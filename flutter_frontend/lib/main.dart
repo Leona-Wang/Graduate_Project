@@ -11,8 +11,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '數字乘二範例',
-      initialRoute: AppRoutes.login,
+      title: '',
+      initialRoute: AppRoutes.welcomeSlides,
       onGenerateRoute: AppRoutes.generateRoute,
     );
   }

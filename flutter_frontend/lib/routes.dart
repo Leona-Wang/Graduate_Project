@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
-import 'screens/loginOption.dart';
+import 'screens/welcome_slides.dart';
 import 'screens/home.dart';
 
 class AppRoutes {
-  static const String login = '/';
+  static const String welcomeSlides = '/';
   static const String home = '/result';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case login:
-        return MaterialPageRoute(builder: (_) => const LoginPage());
-
-      case home:
-        final args = settings.arguments as int;
-        return MaterialPageRoute(builder: (_) => HomePage(result: args));
+      case welcomeSlides:
+        return MaterialPageRoute(builder: (_) => const WelcomeSlidesPage());
 
       default:
         return MaterialPageRoute(
