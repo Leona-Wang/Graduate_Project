@@ -6,7 +6,7 @@ import json
 # Create your views here.
 # views.py
 @csrf_exempt
-def double(request):
+def testApi(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         number = data.get('number', 0)

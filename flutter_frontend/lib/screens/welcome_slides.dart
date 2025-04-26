@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class WelcomeSlidesPage extends StatefulWidget {
   const WelcomeSlidesPage({super.key});
@@ -9,51 +10,32 @@ class WelcomeSlidesPage extends StatefulWidget {
 class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
   late PageController _pageController;
   int currentPage = 0;
-  late List<Widget> slideList;
+
+  final List<String> slideList = [
+    'assets/welcomeSlides/image1.png',
+    'assets/welcomeSlides/image2.png',
+    'assets/welcomeSlides/image3.png',
+    'assets/welcomeSlides/image4.png',
+  ];
+
+  final List<List<String>> titles = [
+    ['做好事，蒐集寶物'],
+    ['捐獻給支持的機構'],
+    ['以小博大，拼運氣'],
+    ['準備好了嗎?', '申辦好忙國入境許可，', '成為我們的一員!'],
+  ];
+
+  final List<List<String>> descriptions = [
+    ['與寵物一起參與慈善活動，', '蒐集掉落的寶物!'],
+    ['將取得的鑽石捐獻給慈善機構，', '用行動支持慈善事業經營!'],
+    ['把鑽石投入公益彩券，', '做善事的同時發大財!'],
+    [],
+  ];
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
-    slideList = _buildSlides();
-  }
-
-  List<Widget> _buildSlides() {
-    return [
-      Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/welcomeSlides/image1.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black26, BlendMode.darken),
-          ),
-        ),
-        child: const Padding(
-          padding: EdgeInsets.only(top: 70.0, left: 20),
-          child: Text(
-            'Welcome!',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 25,
-              decoration: TextDecoration.none,
-            ),
-          ),
-        ),
-      ),
-      for (int i = 2; i <= 4; i++)
-        Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/welcomeSlides/image$i.png'),
-              fit: BoxFit.cover,
-              colorFilter: const ColorFilter.mode(
-                Colors.black26,
-                BlendMode.darken,
-              ),
-            ),
-          ),
-        ),
-    ];
   }
 
   void _nextPage() {
@@ -63,15 +45,15 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
         curve: Curves.easeInOut,
       );
     } else {
-      // TODO: 導入下一頁，例如 Navigator.pushReplacementNamed(context, AppRoutes.login);
-      print('開始使用');
+      // 最後一頁按下去，導到主畫面或做其他事
+      // Navigator.pushReplacementNamed(context, Routes.home);
     }
   }
 
   void _prevOrSkip() {
     if (currentPage == 0) {
-      // TODO: 略過導覽頁邏輯
-      print('跳過導覽');
+      // 跳過直接到主畫面或其他地方
+      // Navigator.pushReplacementNamed(context, Routes.home);
     } else {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
@@ -83,56 +65,108 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+      body: Column(
         children: [
-          PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                currentPage = index;
-              });
-            },
-            children: slideList,
-          ),
-          Positioned(
-            bottom: 30,
-            left: 20,
-            right: 20,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: _prevOrSkip,
-                  child: Text(
-                    currentPage == 0 ? '跳過' : '上一頁',
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
-                Row(
-                  children: List.generate(
-                    slideList.length,
-                    (index) => Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color:
-                            currentPage == index
-                                ? Colors.white
-                                : Colors.white30,
-                      ),
+          Expanded(
+            flex: 3,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  currentPage = index;
+                });
+              },
+              itemCount: slideList.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(slideList[index]),
+                      fit: BoxFit.cover,
                     ),
                   ),
-                ),
-                TextButton(
-                  onPressed: _nextPage,
-                  child: Text(
-                    currentPage == slideList.length - 1 ? '開始使用' : '下一頁',
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  alignment: Alignment.topLeft,
+                  padding: EdgeInsets.only(top: 70.h, left: 20.w),
+                );
+              },
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  titles[currentPage].isNotEmpty
+                      ? Column(
+                        children:
+                            titles[currentPage].map<Widget>((line) {
+                              return Text(
+                                line,
+                                style: TextStyle(
+                                  fontSize: 32.sp,
+                                  color: Colors.black87,
+                                ),
+                                textAlign: TextAlign.center,
+                              );
+                            }).toList(),
+                      )
+                      : const SizedBox.shrink(),
+                  descriptions[currentPage].isNotEmpty
+                      ? Column(
+                        children:
+                            descriptions[currentPage].map<Widget>((line) {
+                              return Text(
+                                line,
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  color: Colors.black87,
+                                ),
+                                textAlign: TextAlign.center,
+                              );
+                            }).toList(),
+                      )
+                      : const SizedBox.shrink(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: _prevOrSkip,
+                        child: Text(
+                          currentPage == 0 ? '跳過' : '上一頁',
+                          style: TextStyle(fontSize: 16.sp),
+                        ),
+                      ),
+                      Row(
+                        children: List.generate(
+                          slideList.length,
+                          (index) => Container(
+                            margin: EdgeInsets.symmetric(horizontal: 4.w),
+                            width: 8.w,
+                            height: 8.w,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color:
+                                  currentPage == index
+                                      ? Colors.black
+                                      : Colors.grey[300],
+                            ),
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _nextPage,
+                        child: Text(
+                          currentPage == slideList.length - 1 ? '開始使用' : '下一頁',
+                          style: TextStyle(fontSize: 16.sp),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
