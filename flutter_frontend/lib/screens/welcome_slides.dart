@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:getwidget/getwidget.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class WelcomeSlidesPage extends StatefulWidget {
@@ -22,7 +23,7 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
     ['做好事，蒐集寶物'],
     ['捐獻給支持的機構'],
     ['以小博大，拼運氣'],
-    ['準備好了嗎?', '申辦好忙國入境許可，', '成為我們的一員!'],
+    ['快來入境好忙國!'],
   ];
 
   final List<List<String>> descriptions = [
@@ -39,27 +40,192 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
   }
 
   void _nextPage() {
-    if (currentPage < slideList.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      // 最後一頁按下去，導到主畫面或做其他事
-      // Navigator.pushReplacementNamed(context, Routes.home);
-    }
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   void _prevOrSkip() {
     if (currentPage == 0) {
-      // 跳過直接到主畫面或其他地方
-      // Navigator.pushReplacementNamed(context, Routes.home);
+      _pageController.animateToPage(
+        descriptions.length - 1,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     } else {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     }
+  }
+
+  Widget _buildNormalPageContent() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        titles[currentPage].isNotEmpty
+            ? Column(
+              children:
+                  titles[currentPage].map<Widget>((line) {
+                    return Text(
+                      line,
+                      style: TextStyle(
+                        fontSize: 32.sp,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                      ),
+
+                      textAlign: TextAlign.center,
+                    );
+                  }).toList(),
+            )
+            : const SizedBox.shrink(),
+        descriptions[currentPage].isNotEmpty
+            ? Column(
+              children:
+                  descriptions[currentPage].map<Widget>((line) {
+                    return Text(
+                      line,
+                      style: TextStyle(fontSize: 16.sp, color: Colors.black87),
+                      textAlign: TextAlign.center,
+                    );
+                  }).toList(),
+            )
+            : const SizedBox.shrink(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              onPressed: _prevOrSkip,
+              child: Text(
+                currentPage == 0 ? '跳過' : '上一頁',
+                style: TextStyle(fontSize: 16.sp),
+              ),
+            ),
+            Row(
+              children: List.generate(
+                slideList.length,
+                (index) => Container(
+                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                  width: 8.w,
+                  height: 8.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        currentPage == index ? Colors.black : Colors.grey[300],
+                  ),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: _nextPage,
+              child: Text('下一頁', style: TextStyle(fontSize: 16.sp)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLastPageContent() {
+    return SizedBox.expand(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '歡迎入境好忙國',
+            style: TextStyle(
+              fontSize: 32.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            '一起用行動支持公益～',
+            style: TextStyle(fontSize: 16.sp, color: Colors.black87),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 10.h),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: GFButton(
+                  onPressed: () {},
+                  color: GFColors.SECONDARY,
+                  shape: GFButtonShape.pills,
+                  type: GFButtonType.solid,
+                  child: Text(
+                    "我是個人使用者，入境接收任務",
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              //SizedBox(height: 16.h),
+              SizedBox(
+                width: double.infinity,
+                child: GFButton(
+                  onPressed: () {},
+                  color: GFColors.SECONDARY,
+                  shape: GFButtonShape.pills,
+                  type: GFButtonType.solid,
+                  child: Text(
+                    "我是慈善機構，入境創建委託所",
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: _prevOrSkip,
+                child: Text(
+                  currentPage == 0 ? '跳過' : '上一頁',
+                  style: TextStyle(fontSize: 16.sp),
+                ),
+              ),
+              Row(
+                children: List.generate(
+                  slideList.length,
+                  (index) => Container(
+                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    width: 8.w,
+                    height: 8.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                          currentPage == index
+                              ? Colors.black
+                              : Colors.grey[300],
+                    ),
+                  ),
+                ),
+              ),
+              TextButton(onPressed: () {}, child: Text('')),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -96,77 +262,10 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
             child: Container(
               color: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  titles[currentPage].isNotEmpty
-                      ? Column(
-                        children:
-                            titles[currentPage].map<Widget>((line) {
-                              return Text(
-                                line,
-                                style: TextStyle(
-                                  fontSize: 32.sp,
-                                  color: Colors.black87,
-                                ),
-                                textAlign: TextAlign.center,
-                              );
-                            }).toList(),
-                      )
-                      : const SizedBox.shrink(),
-                  descriptions[currentPage].isNotEmpty
-                      ? Column(
-                        children:
-                            descriptions[currentPage].map<Widget>((line) {
-                              return Text(
-                                line,
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  color: Colors.black87,
-                                ),
-                                textAlign: TextAlign.center,
-                              );
-                            }).toList(),
-                      )
-                      : const SizedBox.shrink(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: _prevOrSkip,
-                        child: Text(
-                          currentPage == 0 ? '跳過' : '上一頁',
-                          style: TextStyle(fontSize: 16.sp),
-                        ),
-                      ),
-                      Row(
-                        children: List.generate(
-                          slideList.length,
-                          (index) => Container(
-                            margin: EdgeInsets.symmetric(horizontal: 4.w),
-                            width: 8.w,
-                            height: 8.w,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color:
-                                  currentPage == index
-                                      ? Colors.black
-                                      : Colors.grey[300],
-                            ),
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _nextPage,
-                        child: Text(
-                          currentPage == slideList.length - 1 ? '開始使用' : '下一頁',
-                          style: TextStyle(fontSize: 16.sp),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              child:
+                  currentPage == slideList.length - 1
+                      ? _buildLastPageContent()
+                      : _buildNormalPageContent(),
             ),
           ),
         ],
