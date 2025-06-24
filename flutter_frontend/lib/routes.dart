@@ -19,7 +19,7 @@ class AppRoutes {
   static const String example2 = '/example2';
 
   static const String home = '/home'; //主頁面按鈕與功能
-  static const String home_tab = '/home_tab'; //主頁面內容
+  static const String homeTab = '/home_tab'; //主頁面內容
   static const String map = '/map'; //地圖頁面
   static const String pet = '/pet'; //寵物系統
   static const String shop = '/shop'; //商城系統
@@ -44,7 +44,7 @@ class AppRoutes {
       case home:
         return MaterialPageRoute(builder: (_) => HomePage());
 
-      case home_tab:
+      case homeTab:
         return MaterialPageRoute(builder: (_) => HomeTab());
 
       case map:
