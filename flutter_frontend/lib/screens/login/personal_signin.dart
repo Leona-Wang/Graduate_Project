@@ -130,14 +130,18 @@ class PersonalSigninState extends State<PersonalSigninPage> {
             actions: [
               //不註冊
               TextButton(
-                onPressed: () => Navigator.of(context).pop, //按下按鈕後關閉警示框
+                onPressed: () => Navigator.of(context).pop(), //按下按鈕後關閉警示框
                 child: const Text('否'),
               ),
               //註冊
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  Navigator.pushNamed(context, '/personal_signup');
+                  Navigator.pushNamed(
+                    context,
+                    '/personal_signup',
+                    arguments: _emailController.text.trim(),
+                  );
                 },
                 child: const Text('是'),
               ),

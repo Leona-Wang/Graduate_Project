@@ -76,7 +76,11 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => PersonalSigninPage());
 
       case personalSignup:
-        return MaterialPageRoute(builder: (_) => PersonalSignupPage());
+        final personalEmail = settings.arguments as String?;
+        return MaterialPageRoute(
+          builder:
+              (_) => PersonalSignupPage(personalEmail: personalEmail ?? ''),
+        );
 
       case groupSignin:
         return MaterialPageRoute(builder: (_) => GroupSigninPage());
