@@ -130,14 +130,18 @@ class GroupSigninState extends State<GroupSigninPage> {
             actions: [
               //不註冊
               TextButton(
-                onPressed: () => Navigator.of(context).pop, //按下按鈕後關閉警示框
+                onPressed: () => Navigator.of(context).pop(), //按下按鈕後關閉警示框
                 child: const Text('否'),
               ),
               //註冊
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  Navigator.pushNamed(context, '/group_signup');
+                  Navigator.pushNamed(
+                    context,
+                    '/group_signup',
+                    arguments: _emailController.text.trim(),
+                  );
                 },
                 child: const Text('是'),
               ),
@@ -153,7 +157,7 @@ class GroupSigninState extends State<GroupSigninPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('組織帳戶登入')),
+      appBar: AppBar(title: const Text('機構帳戶登入')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),

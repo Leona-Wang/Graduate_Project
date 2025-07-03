@@ -23,7 +23,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
 
   bool _isPasswordState = false;
   bool _isLoading = false;
-  bool _initialEmail = false;
 
   String _errorMessage = '';
 
@@ -33,20 +32,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
     super.initState();
     _emailController.text = widget.personalEmail;
   }
-
-  /*
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialEmail) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      print('DEBUG 收到 arguments: $args'); //抓蟲用
-      personalEmail = args is String ? args : '';
-      _emailController.text = personalEmail;
-      _initialEmail = true;
-      print('接收:$personalEmail'); //抓蟲用
-    }
-  }*/
 
   void _nextStep() {
     final email = _emailController.text.trim();
@@ -77,6 +62,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
   Future<void> _submitRegister() async {
     final personalPassword = _passwordController.text.trim();
     final confirmPassword = _confirmController.text.trim();
+
     if (personalPassword.isEmpty) {
       setState(() => _errorMessage = '請設定密碼');
       return;
@@ -90,29 +76,47 @@ class PersonalSignupState extends State<PersonalSignupPage> {
       setState(() => _errorMessage = '密碼輸入不一致');
       return;
     }
+
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
     try {
-      final uri = Uri.parse('http://'); //API
-      final response = await http.post(
-        uri,
+      final uriData = Uri.parse('http://localhost/person/create/'); //個人資料API
+      final uriPassword = Uri.parse(
+        'http://localhost/user/create/?type=personal',
+      );
+      final response1 = await http.post(
+        uriData,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailController.text.trim(),
+          'nickname': _nicknameController.text.trim(),
+          'location': _selectLocation,
+          'eventType': _selectPrefer,
+        }),
+      );
+
+      if (response1.statusCode == 200) {
+        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+      } else {
+        setState(() => _errorMessage = '個人資料建立失敗:${response1.body}');
+      }
+
+      final response2 = await http.post(
+        uriPassword,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'personalEmail': _emailController.text.trim(),
-          'nickname': _nicknameController.text.trim(),
-          'location': _selectLocation, //使用者活動地區與偏好，json名稱暫定
-          'preference': _selectPrefer,
           'personalPassword': personalPassword,
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response2.statusCode == 200) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       } else {
-        setState(() => _errorMessage = '註冊失敗:${response.body}');
+        setState(() => _errorMessage = '密碼設定失敗:${response1.body}');
       }
     } catch (e) {
       setState(() => _errorMessage = '錯誤:$e');
@@ -129,6 +133,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            const SizedBox(height: 16),
             //設定個人資料
             if (!_isPasswordState) ...[
               //email 有預設輸入的值
@@ -207,12 +212,12 @@ class PersonalSignupState extends State<PersonalSignupPage> {
               ),
               const SizedBox(height: 16),
 
-              //使用者偏好
+              //使用者偏好(之後做成可複選)
               DropdownButtonFormField<String>(
                 value: _selectPrefer,
                 hint: const Text('請選擇您偏好的慈善活動'),
                 items:
-                    ['物資捐贈', '志工服務'].map((e) {
+                    ['群體福利', '社會議題', '教育文化', '醫療衛生', '綜合項目'].map((e) {
                       return DropdownMenuItem(value: e, child: Text(e));
                     }).toList(), //再增加
                 onChanged: (val) => setState(() => _selectPrefer = val),
