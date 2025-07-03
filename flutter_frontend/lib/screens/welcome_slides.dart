@@ -156,7 +156,9 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
               SizedBox(
                 width: double.infinity,
                 child: GFButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/personal_signin');
+                  },
                   color: GFColors.SECONDARY,
                   shape: GFButtonShape.pills,
                   type: GFButtonType.solid,
@@ -175,7 +177,9 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
               SizedBox(
                 width: double.infinity,
                 child: GFButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/group_signin');
+                  },
                   color: GFColors.SECONDARY,
                   shape: GFButtonShape.pills,
                   type: GFButtonType.solid,

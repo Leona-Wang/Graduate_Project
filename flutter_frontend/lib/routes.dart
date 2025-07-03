@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/event.dart';
 import 'package:flutter_frontend/screens/home_tab.dart';
+import 'package:flutter_frontend/screens/login/group_signin.dart';
+import 'package:flutter_frontend/screens/login/group_signup.dart';
+import 'package:flutter_frontend/screens/login/personal_signin.dart';
+import 'package:flutter_frontend/screens/login/personal_signup.dart';
 import 'package:flutter_frontend/screens/map.dart';
 import 'package:flutter_frontend/screens/pet.dart';
 import 'package:flutter_frontend/screens/setting.dart';
@@ -25,6 +29,12 @@ class AppRoutes {
   static const String shop = '/shop'; //商城系統
   static const String event = '/event'; //特殊活動
   static const String setting = '/setting'; //系統設定
+
+  //登入與註冊頁面
+  static const String personalSignin = '/personal_signin'; //個人登入
+  static const String personalSignup = '/personal_signup'; //個人註冊
+  static const String groupSignin = '/group_signin'; //團體登入
+  static const String groupSignup = '/group_signup'; //團體註冊
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -61,6 +71,18 @@ class AppRoutes {
 
       case setting:
         return MaterialPageRoute(builder: (_) => SettingPage());
+
+      case personalSignin:
+        return MaterialPageRoute(builder: (_) => PersonalSigninPage());
+
+      case personalSignup:
+        return MaterialPageRoute(builder: (_) => PersonalSignupPage());
+
+      case groupSignin:
+        return MaterialPageRoute(builder: (_) => GroupSigninPage());
+
+      case groupSignup:
+        return MaterialPageRoute(builder: (_) => GroupSignupPage());
 
       default:
         return MaterialPageRoute(
