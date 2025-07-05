@@ -124,6 +124,7 @@ class GroupSignupState extends State<GroupSignupPage> {
         body: jsonEncode({
           'charityEmail': _emailController.text.trim(),
           'charityPassword': groupPassword,
+          'charityPasswordConfirm': confirmPassword,
         }),
       );
 

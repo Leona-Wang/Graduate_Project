@@ -110,6 +110,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
         body: jsonEncode({
           'personalEmail': _emailController.text.trim(),
           'personalPassword': personalPassword,
+          'personalPasswordConfirm': confirmPassword,
         }),
       );
 
