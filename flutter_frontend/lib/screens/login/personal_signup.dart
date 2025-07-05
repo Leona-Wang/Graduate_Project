@@ -181,6 +181,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                       '桃園',
                       '新竹',
                       '苗栗',
+                      '南投',
                       '臺中',
                       '彰化',
                       '雲林',
