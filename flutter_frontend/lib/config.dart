@@ -5,9 +5,9 @@ class ApiPath {
   static const String testApi = '/testApi/';
   static const String login = '/login/';
 
-  //個人用戶email驗證，需回傳值：
+  //個人用戶email驗證，需回傳值：{'personalEmail':}
   static const String checkPersonalEmail = '/checkPersonalEmail/';
-  //團體用戶email驗證，需回傳值： 
+  //團體用戶email驗證，需回傳值：{'groupEmail':}
   static const String checkCharityEmail = '/checkCharityEmail/';
 
   //個人設定密碼，需回傳值：{'personalEmail':,'personalPassword':,'personalPasswordConfirm':}
