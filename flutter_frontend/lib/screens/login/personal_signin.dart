@@ -42,7 +42,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
 
     /*
     try {
-      final uri = Uri.parse('http://'); //API
+      final uri = Uri.parse('http://localhost:8000/checkPersonalEmail/'); //API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},

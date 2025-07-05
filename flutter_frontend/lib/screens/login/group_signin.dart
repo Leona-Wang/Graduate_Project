@@ -42,7 +42,7 @@ class GroupSigninState extends State<GroupSigninPage> {
 
     /*
     try {
-      final uri = Uri.parse('http://'); //驗證email API
+      final uri = Uri.parse('http://localhost:8000/checkCharityEmail/'); //驗證email API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},

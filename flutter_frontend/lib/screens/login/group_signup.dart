@@ -94,9 +94,9 @@ class GroupSignupState extends State<GroupSignupPage> {
     });
 
     try {
-      final uriData = Uri.parse('http://localhost/charity/create/');
+      final uriData = Uri.parse('http://localhost:8000/charity/create/');
       final uriPassword = Uri.parse(
-        'http://localhost/user/create/?type=charity',
+        'http://localhost:8000/user/create/?type=charity',
       );
 
       final response1 = await http.post(

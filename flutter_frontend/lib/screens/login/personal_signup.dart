@@ -83,9 +83,11 @@ class PersonalSignupState extends State<PersonalSignupPage> {
     });
 
     try {
-      final uriData = Uri.parse('http://localhost/person/create/'); //個人資料API
+      final uriData = Uri.parse(
+        'http://localhost:8000/person/create/',
+      ); //個人資料API
       final uriPassword = Uri.parse(
-        'http://localhost/user/create/?type=personal',
+        'http://localhost:8000/user/create/?type=personal',
       );
       final response1 = await http.post(
         uriData,
