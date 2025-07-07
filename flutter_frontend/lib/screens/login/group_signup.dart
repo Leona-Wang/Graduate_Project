@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../routes.dart';
+import '../../config.dart';
+
 class GroupSignupPage extends StatefulWidget {
   final String email;
   const GroupSignupPage({super.key, required this.email});
@@ -94,10 +97,8 @@ class GroupSignupState extends State<GroupSignupPage> {
     });
 
     try {
-      final uriData = Uri.parse('http://localhost:8000/charity/create/');
-      final uriPassword = Uri.parse(
-        'http://localhost:8000/user/create/?type=charity',
-      );
+      final uriData = Uri.parse('$baseUrl${ApiPath.createCharityInfo}');
+      final uriPassword = Uri.parse('$baseUrl${ApiPath.createCharityUser}');
 
       final response1 = await http.post(
         uriData,
@@ -189,7 +190,26 @@ class GroupSignupState extends State<GroupSignupPage> {
                 value: _selectType,
                 hint: const Text('請選擇您的機構類型'),
                 items:
-                    ['群體福利', '社會議題', '教育文化', '醫療衛生', '綜合項目'].map((e) {
+                    [
+                      '綜合性服務',
+                      '兒童青少年福利',
+                      '婦女福利',
+                      '老人福利',
+                      '身心障礙福利',
+                      '家庭福利',
+                      '健康醫療',
+                      '心理衛生',
+                      '社區規劃(營造)',
+                      '環境保護',
+                      '國際合作交流',
+                      '教育與科學',
+                      '文化藝術',
+                      '人權和平',
+                      '消費者保護',
+                      '性別平等',
+                      '政府單位',
+                      '動物保護',
+                    ].map((e) {
                       return DropdownMenuItem(value: e, child: Text(e));
                     }).toList(),
                 onChanged: (val) {

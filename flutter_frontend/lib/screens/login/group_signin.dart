@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../routes.dart';
+import '../../config.dart';
+
 class GroupSigninPage extends StatefulWidget {
   const GroupSigninPage({super.key});
 
@@ -42,7 +45,7 @@ class GroupSigninState extends State<GroupSigninPage> {
 
     /*
     try {
-      final uri = Uri.parse('http://localhost:8000/checkCharityEmail/'); //驗證email API
+      final uri = Uri.parse('$baseUrl${ApiPath.checkCharityEmail}'); //驗證email API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
@@ -94,7 +97,7 @@ class GroupSigninState extends State<GroupSigninPage> {
 
     /*
     try {
-      final uri = Uri.parse('http://'); //驗證密碼 API
+      final uri = Uri.parse('$baseUrl${ApiPath.}'); //驗證密碼 API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},

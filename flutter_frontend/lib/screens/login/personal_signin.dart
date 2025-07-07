@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../routes.dart';
+import '../../config.dart';
+
 class PersonalSigninPage extends StatefulWidget {
   const PersonalSigninPage({super.key});
 
@@ -42,7 +45,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
 
     /*
     try {
-      final uri = Uri.parse('http://localhost:8000/checkPersonalEmail/'); //API
+      final uri = Uri.parse('$baseUrl${ApiPath.checkPersonalEmail}'); //API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
@@ -94,7 +97,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
 
     /*
     try {
-      final uri = Uri.parse('http://'); //API
+      final uri = Uri.parse('$baseUrl${ApiPath.}'); //API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
