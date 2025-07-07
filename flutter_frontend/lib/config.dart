@@ -1,23 +1,34 @@
 // config.dart
-const String baseUrl = 'http://192.168.0.121:8000';
+
+//API Path 設定格式
+//static String get /API名稱/ => '${BaseConfig.baseUrl}/設定的url/;
+//之後只要在base_config.dart改自己的IP就好
+
+import 'base_config.dart';
 
 class ApiPath {
-  static const String testApi = '/testApi/';
+  static String get testApi => '${BaseConfig.baseUrl}/testApi/';
   static const String login = '/login/';
 
   //個人用戶email驗證，需回傳值：{'personalEmail':}
-  static const String checkPersonalEmail = '/checkPersonalEmail/';
+  static String get checkPersonalEmail =>
+      '${BaseConfig.baseUrl}/checkPersonalEmail/';
   //團體用戶email驗證，需回傳值：{'groupEmail':}
-  static const String checkCharityEmail = '/checkCharityEmail/';
+  static String get checkCharityEmail =>
+      '${BaseConfig.baseUrl}/checkCharityEmail/';
 
   //個人設定密碼，需回傳值：{'personalEmail':,'personalPassword':,'personalPasswordConfirm':}
-  static const String createPersonalUser = '/user/create/?type=personal';
+  static String get createPersonalUser =>
+      '${BaseConfig.baseUrl}/user/create/?type=personal';
   //團體設定密碼，需回傳值：{'charityEmail':,'charityPassword':,'charityPasswordConfirm':}
-  static const String createCharityUser = '/user/create/?type=charity';
+  static String get createCharityUser =>
+      '${BaseConfig.baseUrl}/user/create/?type=charity';
 
   //個人用戶創建資料，需回傳值：{'email':,'nickname':,'location':,'eventType':[可多選，把選項名稱用外面這種括號包起來]}
-  static const String createPersonalInfo = '/person/create/';
+  static String get createPersonalInfo =>
+      '${BaseConfig.baseUrl}/person/create/';
   //團體創建資料，需回傳值：{'email':,'groupName':,'groupType':,'groupAddress':,'groupPhone':,'groupId':}
   //如果前端想要有透過 id 找 organization 資料的話再跟汪說，我寫一個 API 給你們
-  static const String createCharityInfo = '/charity/create/';
+  static String get createCharityInfo =>
+      '${BaseConfig.baseUrl}/charity/create/';
 }

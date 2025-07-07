@@ -27,7 +27,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
     setState(() => _isLoading = true);
 
     //測試用
-    try {
+    /*try {
       await Future.delayed(const Duration(seconds: 1));
 
       bool accountExists = personalEmail.contains('test');
@@ -41,11 +41,12 @@ class PersonalSigninState extends State<PersonalSigninPage> {
       _showMessage('模擬錯誤:$e');
     } finally {
       setState(() => _isLoading = false);
-    }
+    }*/
 
-    /*
     try {
-      final uri = Uri.parse('$baseUrl${ApiPath.checkPersonalEmail}'); //API
+      final uri = Uri.parse(ApiPath.checkPersonalEmail); //API
+      print(uri);
+      print('呼叫中');
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
@@ -53,8 +54,10 @@ class PersonalSigninState extends State<PersonalSigninPage> {
       );
 
       final result = jsonDecode(response.body);
+      //print(response.statusCode);
+      //print(response.body);
 
-      if (response.statusCode == 200 && result['exists'] == true) {
+      if (response.statusCode == 200 && result == true) {
         //帳號存在，進入輸入密碼頁面
         setState(() => _showPasswordField = true);
       } else {
@@ -65,7 +68,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
       _showMessage('錯誤:$e');
     } finally {
       setState(() => _isLoading = false);
-    }*/
+    }
   }
 
   Future<void> _handlePasswordSubmit() async {
@@ -97,7 +100,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
 
     /*
     try {
-      final uri = Uri.parse('$baseUrl${ApiPath.}'); //API
+      final uri = Uri.parse(ApiPath.); //API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},

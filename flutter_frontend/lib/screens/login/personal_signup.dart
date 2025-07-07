@@ -86,20 +86,20 @@ class PersonalSignupState extends State<PersonalSignupPage> {
     });
 
     try {
-      final uriData = Uri.parse(
-        '$baseUrl${ApiPath.createPersonalInfo}',
-      ); //個人資料API
-      final uriPassword = Uri.parse('$baseUrl${ApiPath.createPersonalUser}');
-      final response1 = await http.post(
-        uriData,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': _emailController.text.trim(),
-          'nickname': _nicknameController.text.trim(),
-          'location': _selectLocation,
-          'eventType': _selectPrefer,
-        }),
-      );
+      final uriData = Uri.parse(ApiPath.createPersonalInfo); //個人資料API
+      final uriPassword = Uri.parse(ApiPath.createPersonalUser); //密碼API
+      final response1 = await http
+          .post(
+            uriData,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': _emailController.text.trim(),
+              'nickname': _nicknameController.text.trim(),
+              'location': _selectLocation,
+              'eventType': _selectPrefer,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response1.statusCode == 200) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);

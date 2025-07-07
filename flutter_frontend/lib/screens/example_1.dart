@@ -15,7 +15,7 @@ class Example1PageState extends State<Example1Page> {
 
   Future<void> sendNumber() async {
     final int number = int.tryParse(_controller.text) ?? 0;
-    final url = Uri.parse('$baseUrl${ApiPath.testApi}');
+    final url = Uri.parse(ApiPath.testApi);
 
     final response = await http.post(
       url,

@@ -27,7 +27,7 @@ class GroupSigninState extends State<GroupSigninPage> {
     setState(() => _isLoading = true);
 
     //測試用
-    try {
+    /*try {
       await Future.delayed(const Duration(seconds: 1));
 
       bool accountExists = groupEmail.contains('test');
@@ -41,11 +41,10 @@ class GroupSigninState extends State<GroupSigninPage> {
       _showMessage('模擬錯誤:$e');
     } finally {
       setState(() => _isLoading = false);
-    }
+    }*/
 
-    /*
     try {
-      final uri = Uri.parse('$baseUrl${ApiPath.checkCharityEmail}'); //驗證email API
+      final uri = Uri.parse(ApiPath.checkCharityEmail); //驗證email API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
@@ -65,7 +64,7 @@ class GroupSigninState extends State<GroupSigninPage> {
       _showMessage('錯誤:$e');
     } finally {
       setState(() => _isLoading = false);
-    }*/
+    }
   }
 
   Future<void> _handlePasswordSubmit() async {
@@ -97,7 +96,7 @@ class GroupSigninState extends State<GroupSigninPage> {
 
     /*
     try {
-      final uri = Uri.parse('$baseUrl${ApiPath.}'); //驗證密碼 API
+      final uri = Uri.parse(ApiPath.); //驗證密碼 API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},

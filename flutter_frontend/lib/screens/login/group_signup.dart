@@ -97,8 +97,8 @@ class GroupSignupState extends State<GroupSignupPage> {
     });
 
     try {
-      final uriData = Uri.parse('$baseUrl${ApiPath.createCharityInfo}');
-      final uriPassword = Uri.parse('$baseUrl${ApiPath.createCharityUser}');
+      final uriData = Uri.parse(ApiPath.createCharityInfo); //資料API
+      final uriPassword = Uri.parse(ApiPath.createCharityUser); //密碼API
 
       final response1 = await http.post(
         uriData,
