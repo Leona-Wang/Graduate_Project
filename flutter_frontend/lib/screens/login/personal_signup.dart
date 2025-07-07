@@ -101,12 +101,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
           )
           .timeout(const Duration(seconds: 10));
 
-      if (response1.statusCode == 200) {
-        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-      } else {
-        setState(() => _errorMessage = '個人資料建立失敗:${response1.body}');
-      }
-
       final response2 = await http.post(
         uriPassword,
         headers: {'Content-Type': 'application/json'},
@@ -117,11 +111,17 @@ class PersonalSignupState extends State<PersonalSignupPage> {
         }),
       );
 
-      if (response2.statusCode == 200) {
+      if (response1.statusCode == 200 && response2.statusCode == 200) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       } else {
-        setState(() => _errorMessage = '密碼設定失敗:${response1.body}');
+        setState(() => _errorMessage = '個人資料建立失敗:${response1.body}');
+        setState(() => _errorMessage = '密碼設定失敗:${response2.body}');
       }
+
+      print(response1.statusCode);
+      print(response1.body);
+      print(response2.statusCode);
+      print(response2.body);
     } catch (e) {
       setState(() => _errorMessage = '錯誤:$e');
     } finally {

@@ -107,17 +107,11 @@ class GroupSignupState extends State<GroupSignupPage> {
           'email': _emailController.text.trim(),
           'groupName': _nameController.text.trim(),
           'groupType': _selectType,
-          'groupAddress': _addressController,
-          'groupPhone': _phoneController,
-          'groupId': _idController,
+          'groupAddress': _addressController.text.trim(),
+          'groupPhone': _phoneController.text.trim(),
+          'groupId': _idController.text.trim(),
         }),
       );
-
-      if (response1.statusCode == 200) {
-        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-      } else {
-        setState(() => _errorMessage = '機構資料建立失敗:${response1.body}');
-      }
 
       final response2 = await http.post(
         uriPassword,
@@ -129,10 +123,13 @@ class GroupSignupState extends State<GroupSignupPage> {
         }),
       );
 
-      if (response2.statusCode == 200) {
+      if (response1.statusCode == 200 && response2.statusCode == 200) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       } else {
-        setState(() => _errorMessage = '密碼設定失敗:${response1.body}');
+        setState(() => _errorMessage = '機構資料建立失敗:${response1.body}');
+        setState(
+          () => _errorMessage = '密碼設定失敗:${response2.body}',
+        ); //之後修改為分開顯示error
       }
     } catch (e) {
       setState(() => _errorMessage = '錯誤:$e');
