@@ -17,6 +17,9 @@ class ApiPath {
   static String get checkCharityEmail =>
       '${BaseConfig.baseUrl}/checkCharityEmail/';
 
+  //帳號登入(個人團體都用這個)，需回傳值：{'email':,'password':}
+  static String get checkPassword => '${BaseConfig.baseUrl}/login/';
+
   //個人設定密碼，需回傳值：{'personalEmail':,'personalPassword':,'personalPasswordConfirm':}
   static String get createPersonalUser =>
       '${BaseConfig.baseUrl}/user/create/?type=personal';

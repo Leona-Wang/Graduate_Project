@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from .Account import validateEmail
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
+from django.contrib.auth import authenticate, login
 
 
 # Create your views here.
@@ -27,23 +28,57 @@ def testApi(request):
 
 
 @csrf_exempt
+def verifyEmail(request):
+    data = json.loads(request.body)
+
+    personalEmail = data.get('personalEmail', '').strip()
+    groupEmail = data.get('groupEmail', '').strip()
+
+    if not personalEmail and not groupEmail:
+        return JsonResponse({'success': False, 'message': '請輸入 email'}, status=400)
+
+    if personalEmail:
+        exists = PersonalInfo.objects.filter(user__email=personalEmail).exists()
+    else:
+        exists = CharityInfo.objects.filter(user__email=groupEmail).exists()
+
+    return JsonResponse({'exists': exists}, status=200)
+
+
+@csrf_exempt
 def checkPersonalEmail(request):
     """B1 抓前端傳回的 email 值，驗證是否是建立過的個人 email """
     if request.method == 'POST':
+        try:
+            verifyEmail(request)
 
-        validateEmail(request)
-
-    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 
 @csrf_exempt
 def checkCharityEmail(request):
     """B2 抓前端傳回的email值，驗證是否是建立過的慈善團體email"""
     if request.method == 'POST':
+        try:
+            verifyEmail(request)
 
-        validateEmail(request)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
-    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class VerifyPassword(APIView):
+
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email', "")
+        password = request.data.get('password', "")
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({'success': True}, status=200)
+        else:
+            return JsonResponse({'success': False, 'message': '輸入錯誤'}, status=400)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -72,6 +107,7 @@ class CreateUser(APIView):
 
             user = User.objects.create_user(email=email, username=email, password=password)
             user.save()
+            login(request, user)
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)

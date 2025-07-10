@@ -100,7 +100,17 @@ class GroupSignupState extends State<GroupSignupPage> {
       final uriData = Uri.parse(ApiPath.createCharityInfo); //資料API
       final uriPassword = Uri.parse(ApiPath.createCharityUser); //密碼API
 
-      final response1 = await http.post(
+      final accountCreate = await http.post(
+        uriPassword,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'charityEmail': _emailController.text.trim(),
+          'charityPassword': groupPassword,
+          'charityPasswordConfirm': confirmPassword,
+        }),
+      );
+
+      final infoCreate = await http.post(
         uriData,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -113,22 +123,12 @@ class GroupSignupState extends State<GroupSignupPage> {
         }),
       );
 
-      final response2 = await http.post(
-        uriPassword,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'charityEmail': _emailController.text.trim(),
-          'charityPassword': groupPassword,
-          'charityPasswordConfirm': confirmPassword,
-        }),
-      );
-
-      if (response1.statusCode == 200 && response2.statusCode == 200) {
+      if (infoCreate.statusCode == 200 && accountCreate.statusCode == 200) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       } else {
-        setState(() => _errorMessage = '機構資料建立失敗:${response1.body}');
+        setState(() => _errorMessage = '機構資料建立失敗:${infoCreate.body}');
         setState(
-          () => _errorMessage = '密碼設定失敗:${response2.body}',
+          () => _errorMessage = '密碼設定失敗:${accountCreate.body}',
         ); //之後修改為分開顯示error
       }
     } catch (e) {

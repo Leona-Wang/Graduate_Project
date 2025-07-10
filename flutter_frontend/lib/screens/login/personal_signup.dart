@@ -88,7 +88,18 @@ class PersonalSignupState extends State<PersonalSignupPage> {
     try {
       final uriData = Uri.parse(ApiPath.createPersonalInfo); //個人資料API
       final uriPassword = Uri.parse(ApiPath.createPersonalUser); //密碼API
-      final response1 = await http
+
+      final accountCreate = await http.post(
+        uriPassword,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'personalEmail': _emailController.text.trim(),
+          'personalPassword': personalPassword,
+          'personalPasswordConfirm': confirmPassword,
+        }),
+      );
+
+      final infoCreate = await http
           .post(
             uriData,
             headers: {'Content-Type': 'application/json'},
@@ -101,27 +112,17 @@ class PersonalSignupState extends State<PersonalSignupPage> {
           )
           .timeout(const Duration(seconds: 10));
 
-      final response2 = await http.post(
-        uriPassword,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'personalEmail': _emailController.text.trim(),
-          'personalPassword': personalPassword,
-          'personalPasswordConfirm': confirmPassword,
-        }),
-      );
-
-      if (response1.statusCode == 200 && response2.statusCode == 200) {
+      if (accountCreate.statusCode == 200 && infoCreate.statusCode == 200) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
       } else {
-        setState(() => _errorMessage = '個人資料建立失敗:${response1.body}');
-        setState(() => _errorMessage = '密碼設定失敗:${response2.body}');
+        setState(() => _errorMessage = '密碼設定失敗:${accountCreate.body}');
+        setState(() => _errorMessage = '個人資料建立失敗:${infoCreate.body}');
       }
 
-      print(response1.statusCode);
-      print(response1.body);
-      print(response2.statusCode);
-      print(response2.body);
+      print(infoCreate.statusCode);
+      print(infoCreate.body);
+      print(accountCreate.statusCode);
+      print(accountCreate.body);
     } catch (e) {
       setState(() => _errorMessage = '錯誤:$e');
     } finally {
