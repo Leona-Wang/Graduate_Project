@@ -113,7 +113,11 @@ class PersonalSigninState extends State<PersonalSigninPage> {
 
       if (response.statusCode == 200 && result['corret'] == true) {
         //密碼正確
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/personal_screens/home',
+          (route) => false,
+        );
       } else {
         //密碼錯誤
         setState(() => _showMessage('密碼錯誤，請再次嘗試'));

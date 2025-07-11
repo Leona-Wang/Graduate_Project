@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/event.dart';
-import 'package:flutter_frontend/screens/home_tab.dart';
+import 'package:flutter_frontend/screens/personal_screens/event.dart';
+import 'package:flutter_frontend/screens/personal_screens/home_tab.dart';
 import 'package:flutter_frontend/screens/login/group_signin.dart';
 import 'package:flutter_frontend/screens/login/group_signup.dart';
 import 'package:flutter_frontend/screens/login/personal_signin.dart';
 import 'package:flutter_frontend/screens/login/personal_signup.dart';
-import 'package:flutter_frontend/screens/map.dart';
-import 'package:flutter_frontend/screens/pet.dart';
-import 'package:flutter_frontend/screens/setting.dart';
-import 'package:flutter_frontend/screens/shop.dart';
+import 'package:flutter_frontend/screens/personal_screens/map.dart';
+import 'package:flutter_frontend/screens/personal_screens/pet.dart';
+import 'package:flutter_frontend/screens/personal_screens/setting.dart';
+import 'package:flutter_frontend/screens/personal_screens/shop.dart';
 import 'screens/welcome_slides.dart';
 import 'screens/example_1.dart';
 import 'screens/example_2.dart';
 import 'screens/user_register.dart';
 
-import 'screens/home.dart';
+import 'screens/personal_screens/home.dart';
 
 class AppRoutes {
   static const String welcomeSlides = '/';
