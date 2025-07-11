@@ -225,7 +225,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
               ),
               const SizedBox(height: 16),
 
-              //使用者偏好(之後做成可複選)
+              //使用者偏好
               DropdownButtonFormField(
                 hint: const Text('請選擇您偏好的慈善活動'),
                 items:

@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return MaterialApp(
           title: '',
-          initialRoute: AppRoutes.homeTab,
+          initialRoute: AppRoutes.welcomeSlides,
           onGenerateRoute: AppRoutes.generateRoute,
           builder: (context, widget) {
             // 這樣可以讓文字大小自動跟隨縮放

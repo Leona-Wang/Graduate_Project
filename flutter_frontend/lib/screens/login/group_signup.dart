@@ -25,7 +25,7 @@ class GroupSignupState extends State<GroupSignupPage> {
   final TextEditingController _confirmController = TextEditingController();
 
   late String email;
-  String? _selectType;
+  Set<String> _selectType = Set.from([]);
 
   bool _isPasswordState = false;
   bool _isLoading = false;
@@ -187,7 +187,7 @@ class GroupSignupState extends State<GroupSignupPage> {
 
               //機構類型
               DropdownButtonFormField<String>(
-                value: _selectType,
+                //value: _selectType,
                 hint: const Text('請選擇您的機構類型'),
                 items:
                     [
@@ -210,16 +210,33 @@ class GroupSignupState extends State<GroupSignupPage> {
                       '政府單位',
                       '動物保護',
                     ].map((e) {
-                      return DropdownMenuItem(value: e, child: Text(e));
+                      return DropdownMenuItem(
+                        value: e,
+                        child: StatefulBuilder(
+                          builder: (context, _setState) {
+                            return Row(
+                              children: [
+                                //選取
+                                Checkbox(
+                                  value: _selectType.contains(e),
+                                  onChanged: (isSelected) {
+                                    if (isSelected == true) {
+                                      _selectType.add(e);
+                                    } else {
+                                      _selectType.remove(e);
+                                    }
+                                    _setState(() {});
+                                    setState(() {});
+                                  },
+                                ),
+                                Text(e),
+                              ],
+                            );
+                          },
+                        ),
+                      );
                     }).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    _selectType = val;
-                    if (_errorMessage.isNotEmpty) {
-                      _errorMessage = '';
-                    }
-                  });
-                },
+                onChanged: (x) {},
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: '機構類型',
