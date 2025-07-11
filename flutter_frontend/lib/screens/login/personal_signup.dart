@@ -21,7 +21,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
   final TextEditingController _confirmController = TextEditingController();
 
   String? _selectLocation;
-  String? _selectPrefer;
+  Set<String> _selectPrefer = Set.from([]);
   late String personalEmail;
 
   bool _isPasswordState = false;
@@ -226,8 +226,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
               const SizedBox(height: 16),
 
               //使用者偏好(之後做成可複選)
-              DropdownButtonFormField<String>(
-                value: _selectPrefer,
+              DropdownButtonFormField(
                 hint: const Text('請選擇您偏好的慈善活動'),
                 items:
                     [
@@ -250,9 +249,33 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                       '政府單位',
                       '動物保護',
                     ].map((e) {
-                      return DropdownMenuItem(value: e, child: Text(e));
-                    }).toList(), //再增加
-                onChanged: (val) => setState(() => _selectPrefer = val),
+                      return DropdownMenuItem(
+                        value: e,
+                        child: StatefulBuilder(
+                          builder: (context, _setState) {
+                            return Row(
+                              children: [
+                                //選取
+                                Checkbox(
+                                  value: _selectPrefer.contains(e),
+                                  onChanged: (isSelected) {
+                                    if (isSelected == true) {
+                                      _selectPrefer.add(e);
+                                    } else {
+                                      _selectPrefer.remove(e);
+                                    }
+                                    _setState(() {});
+                                    setState(() {});
+                                  },
+                                ),
+                                Text(e),
+                              ],
+                            );
+                          },
+                        ),
+                      );
+                    }).toList(),
+                onChanged: (x) {},
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: '偏好慈善活動',
