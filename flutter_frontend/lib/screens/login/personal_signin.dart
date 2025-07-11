@@ -70,6 +70,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
   }
 
   Future<void> _handlePasswordSubmit() async {
+    final personalEmail = _emailController.text.trim();
     final personalPassword = _passwordController.text.trim();
 
     if (personalPassword.isEmpty) return;
@@ -78,6 +79,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
       _isLoading = true;
     });
 
+    /*
     //測試用
     try {
       await Future.delayed(const Duration(seconds: 1));
@@ -94,16 +96,16 @@ class PersonalSigninState extends State<PersonalSigninPage> {
       _showMessage('模擬錯誤:$e');
     } finally {
       setState(() => _isLoading = false);
-    }
+    }*/
 
-    /*
     try {
-      final uri = Uri.parse(ApiPath.); //API
+      final uri = Uri.parse(ApiPath.checkPassword); //API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'personalPassword': personalPassword,
+          'email': personalEmail,
+          'password': personalPassword,
         }), //password json
       );
 
@@ -120,7 +122,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
       _showMessage('錯誤:$e');
     } finally {
       setState(() => _isLoading = false);
-    }*/
+    }
   }
 
   //驗證失敗

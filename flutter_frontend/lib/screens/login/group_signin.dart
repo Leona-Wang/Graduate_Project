@@ -68,6 +68,7 @@ class GroupSigninState extends State<GroupSigninPage> {
   }
 
   Future<void> _handlePasswordSubmit() async {
+    final groupEmail = _emailController.text.trim();
     final groupPassword = _passwordController.text.trim();
 
     if (groupPassword.isEmpty) return;
@@ -76,6 +77,7 @@ class GroupSigninState extends State<GroupSigninPage> {
       _isLoading = true;
     });
 
+    /*
     //測試用
     try {
       await Future.delayed(const Duration(seconds: 1));
@@ -92,16 +94,16 @@ class GroupSigninState extends State<GroupSigninPage> {
       _showMessage('模擬錯誤:$e');
     } finally {
       setState(() => _isLoading = false);
-    }
+    }*/
 
-    /*
     try {
-      final uri = Uri.parse(ApiPath.); //驗證密碼 API
+      final uri = Uri.parse(ApiPath.checkPassword); //驗證密碼 API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'groupPassword': groupPassword,
+          'email': groupEmail,
+          'password': groupPassword,
         }), //password json
       );
 
@@ -118,7 +120,7 @@ class GroupSigninState extends State<GroupSigninPage> {
       _showMessage('錯誤:$e');
     } finally {
       setState(() => _isLoading = false);
-    }*/
+    }
   }
 
   //驗證失敗
