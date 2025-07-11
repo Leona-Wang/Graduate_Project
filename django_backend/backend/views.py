@@ -50,7 +50,7 @@ def checkPersonalEmail(request):
     """B1 抓前端傳回的 email 值，驗證是否是建立過的個人 email """
     if request.method == 'POST':
         try:
-            verifyEmail(request)
+            return verifyEmail(request)
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
@@ -61,7 +61,7 @@ def checkCharityEmail(request):
     """B2 抓前端傳回的email值，驗證是否是建立過的慈善團體email"""
     if request.method == 'POST':
         try:
-            verifyEmail(request)
+            return verifyEmail(request)
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
