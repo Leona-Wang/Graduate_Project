@@ -111,7 +111,11 @@ class GroupSigninState extends State<GroupSigninPage> {
 
       if (response.statusCode == 200 && result['corret'] == true) {
         //密碼正確
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/home_tab',
+          (route) => false,
+        );
       } else {
         //密碼錯誤
         setState(() => _showMessage('密碼錯誤，請再次嘗試'));

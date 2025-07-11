@@ -6,7 +6,7 @@ class EventPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Event')),
+      //appBar: AppBar(title: const Text('Event')),
       body: const Center(child: Text('絕命測試中...')),
     );
   }

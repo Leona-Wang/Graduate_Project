@@ -6,7 +6,7 @@ class PetPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pet')),
+      //appBar: AppBar(title: const Text('Pet')),
       body: const Center(child: Text('絕命測試中...')),
     );
   }
