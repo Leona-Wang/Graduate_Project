@@ -113,9 +113,14 @@ class PersonalSignupState extends State<PersonalSignupPage> {
           .timeout(const Duration(seconds: 10));
 
       if (accountCreate.statusCode == 200 && infoCreate.statusCode == 200) {
-        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-      } else {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/personal_signin',
+          (_) => false,
+        );
+      } else if (accountCreate.statusCode != 200) {
         setState(() => _errorMessage = '密碼設定失敗:${accountCreate.body}');
+      } else {
         setState(() => _errorMessage = '個人資料建立失敗:${infoCreate.body}');
       }
 

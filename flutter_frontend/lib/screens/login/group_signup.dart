@@ -124,12 +124,15 @@ class GroupSignupState extends State<GroupSignupPage> {
       );
 
       if (infoCreate.statusCode == 200 && accountCreate.statusCode == 200) {
-        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-      } else {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/group_signin',
+          (_) => false,
+        );
+      } else if (infoCreate.statusCode != 200) {
         setState(() => _errorMessage = '機構資料建立失敗:${infoCreate.body}');
-        setState(
-          () => _errorMessage = '密碼設定失敗:${accountCreate.body}',
-        ); //之後修改為分開顯示error
+      } else {
+        setState(() => _errorMessage = '密碼設定失敗:${accountCreate.body}');
       }
     } catch (e) {
       setState(() => _errorMessage = '錯誤:$e');
