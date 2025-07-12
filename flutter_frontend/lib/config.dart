@@ -12,10 +12,10 @@ class ApiPath {
 
   //個人用戶email驗證，需回傳值：{'personalEmail':}
   static String get checkPersonalEmail =>
-      '${BaseConfig.baseUrl}/checkPersonalEmail/';
-  //團體用戶email驗證，需回傳值：{'groupEmail':}
+      '${BaseConfig.baseUrl}/email/check/?type=personal';
+  //團體用戶email驗證，需回傳值：{'groupEmail':} *注意API名稱是check"Charity"Email，但回傳值是"group"Email
   static String get checkCharityEmail =>
-      '${BaseConfig.baseUrl}/checkCharityEmail/';
+      '${BaseConfig.baseUrl}/email/check/?type=charity';
 
   //帳號登入(個人團體都用這個)，需回傳值：{'email':,'password':}
   static String get checkPassword => '${BaseConfig.baseUrl}/login/';

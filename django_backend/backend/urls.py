@@ -19,8 +19,7 @@ from . import views
 
 urlpatterns = [
     path('testApi/', views.testApi),
-    path('checkPersonalEmail/', views.checkPersonalEmail),
-    path('checkCharityEmail/', views.checkCharityEmail),
+    path('email/check/', views.CheckEmail.as_view(), name="checkEmail"),
     path('login/', views.VerifyPassword.as_view(), name="verifyPassword"),
     path('user/create/', views.CreateUser.as_view(), name="createUser"),
     path('person/create/', views.CreatePersonalInfo.as_view(), name="createPersonalInfo"),

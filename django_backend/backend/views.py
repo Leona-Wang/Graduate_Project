@@ -27,42 +27,26 @@ def testApi(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
-@csrf_exempt
-def verifyEmail(request):
-    data = json.loads(request.body)
-
-    personalEmail = data.get('personalEmail', '').strip()
-    groupEmail = data.get('groupEmail', '').strip()
-
-    if not personalEmail and not groupEmail:
-        return JsonResponse({'success': False, 'message': '請輸入 email'}, status=400)
-
-    if personalEmail:
-        exists = PersonalInfo.objects.filter(user__email=personalEmail).exists()
-    else:
-        exists = CharityInfo.objects.filter(user__email=groupEmail).exists()
-
-    return JsonResponse({'exists': exists}, status=200)
-
-
-@csrf_exempt
-def checkPersonalEmail(request):
-    """B1 抓前端傳回的 email 值，驗證是否是建立過的個人 email """
-    if request.method == 'POST':
+@method_decorator(csrf_exempt, name='dispatch')
+class CheckEmail(APIView):
+    """根據 query string 的 type 來驗證個人或慈善 email"""
+    def post(self, request, *args, **kwargs):
         try:
-            return verifyEmail(request)
-
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
-
-@csrf_exempt
-def checkCharityEmail(request):
-    """B2 抓前端傳回的email值，驗證是否是建立過的慈善團體email"""
-    if request.method == 'POST':
-        try:
-            return verifyEmail(request)
-
+            type_ = request.query_params.get('type', '').lower()
+            if type_ == 'personal':
+                personalEmail = request.data.get('personalEmail', '').strip()
+                if not personalEmail:
+                    return JsonResponse({'success': False, 'message': '請輸入個人 email'}, status=400)
+                exists = PersonalInfo.objects.filter(user__email=personalEmail).exists()
+                return JsonResponse({'exists': exists}, status=200)
+            elif type_ == 'charity':
+                groupEmail = request.data.get('groupEmail', '').strip()
+                if not groupEmail:
+                    return JsonResponse({'success': False, 'message': '請輸入團體 email'}, status=400)
+                exists = CharityInfo.objects.filter(organization__email=groupEmail).exists()
+                return JsonResponse({'exists': exists}, status=200)
+            else:
+                return JsonResponse({'success': False, 'message': 'type 必須為 personal 或 charity'}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
