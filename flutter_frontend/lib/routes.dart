@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/event.dart';
-import 'package:flutter_frontend/screens/personal_screens/home_tab.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_home.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_home_tab.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_event.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
 import 'package:flutter_frontend/screens/login/group_signin.dart';
 import 'package:flutter_frontend/screens/login/group_signup.dart';
 import 'package:flutter_frontend/screens/login/personal_signin.dart';
 import 'package:flutter_frontend/screens/login/personal_signup.dart';
-import 'package:flutter_frontend/screens/personal_screens/map.dart';
-import 'package:flutter_frontend/screens/personal_screens/pet.dart';
-import 'package:flutter_frontend/screens/personal_screens/setting.dart';
-import 'package:flutter_frontend/screens/personal_screens/shop.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_map.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_pet.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_setting.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_shop.dart';
 import 'screens/welcome_slides.dart';
 import 'screens/example_1.dart';
 import 'screens/example_2.dart';
 import 'screens/user_register.dart';
 
-import 'screens/personal_screens/home.dart';
+import 'screens/personal_screens/personal_home.dart';
 
 class AppRoutes {
   static const String welcomeSlides = '/';
@@ -22,13 +26,20 @@ class AppRoutes {
   static const String example1 = '/example1';
   static const String example2 = '/example2';
 
-  static const String home = '/home'; //主頁面按鈕與功能
-  static const String homeTab = '/home_tab'; //主頁面內容
-  static const String map = '/map'; //地圖頁面
-  static const String pet = '/pet'; //寵物系統
-  static const String shop = '/shop'; //商城系統
-  static const String event = '/event'; //特殊活動
-  static const String setting = '/setting'; //系統設定
+  //personal_screens
+  static const String personalHomeTab = '/personal_home_tab'; //主頁面按鈕與功能
+  static const String personalHome = '/personal_home'; //主頁面內容
+  static const String personalMap = '/personal_map'; //地圖頁面
+  static const String personalPet = '/personal_pet'; //寵物系統
+  static const String personalShop = '/personal_shop'; //商城系統
+  static const String personalEvent = '/personal_event'; //特殊活動
+  static const String personalSetting = '/personal_setting'; //系統設定
+
+  //charity_screens
+  static const String charityHomeTab = 'charity_home_tab';
+  static const String charityHome = '/charity_home';
+  static const String charityMap = 'charity_map';
+  static const String charitySetting = 'charity_setting';
 
   //登入與註冊頁面
   static const String personalSignin = '/personal_signin'; //個人登入
@@ -51,27 +62,42 @@ class AppRoutes {
         final args = settings.arguments as int;
         return MaterialPageRoute(builder: (_) => Example2Page(result: args));
 
-      case home:
-        return MaterialPageRoute(builder: (_) => HomePage());
+      //personal_screens
+      case personalHome:
+        return MaterialPageRoute(builder: (_) => PersonalHomePage());
 
-      case homeTab:
-        return MaterialPageRoute(builder: (_) => HomeTab());
+      case personalHomeTab:
+        return MaterialPageRoute(builder: (_) => PersonalHomeTab());
 
-      case map:
-        return MaterialPageRoute(builder: (_) => MapPage());
+      case personalMap:
+        return MaterialPageRoute(builder: (_) => PersonalMapPage());
 
-      case pet:
-        return MaterialPageRoute(builder: (_) => PetPage());
+      case personalPet:
+        return MaterialPageRoute(builder: (_) => PersonalPetPage());
 
-      case shop:
-        return MaterialPageRoute(builder: (_) => ShopPage());
+      case personalShop:
+        return MaterialPageRoute(builder: (_) => PersonalShopPage());
 
-      case event:
-        return MaterialPageRoute(builder: (_) => EventPage());
+      case personalEvent:
+        return MaterialPageRoute(builder: (_) => PersonalEventPage());
 
-      case setting:
-        return MaterialPageRoute(builder: (_) => SettingPage());
+      case personalSetting:
+        return MaterialPageRoute(builder: (_) => PersonalSettingPage());
 
+      //charity_screens
+      case charityHomeTab:
+        return MaterialPageRoute(builder: (_) => CharityHomeTabPage());
+
+      case charityHome:
+        return MaterialPageRoute(builder: (_) => CharityHomePage());
+
+      case charityMap:
+        return MaterialPageRoute(builder: (_) => CharityMapPage());
+
+      case charitySetting:
+        return MaterialPageRoute(builder: (_) => CharitySettingPage());
+
+      //login-out
       case personalSignin:
         return MaterialPageRoute(builder: (_) => PersonalSigninPage());
 

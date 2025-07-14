@@ -113,7 +113,7 @@ class GroupSigninState extends State<GroupSigninPage> {
         //密碼正確
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/home_tab',
+          '/charity_home_tab',
           (route) => false,
         );
       } else {

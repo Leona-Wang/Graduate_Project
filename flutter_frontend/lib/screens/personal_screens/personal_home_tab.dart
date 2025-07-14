@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/home.dart';
-import 'package:flutter_frontend/screens/personal_screens/map.dart';
-import 'package:flutter_frontend/screens/personal_screens/pet.dart';
-import 'package:flutter_frontend/screens/personal_screens/shop.dart';
-import 'package:flutter_frontend/screens/personal_screens/event.dart';
-import 'package:flutter_frontend/screens/personal_screens/setting.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_map.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_pet.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_shop.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_event.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_setting.dart';
 
-class HomeTab extends StatefulWidget {
-  const HomeTab({super.key});
+class PersonalHomeTab extends StatefulWidget {
+  const PersonalHomeTab({super.key});
 
   @override
-  State<HomeTab> createState() => _HomePageState();
+  State<PersonalHomeTab> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomeTab> {
+class _HomePageState extends State<PersonalHomeTab> {
   int _currentTabIndex = 0;
 
   final List<Widget> _pages = const [
-    HomePage(), //0
-    PetPage(), //1
-    ShopPage(), //2
-    EventPage(), //3
-    SettingPage(), //4
+    PersonalHomePage(), //0
+    PersonalPetPage(), //1
+    PersonalShopPage(), //2
+    PersonalEventPage(), //3
+    PersonalSettingPage(), //4
   ];
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
@@ -43,7 +43,7 @@ class _HomePageState extends State<HomeTab> {
   void _openMapPage() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => const MapPage()));
+    ).push(MaterialPageRoute(builder: (_) => const PersonalMapPage()));
   }
 
   @override

@@ -115,7 +115,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
         //密碼正確
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/home_tab',
+          '/personal_home_tab',
           (route) => false,
         );
       } else {

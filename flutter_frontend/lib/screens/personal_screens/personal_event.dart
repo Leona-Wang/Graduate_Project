@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class MapPage extends StatelessWidget {
-  const MapPage({super.key});
+class PersonalEventPage extends StatelessWidget {
+  const PersonalEventPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('地圖')), //之後返回鍵改為回到首頁，避免堆疊太多子頁面
+      //appBar: AppBar(title: const Text('Event')),
       body: const Center(child: Text('絕命測試中...')),
     );
   }
