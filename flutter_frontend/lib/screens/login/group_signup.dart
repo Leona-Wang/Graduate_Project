@@ -145,208 +145,217 @@ class GroupSignupState extends State<GroupSignupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('註冊機構帳號')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            //設定組織資料
-            if (!_isPasswordState) ...[
-              const SizedBox(height: 16),
+      body: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 500),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  //設定組織資料
+                  if (!_isPasswordState) ...[
+                    const SizedBox(height: 16),
 
-              //email 有預設輸入的值
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '機構帳號',
-                  helperText: '請輸入您的email',
-                ),
-                onChanged: (_) {
-                  if (_errorMessage.isNotEmpty) {
-                    setState(() => _errorMessage = '');
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
+                    //email 有預設輸入的值
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '機構帳號',
+                        helperText: '請輸入您的email',
+                      ),
+                      onChanged: (_) {
+                        if (_errorMessage.isNotEmpty) {
+                          setState(() => _errorMessage = '');
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-              //名稱
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '機構名稱',
-                  helperText: '請輸入您的名稱',
-                ),
-                onChanged: (_) {
-                  if (_errorMessage.isNotEmpty) {
-                    setState(() => _errorMessage = '');
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
+                    //名稱
+                    TextField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '機構名稱',
+                        helperText: '請輸入您的名稱',
+                      ),
+                      onChanged: (_) {
+                        if (_errorMessage.isNotEmpty) {
+                          setState(() => _errorMessage = '');
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-              //機構類型
-              DropdownButtonFormField<String>(
-                //value: _selectType,
-                hint: const Text('請選擇您的機構類型'),
-                items:
-                    [
-                      '綜合性服務',
-                      '兒童青少年福利',
-                      '婦女福利',
-                      '老人福利',
-                      '身心障礙福利',
-                      '家庭福利',
-                      '健康醫療',
-                      '心理衛生',
-                      '社區規劃(營造)',
-                      '環境保護',
-                      '國際合作交流',
-                      '教育與科學',
-                      '文化藝術',
-                      '人權和平',
-                      '消費者保護',
-                      '性別平等',
-                      '政府單位',
-                      '動物保護',
-                    ].map((e) {
-                      return DropdownMenuItem(
-                        value: e,
-                        child: StatefulBuilder(
-                          builder: (context, _setState) {
-                            return Row(
-                              children: [
-                                //選取
-                                Checkbox(
-                                  value: _selectType.contains(e),
-                                  onChanged: (isSelected) {
-                                    if (isSelected == true) {
-                                      _selectType.add(e);
-                                    } else {
-                                      _selectType.remove(e);
-                                    }
-                                    _setState(() {});
-                                    setState(() {});
-                                  },
-                                ),
-                                Text(e),
-                              ],
+                    //機構類型
+                    DropdownButtonFormField<String>(
+                      //value: _selectType,
+                      hint: const Text('請選擇您的機構類型'),
+                      items:
+                          [
+                            '綜合性服務',
+                            '兒童青少年福利',
+                            '婦女福利',
+                            '老人福利',
+                            '身心障礙福利',
+                            '家庭福利',
+                            '健康醫療',
+                            '心理衛生',
+                            '社區規劃(營造)',
+                            '環境保護',
+                            '國際合作交流',
+                            '教育與科學',
+                            '文化藝術',
+                            '人權和平',
+                            '消費者保護',
+                            '性別平等',
+                            '政府單位',
+                            '動物保護',
+                          ].map((e) {
+                            return DropdownMenuItem(
+                              value: e,
+                              child: StatefulBuilder(
+                                builder: (context, _setState) {
+                                  return Row(
+                                    children: [
+                                      //選取
+                                      Checkbox(
+                                        value: _selectType.contains(e),
+                                        onChanged: (isSelected) {
+                                          if (isSelected == true) {
+                                            _selectType.add(e);
+                                          } else {
+                                            _selectType.remove(e);
+                                          }
+                                          _setState(() {});
+                                          setState(() {});
+                                        },
+                                      ),
+                                      Text(e),
+                                    ],
+                                  );
+                                },
+                              ),
                             );
-                          },
-                        ),
-                      );
-                    }).toList(),
-                onChanged: (x) {},
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '機構類型',
-                ),
-              ),
-              const SizedBox(height: 16),
+                          }).toList(),
+                      onChanged: (x) {},
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '機構類型',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-              //機構代碼
-              TextField(
-                controller: _idController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '機構代碼',
-                  helperText: '請輸入您的機構代碼',
-                ),
-                onChanged: (_) {
-                  if (_errorMessage.isNotEmpty) {
-                    setState(() => _errorMessage = '');
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
+                    //機構代碼
+                    TextField(
+                      controller: _idController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '機構代碼',
+                        helperText: '請輸入您的機構代碼',
+                      ),
+                      onChanged: (_) {
+                        if (_errorMessage.isNotEmpty) {
+                          setState(() => _errorMessage = '');
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-              //地址
-              TextField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '機構地址',
-                  helperText: '請輸入您的機構地址',
-                ),
-                onChanged: (_) {
-                  if (_errorMessage.isNotEmpty) {
-                    setState(() => _errorMessage = '');
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
+                    //地址
+                    TextField(
+                      controller: _addressController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '機構地址',
+                        helperText: '請輸入您的機構地址',
+                      ),
+                      onChanged: (_) {
+                        if (_errorMessage.isNotEmpty) {
+                          setState(() => _errorMessage = '');
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-              //電話
-              TextField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '連絡電話',
-                  helperText: '請輸入您的聯絡電話',
-                ),
-                onChanged: (_) {
-                  if (_errorMessage.isNotEmpty) {
-                    setState(() => _errorMessage = '');
-                  }
-                },
-              ),
+                    //電話
+                    TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '連絡電話',
+                        helperText: '請輸入您的聯絡電話',
+                      ),
+                      onChanged: (_) {
+                        if (_errorMessage.isNotEmpty) {
+                          setState(() => _errorMessage = '');
+                        }
+                      },
+                    ),
 
-              const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-              //下一步按鈕
-              ElevatedButton(
-                onPressed: _isLoading ? null : _nextStep,
-                child: const Text('下一步'),
-              ),
-            ],
+                    //下一步按鈕
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _nextStep,
+                      child: const Text('下一步'),
+                    ),
+                  ],
 
-            //設定密碼頁面
-            if (_isPasswordState) ...[
-              //密碼輸入
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '設定密碼',
-                  helperText: '請輸入密碼',
-                ),
-              ),
-              const SizedBox(height: 16),
+                  //設定密碼頁面
+                  if (_isPasswordState) ...[
+                    //密碼輸入
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '設定密碼',
+                        helperText: '請輸入密碼',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-              //再次輸入密碼
-              TextField(
-                controller: _confirmController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '設定密碼',
-                  helperText: '請再次輸入密碼',
-                ),
-              ),
-              const SizedBox(height: 24),
+                    //再次輸入密碼
+                    TextField(
+                      controller: _confirmController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '設定密碼',
+                        helperText: '請再次輸入密碼',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
-              //提交按鈕
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitRegister,
-                child:
-                    _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('註冊完成'),
-              ),
-            ],
+                    //提交按鈕
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _submitRegister,
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator()
+                              : const Text('註冊完成'),
+                    ),
+                  ],
 
-            //錯誤訊息
-            if (_errorMessage.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                _errorMessage,
-                style: const TextStyle(color: Colors.redAccent),
+                  //錯誤訊息
+                  if (_errorMessage.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _errorMessage,
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ],
+            ),
+          ),
         ),
       ),
     );

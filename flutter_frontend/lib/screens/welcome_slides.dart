@@ -130,7 +130,7 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
   }
 
   Widget _buildLastPageContent() {
-    return SizedBox.expand(
+    return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

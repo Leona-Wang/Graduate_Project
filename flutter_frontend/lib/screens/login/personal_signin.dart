@@ -115,7 +115,7 @@ class PersonalSigninState extends State<PersonalSigninPage> {
         //密碼正確
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/personal_home_tab',
+          '/home_tab',
           (route) => false,
         );
       } else {
@@ -168,59 +168,109 @@ class PersonalSigninState extends State<PersonalSigninPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('個人帳戶登入')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              //email輸入格
-              if (!_showPasswordField) ...[
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.text,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '帳號',
-                    helperText: '請輸入帳號email',
-                  ),
-                ),
+      body: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  //email輸入格
+                  if (!_showPasswordField) ...[
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '帳號',
+                        helperText: '請輸入帳號email',
+                      ),
+                    ),
 
-                const SizedBox(height: 16),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/personal_signup');
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(
+                          '註冊帳號',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
 
-                //提交email按鈕
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _handleEmailSubmit,
-                  child:
-                      _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('下一步'),
-                ),
-              ],
+                    //提交email按鈕
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _handleEmailSubmit,
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator()
+                              : const Text('下一步'),
+                    ),
+                  ],
 
-              //密碼輸入格
-              if (_showPasswordField) ...[
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '密碼',
-                    helperText: '請輸入帳號密碼',
-                  ),
-                ),
-                const SizedBox(height: 16),
+                  //密碼輸入格
+                  if (_showPasswordField) ...[
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: '密碼',
+                        helperText: '請輸入帳號密碼',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          _showMessage('尚未實作忘記密碼功能');
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(
+                          '忘記密碼？',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
 
-                //提交密碼按鈕
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _handlePasswordSubmit,
-                  child:
-                      _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('登入'),
-                ),
-              ],
-            ],
+                    //提交密碼按鈕
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _handlePasswordSubmit,
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator()
+                              : const Text('登入'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
