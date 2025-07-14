@@ -20,6 +20,7 @@ class CharityHomeTabPage extends StatelessWidget {
 
 顯示機構資訊
 查看您的活動按紐
+新增活動(地圖)
 
               一隻芒果鳥
 

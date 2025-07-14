@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.6
+  http: ^1.4.0 #0.13.6
   getwidget: ^6.0.0
   flutter_screenutil: ^5.9.3
 
@@ -38,6 +38,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   multi_dropdown: ^3.0.1
+
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
 
 dev_dependencies:
   flutter_test:
