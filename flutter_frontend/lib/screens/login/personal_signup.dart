@@ -147,7 +147,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: 500),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 16),
                   //設定個人資料

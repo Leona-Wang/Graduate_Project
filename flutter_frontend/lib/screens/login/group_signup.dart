@@ -153,7 +153,7 @@ class GroupSignupState extends State<GroupSignupPage> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: 500),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   //設定組織資料
                   if (!_isPasswordState) ...[
