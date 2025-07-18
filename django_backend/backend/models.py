@@ -60,6 +60,7 @@ class CharityEvent(models.Model):
     coOrganizers = models.ManyToManyField(Organization, blank=True, related_name="coEvents")  # 協辦單位
     eventType = models.ForeignKey(EventType, null=True, blank=True, on_delete=models.SET_NULL)  # 活動類型
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)  # 活動地點
+    address = models.TextField(blank=True, null=True)#地址
     startTime = models.DateTimeField(null=False, blank=False)  # 活動開始時間
     endTime = models.DateTimeField(null=False, blank=False)    # 活動結束時間
     signupDeadline = models.DateTimeField(null=True, blank=True)  # 報名截止時間
