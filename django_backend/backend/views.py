@@ -7,6 +7,8 @@ from .Account import validateEmail
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login
+from datetime import datetime
+from Casino import createCasino, createBet, updateBet, removeBet, getSumOfBet, getUserWinProbability, getWinner, saveWinner
 
 
 # Create your views here.
@@ -30,6 +32,7 @@ def testApi(request):
 @method_decorator(csrf_exempt, name='dispatch')
 class CheckEmail(APIView):
     """根據 query string 的 type 來驗證個人或慈善 email"""
+
     def post(self, request, *args, **kwargs):
         try:
             type_ = request.query_params.get('type', '').lower()
@@ -165,3 +168,16 @@ class CreateCharityInfo(APIView):
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CreateCasino(APIView):
+    """給我們內部建立 5050 活動用"""
+
+    def post(self, request, *args, **kwargs):
+        startTime = request.data.get('startTime', None)
+        endTime = request.data.get('endTime', None)
+        casinoResult = createCasino(startTime=startTime, endTime=endTime)
+        if casinoResult:
+            return JsonResponse({'success': True}, status=200)
+        return JsonResponse({'success': False, 'message': casinoResult}, status=400)

@@ -1,1 +1,5 @@
 django>5.2,<5.3
+pylint
+yapf
+django-cors-headers
+djangorestframework
