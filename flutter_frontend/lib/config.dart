@@ -34,4 +34,8 @@ class ApiPath {
   //如果前端想要有透過 id 找 organization 資料的話再跟汪說，我寫一個 API 給你們
   static String get createCharityInfo =>
       '${BaseConfig.baseUrl}/charity/create/';
+
+  //創建慈善活動，需回傳值：{'name':,'startTime':,'endTime':,'description':,'eventTypeId':,'locationId':,'coOrganizerIds':[可多選],'participantIds':[可多選],'charityInfoId':}
+  static String get createCharityEvent =>
+      '${BaseConfig.baseUrl}/charity/event/create/';
 }

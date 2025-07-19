@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import PersonalInfo, CharityInfo, Location, EventType, Organization
+from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent
 from rest_framework.views import APIView
 from .Account import validateEmail
 from django.contrib.auth.models import User
@@ -181,3 +181,78 @@ class CreateCasino(APIView):
         if casinoResult:
             return JsonResponse({'success': True}, status=200)
         return JsonResponse({'success': False, 'message': casinoResult}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CreateCharityEvent(APIView):
+    """慈善團體用戶新增 CharityEvent"""
+
+    def post(self, request, *args, **kwargs):
+        try:
+            # 驗證是否登入
+            user = request.user
+            if not user or not user.is_authenticated:
+                return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+            # 驗證是否為慈善團體
+            charity_info = CharityInfo.objects.filter(user=user).first()
+            if not charity_info:
+                return JsonResponse({'success': False, 'message': '非慈善團體用戶'}, status=401)
+
+            data = request.data if hasattr(request, 'data') else json.loads(request.body)
+            name = data.get('name', '').strip()
+            coOrganizerIds = data.get('coOrganizers', [])
+            eventTypeId = data.get('eventType')
+            locationId = data.get('location')
+            address = data.get('address', '')
+            startTime = data.get('startTime')
+            endTime = data.get('endTime')
+            signupDeadline = data.get('signupDeadline')
+            description = data.get('description', '')
+            participantIds = data.get('participants', [])
+            createTime = data.get('createTime')
+            status = data.get('status', '')
+
+            # 必填欄位檢查
+            if not all([name, startTime, endTime]):
+                return JsonResponse({'success': False, 'message': '缺少必填欄位(name, startTime, endTime)'}, status=400)
+
+            mainOrganizer = charity_info.organization
+            if not mainOrganizer:
+                return JsonResponse({'success': False, 'message': '慈善團體缺少主辦單位'}, status=400)
+
+            eventType = EventType.objects.filter(id=eventTypeId).first() if eventTypeId else None
+            location = Location.objects.filter(id=locationId).first() if locationId else None
+
+            # 時間格式轉換
+            def parse_dt(dt_str):
+                return datetime.fromisoformat(dt_str) if dt_str else None
+
+            event = CharityEvent.objects.create(
+                name=name,
+                mainOrganizer=mainOrganizer,
+                eventType=eventType,
+                location=location,
+                address=address,
+                startTime=parse_dt(startTime),
+                endTime=parse_dt(endTime),
+                signupDeadline=parse_dt(signupDeadline) if signupDeadline else None,
+                description=description,
+                createTime=parse_dt(createTime) if createTime else None,
+                status=status
+            )
+
+            # 協辦單位
+            if coOrganizerIds:
+                coOrganizers = Organization.objects.filter(id__in=coOrganizerIds)
+                event.coOrganizers.set(coOrganizers)
+
+            # 參與者
+            if participantIds:
+                participants = User.objects.filter(id__in=participantIds)
+                event.participants.set(participants)
+
+            event.save()
+            return JsonResponse({'success': True, 'eventId': event.id}, status=201)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)

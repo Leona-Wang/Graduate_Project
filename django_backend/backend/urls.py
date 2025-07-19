@@ -24,4 +24,5 @@ urlpatterns = [
     path('user/create/', views.CreateUser.as_view(), name="createUser"),
     path('person/create/', views.CreatePersonalInfo.as_view(), name="createPersonalInfo"),
     path('charity/create/', views.CreateCharityInfo.as_view(), name="createCharityInfo"),
+    path('charity/event/create/', views.CreateCharityEvent.as_view(), name="createCharityEvent"),
 ]
