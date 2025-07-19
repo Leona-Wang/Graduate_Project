@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../routes.dart';
 import '../../config.dart';
@@ -270,6 +272,42 @@ class PersonalSigninState extends State<PersonalSigninPage> {
                           }
                         }
                       },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    ElevatedButton.icon(
+                      label: const Text('使用 LINE 登入'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () async {
+                        const url =
+                            'https://access.line.me/oauth2/v2.1/authorize'
+                            '?response_type=code'
+                            '&client_id=2007781853'
+                            '&redirect_uri=https%3A%2F%2Flogin-app-67d5a.firebaseapp.com%2F__%2Fauth%2Fhandler'
+                            '&state=test123'
+                            '&scope=profile%20openid%20email';
+
+                        if (await canLaunchUrl(Uri.parse(url))) {
+                          await launchUrl(
+                            Uri.parse(url),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } else {
+                          debugPrint("無法打開 LINE 授權頁");
+                        }
+                      },
+                    ),
+
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Firebase可能需要收費，具體登入暫未實作',
+                        style: TextStyle(fontSize: 8, color: Colors.grey),
+                      ),
                     ),
                   ],
 
