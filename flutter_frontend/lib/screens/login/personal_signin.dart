@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../routes.dart';
 import '../../config.dart';
@@ -221,6 +223,53 @@ class PersonalSigninState extends State<PersonalSigninPage> {
                           _isLoading
                               ? const CircularProgressIndicator()
                               : const Text('下一步'),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.account_circle),
+                      label: const Text('使用 Google 登入'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () async {
+                        try {
+                          final googleUser =
+                              await GoogleSignIn(
+                                clientId:
+                                    '51601454665-9n15a5gkudl21va57aeeoneg85lomibt.apps.googleusercontent.com',
+                              ).signIn();
+
+                          if (googleUser == null) return; // 使用者取消
+
+                          final googleAuth = await googleUser.authentication;
+
+                          final credential = GoogleAuthProvider.credential(
+                            accessToken: googleAuth.accessToken,
+                            idToken: googleAuth.idToken,
+                          );
+
+                          await FirebaseAuth.instance.signInWithCredential(
+                            credential,
+                          );
+
+                          if (context.mounted) {
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/home_tab',
+                              (route) => false,
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Google 登入失敗：$e')),
+                            );
+                          }
+                        }
+                      },
                     ),
                   ],
 
