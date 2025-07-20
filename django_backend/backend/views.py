@@ -3,7 +3,6 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent
 from rest_framework.views import APIView
-#from .Account import validateEmail
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login
