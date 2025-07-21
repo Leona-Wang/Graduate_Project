@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_home.dart';
-import 'package:flutter_frontend/screens/charity_screens/charity_home_tab.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_event_list.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
@@ -37,7 +37,7 @@ class AppRoutes {
   static const String personalSetting = '/personal_setting'; //系統設定
 
   //charity_screens
-  static const String charityHomeTab = '/charity_home_tab';
+  static const String charityHomeTab = '/charity_event_list';
   static const String charityHome = '/charity_home';
   static const String charityMap = '/charity_map';
   static const String charitySetting = '/charity_setting';
@@ -88,7 +88,7 @@ class AppRoutes {
 
       //charity_screens
       case charityHomeTab:
-        return MaterialPageRoute(builder: (_) => CharityHomeTabPage());
+        return MaterialPageRoute(builder: (_) => CharityEventListPage());
 
       case charityHome:
         return MaterialPageRoute(builder: (_) => CharityHomePage());
