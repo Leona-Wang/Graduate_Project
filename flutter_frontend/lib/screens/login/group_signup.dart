@@ -127,9 +127,9 @@ class GroupSignupState extends State<GroupSignupPage> {
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/group_signin',
-          (_) => false,
+          ModalRoute.withName('/'),
         );
-        setState(() => _errorMessage = '註冊成功!');
+        setState(() => _showMessage('註冊成功!'));
       } else if (infoCreate.statusCode != 200) {
         setState(() => _errorMessage = '機構資料建立失敗:${infoCreate.body}');
       } else {
@@ -140,6 +140,10 @@ class GroupSignupState extends State<GroupSignupPage> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -311,6 +315,18 @@ class GroupSignupState extends State<GroupSignupPage> {
 
                   //設定密碼頁面
                   if (_isPasswordState) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordState = false;
+                            _passwordController.clear();
+                          });
+                        },
+                        child: const Text('← 上一步'),
+                      ),
+                    ),
                     //密碼輸入
                     TextField(
                       controller: _passwordController,

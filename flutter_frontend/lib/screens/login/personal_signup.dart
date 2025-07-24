@@ -116,9 +116,9 @@ class PersonalSignupState extends State<PersonalSignupPage> {
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/personal_signin',
-          (_) => false,
+          ModalRoute.withName('/'),
         );
-        setState(() => _errorMessage = '註冊成功!');
+        setState(() => _showMessage('註冊成功!'));
       } else if (accountCreate.statusCode != 200) {
         setState(() => _errorMessage = '密碼設定失敗:${accountCreate.body}');
       } else {
@@ -134,6 +134,10 @@ class PersonalSignupState extends State<PersonalSignupPage> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -299,6 +303,18 @@ class PersonalSignupState extends State<PersonalSignupPage> {
 
                   //設定密碼頁面
                   if (_isPasswordState) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordState = false;
+                            _passwordController.clear();
+                          });
+                        },
+                        child: const Text('← 上一步'),
+                      ),
+                    ),
                     //密碼輸入
                     TextField(
                       controller: _passwordController,

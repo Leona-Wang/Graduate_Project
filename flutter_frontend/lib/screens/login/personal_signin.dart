@@ -115,16 +115,16 @@ class PersonalSigninState extends State<PersonalSigninPage> {
 
       final result = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && result['corret'] == true) {
+      if (response.statusCode == 200 && result['success'] == true) {
         //密碼正確
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/home_tab',
+          '/personal_home_tab',
           (route) => false,
         );
       } else {
         //密碼錯誤
-        setState(() => _showMessage('密碼錯誤，請再次嘗試'));
+        setState(() => _showMessage('密碼錯誤，請再次嘗試:${response.body}'));
       }
     } catch (e) {
       _showMessage('錯誤:$e');
@@ -313,6 +313,18 @@ class PersonalSigninState extends State<PersonalSigninPage> {
 
                   //密碼輸入格
                   if (_showPasswordField) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _showPasswordField = false;
+                            _passwordController.clear();
+                          });
+                        },
+                        child: const Text('← 上一步'),
+                      ),
+                    ),
                     TextField(
                       controller: _passwordController,
                       obscureText: true,

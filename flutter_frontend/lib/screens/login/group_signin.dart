@@ -26,6 +26,8 @@ class GroupSigninState extends State<GroupSigninPage> {
 
     setState(() => _isLoading = true);
 
+    //print(groupEmail);
+
     //測試用
     /*try {
       await Future.delayed(const Duration(seconds: 1));
@@ -52,8 +54,11 @@ class GroupSigninState extends State<GroupSigninPage> {
       );
 
       final result = jsonDecode(response.body);
+      print(response.statusCode);
+      print(response.body);
+      final exists = result['exists'] as bool;
 
-      if (response.statusCode == 200 && result['exists'] == true) {
+      if (response.statusCode == 200 && exists == true) {
         //帳號存在，進入輸入密碼頁面
         setState(() => _showPasswordField = true);
       } else {
@@ -109,11 +114,11 @@ class GroupSigninState extends State<GroupSigninPage> {
 
       final result = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && result['corret'] == true) {
+      if (response.statusCode == 200 && result['success'] == true) {
         //密碼正確
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/home_tab',
+          '/charity_home',
           (route) => false,
         );
       } else {
@@ -224,6 +229,18 @@ class GroupSigninState extends State<GroupSigninPage> {
 
                   //密碼輸入格
                   if (_showPasswordField) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _showPasswordField = false;
+                            _passwordController.clear();
+                          });
+                        },
+                        child: const Text('← 上一步'),
+                      ),
+                    ),
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
