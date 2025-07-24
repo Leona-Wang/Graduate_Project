@@ -6,3 +6,4 @@ flutter_frontend/lib/base_config.dart
 *.cmake
 *.swift
 *.lock
+.vscode/launch.json
