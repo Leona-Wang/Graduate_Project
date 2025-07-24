@@ -107,7 +107,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
               'email': _emailController.text.trim(),
               'nickname': _nicknameController.text.trim(),
               'location': _selectLocation,
-              'eventType': _selectPrefer,
+              'eventType': _selectPrefer.toList(),
             }),
           )
           .timeout(const Duration(seconds: 10));
@@ -118,6 +118,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
           '/personal_signin',
           (_) => false,
         );
+        setState(() => _errorMessage = '註冊成功!');
       } else if (accountCreate.statusCode != 200) {
         setState(() => _errorMessage = '密碼設定失敗:${accountCreate.body}');
       } else {

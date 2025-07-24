@@ -116,7 +116,7 @@ class GroupSignupState extends State<GroupSignupPage> {
         body: jsonEncode({
           'email': _emailController.text.trim(),
           'groupName': _nameController.text.trim(),
-          'groupType': _selectType,
+          'groupType': _selectType.toList(),
           'groupAddress': _addressController.text.trim(),
           'groupPhone': _phoneController.text.trim(),
           'groupId': _idController.text.trim(),
@@ -129,6 +129,7 @@ class GroupSignupState extends State<GroupSignupPage> {
           '/group_signin',
           (_) => false,
         );
+        setState(() => _errorMessage = '註冊成功!');
       } else if (infoCreate.statusCode != 200) {
         setState(() => _errorMessage = '機構資料建立失敗:${infoCreate.body}');
       } else {
