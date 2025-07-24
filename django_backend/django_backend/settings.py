@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -119,3 +120,11 @@ OFFICIAL_EVENT_TYPE_CHOICES = [
     (OFFICIAL_EVENT_TYPE_NORMAL, 'Normal'),
     (OFFICIAL_EVENT_TYPE_CASINO, 'Casino'),
 ]
+
+ACTIVITY_LIST_TIME_CHOICES = {
+    '3 days': timedelta(days=3),
+    '1 week': timedelta(days=7),
+    '1 month': timedelta(days=30),
+    '3 months': timedelta(days=90),
+    'permanent': None
+}

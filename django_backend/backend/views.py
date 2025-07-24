@@ -1,12 +1,17 @@
 from django.http import JsonResponse
+from rest_framework.response import Response
+from .serializers import CharityEventSerializer
+from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login
 from datetime import datetime
+from django.utils.timezone import now
 from .Casino import createCasino, createBet, updateBet, removeBet, getSumOfBet, getUserWinProbability, getWinner, saveWinner
 
 
@@ -45,7 +50,7 @@ class CheckEmail(APIView):
                 groupEmail = request.data.get('groupEmail', '').strip()
                 if not groupEmail:
                     return JsonResponse({'success': False, 'message': '請輸入團體 email'}, status=400)
-                exists = CharityInfo.objects.filter(organization__email=groupEmail).exists()
+                exists = CharityInfo.objects.filter(user__email=groupEmail).exists()
                 return JsonResponse({'exists': exists}, status=200)
             else:
                 return JsonResponse({'success': False, 'message': 'type 必須為 personal 或 charity'}, status=400)
@@ -255,3 +260,61 @@ class CreateCharityEvent(APIView):
             return JsonResponse({'success': True, 'eventId': event.id}, status=201)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CharityEventList(APIView):
+    """回傳活動清單(根據 request 抓到的 user 判斷是個人用戶還是組織，是組織就給組織自己的活動，個人用戶給全部的)"""
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        page = int(request.GET.get('page', 1))
+        eventType = request.GET.get('eventType', None)
+        location = request.GET.get('location', None)
+        time = request.GET.get('time', 'permanent')
+        timeDelta = settings.ACTIVITY_LIST_TIME_CHOICES.get(time, None)
+
+        perPage = 10
+        startIndex = (page - 1) * perPage
+        endIndex = page * perPage
+
+        charityInfo = CharityInfo.objects.filter(user=user).first()
+
+        filters = Q()
+
+        if eventType:
+            filters &= Q(eventType__typeName=eventType)
+        if location:
+            filters &= Q(location__locationName=location)
+        if timeDelta:
+            nowTime = now()
+            futureTime = nowTime + timeDelta
+            filters &= Q(startTime__gte=nowTime, startTime__lte=futureTime)
+        if charityInfo:
+            filters &= Q(mainOrganizer=charityInfo)
+
+        events = CharityEvent.objects.filter(filters).order_by('-startTime')[startIndex:endIndex]
+
+        eventList = CharityEventSerializer(events, many=True)
+        eventTypeList = list(EventType.objects.values_list('typeName', flat=True))
+        locationList = list(Location.objects.values_list('locationName', flat=True))
+
+        return Response({
+            'events': eventList.data,
+            'eventTypes': eventTypeList,
+            'locations': locationList,
+        })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CharityEventDetail(APIView):
+    """根據選擇回傳對應的 event """
+
+    def get(self, request, *args, **kwargs):
+        charityEventID = kwargs.get('eventId')
+
+        event = CharityEventSerializer(CharityEvent.objects.filter(id=charityEventID).first()).data
+
+        return Response({
+            'event': event,
+        })
