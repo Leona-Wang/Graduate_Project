@@ -54,7 +54,7 @@ class GroupSignupState extends State<GroupSignupPage> {
       setState(() => _errorMessage = '請輸入機構名稱');
       return;
     }
-    if (_selectType == null) {
+    if (_selectType.isEmpty) {
       setState(() => _errorMessage = '請選擇機構類型');
     }
     if (id.isEmpty) {

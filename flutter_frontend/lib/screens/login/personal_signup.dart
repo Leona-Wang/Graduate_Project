@@ -52,7 +52,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
       setState(() => _errorMessage = '請選擇地區');
       return;
     }
-    if (_selectPrefer == null) {
+    if (_selectPrefer.isEmpty) {
       setState(() => _errorMessage = '請選擇偏好活動');
       return;
     }

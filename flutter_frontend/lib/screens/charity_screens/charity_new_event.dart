@@ -2,6 +2,7 @@ import 'dart:isolate';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -20,6 +21,9 @@ class CharityNewEventState extends State<CharityNewEventPage> {
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+
+  String? _selectEventType;
 
   String _errorMessage = '';
 
@@ -34,6 +38,7 @@ class CharityNewEventState extends State<CharityNewEventPage> {
     final start = _startController.text;
     final end = _endController.text;
     final location = _locationController.text.trim();
+    final description = _descriptionController.text.trim();
 
     if (name.isEmpty) {
       setState(() => _errorMessage = '請輸入活動名稱');
@@ -47,9 +52,15 @@ class CharityNewEventState extends State<CharityNewEventPage> {
       setState(() => _errorMessage = '請輸入活動結束時程');
       return;
     }
+    if (_selectEventType == null) {
+      setState(() => _errorMessage = '請選擇您的活動類型');
+    }
     if (location.isEmpty) {
       setState(() => _errorMessage = '請選擇地點');
       return;
+    }
+    if (description.isEmpty) {
+      setState(() => _errorMessage = '請描述你的活動內容');
     }
     setState(() {
       _isLoading = true;
@@ -57,7 +68,7 @@ class CharityNewEventState extends State<CharityNewEventPage> {
     });
 
     try {
-      final uriData = Uri.parse(''); //新增活動API
+      final uriData = Uri.parse(ApiPath.createCharityEvent); //新增活動API
 
       final eventCreate = await http
           .post(
@@ -73,8 +84,9 @@ class CharityNewEventState extends State<CharityNewEventPage> {
           '/charity_home_tap',
           (_) => false,
         );
+        setState(() => _showMessage('創建成功!'));
       } else if (eventCreate.statusCode != 200) {
-        setState(() => _errorMessage = '密碼設定失敗:${eventCreate.body}');
+        setState(() => _errorMessage = '創建活動失敗:${eventCreate.body}');
       }
     } catch (e) {
       setState(() => _errorMessage = '錯誤:$e');
@@ -112,6 +124,10 @@ class CharityNewEventState extends State<CharityNewEventPage> {
         "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
   }
 
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,8 +152,8 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                       helperText: '請輸入名稱',
                     ),
                   ),
-
                   const SizedBox(height: 16),
+
                   //開始日期時間輸入欄
                   TextFormField(
                     controller: _startController,
@@ -160,8 +176,8 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                       helperText: '請選擇時程',
                     ),
                   ),
-
                   const SizedBox(height: 16),
+
                   //結束日期時間輸入欄
                   TextFormField(
                     controller: _endController,
@@ -191,8 +207,50 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                       helperText: '請選擇時程',
                     ),
                   ),
-
                   const SizedBox(height: 16),
+
+                  //活動類型下拉式選單
+                  DropdownButtonFormField<String>(
+                    value: _selectEventType,
+                    hint: const Text('請選擇您的活動類型'),
+                    items:
+                        [
+                          '綜合性服務',
+                          '兒童青少年福利',
+                          '婦女福利',
+                          '老人福利',
+                          '身心障礙福利',
+                          '家庭福利',
+                          '健康醫療',
+                          '心理衛生',
+                          '社區規劃(營造)',
+                          '環境保護',
+                          '國際合作交流',
+                          '教育與科學',
+                          '文化藝術',
+                          '人權和平',
+                          '消費者保護',
+                          '性別平等',
+                          '政府單位',
+                          '動物保護',
+                        ].map((e) {
+                          return DropdownMenuItem(value: e, child: Text(e));
+                        }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _selectEventType = val;
+                        if (_errorMessage.isNotEmpty) {
+                          _errorMessage = '';
+                        }
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: '活動類型',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   //地址輸入欄
                   TextFormField(
                     controller: _locationController,
@@ -220,6 +278,18 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                       border: OutlineInputBorder(),
                       labelText: '活動地點',
                       suffixIcon: Icon(Icons.map),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  //活動詳情輸入欄
+                  TextFormField(
+                    controller: _descriptionController,
+                    maxLines: 8,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: '活動詳情',
+                      helperText: '請輸入活動內容詳情',
                     ),
                   ),
                   const SizedBox(height: 16),
