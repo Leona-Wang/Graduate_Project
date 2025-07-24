@@ -2,3 +2,7 @@ venv/
 *.sqlite3
 *.pyc
 flutter_frontend/lib/base_config.dart
+*.cc
+*.cmake
+*.swift
+*.lock
