@@ -25,6 +25,7 @@ urlpatterns = [
     path('person/create/', views.CreatePersonalInfo.as_view(), name="createPersonalInfo"),
     path('charity/create/', views.CreateCharityInfo.as_view(), name="createCharityInfo"),
     path('charity/event/create/', views.CreateCharityEvent.as_view(), name="createCharityEvent"),
+    path('charity/event/coorganize/', views.CoOrganize.as_view(), name="coOrganize"),
     path('events/', views.CharityEventList.as_view(), name="charityEventList"),
     path('events/<int:eventId>/', views.CharityEventDetail.as_view(), name="charityEventDetail"),
 ]

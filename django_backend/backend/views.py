@@ -340,3 +340,42 @@ class CharityEventDetail(APIView):
         return Response({
             'event': event,
         })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CoOrganize(APIView):
+    """慈善團體透過邀請碼協辦 CharityEvent"""
+
+    def post(self, request, *args, **kwargs):
+        try:
+            # 驗證是否登入
+            user = request.user
+            if not user or not user.is_authenticated:
+                return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+            # 驗證是否為慈善團體
+            charityInfo = CharityInfo.objects.filter(user=user).first()
+            if not charityInfo:
+                return JsonResponse({'success': False, 'message': '非慈善團體用戶'}, status=401)
+
+
+            inviteCode = request.data.get('inviteCode', '').strip()
+            if not inviteCode or len(inviteCode) != 6:
+                return JsonResponse({'success': False, 'message': '請輸入6位數邀請碼'}, status=400)
+
+            # 查詢 CharityEvent 是否存在
+            event = CharityEvent.objects.filter(inviteCode=inviteCode).first()
+            if not event:
+                return JsonResponse({'success': False, 'message': '邀請碼錯誤或活動不存在'}, status=404)
+
+            # 檢查是否已協辦
+            if event.coOrganizers.filter(id=charityInfo.id).exists():
+                return JsonResponse({'success': False, 'message': '已是協辦單位'}, status=400)
+
+            # 加入協辦單位
+            event.coOrganizers.add(charityInfo)
+            event.save()
+
+            return JsonResponse({'success': True, 'message': '協辦成功'}, status=200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)

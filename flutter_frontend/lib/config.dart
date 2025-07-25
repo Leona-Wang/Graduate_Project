@@ -39,6 +39,10 @@ class ApiPath {
   static String get createCharityEvent =>
       '${BaseConfig.baseUrl}/charity/event/create/';
 
+  //透過邀請碼加入活動協辦，需回傳值：{'inviteCode':(必填)}
+  static String get coOrganizeEvent =>
+      '${BaseConfig.baseUrl}/charity/event/coorganize/';
+
   //拿事件清單(個人帳號跟組織都用這個)，需回傳值(有預設值，第一次拿不用給值)(用 GET ，不是 POST )：
   //{'page':,'eventType':,'location':,'time':(到 settings.py 看 ACTIVITY_LIST_TIME_CHOICES ，回傳''裡面的值 )}
   //拿到的值怎麼填可以參考 https://chatgpt.com/share/68824fd7-1740-8001-a131-6c1385e4510b
