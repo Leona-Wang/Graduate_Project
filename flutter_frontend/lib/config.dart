@@ -35,7 +35,7 @@ class ApiPath {
   static String get createCharityInfo =>
       '${BaseConfig.baseUrl}/charity/create/';
 
-  //創建慈善活動，需回傳值：{'name':,'startTime':,'endTime':,'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址}
+  //創建慈善活動，需回傳值：{'name':(必填),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間, 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址}
   static String get createCharityEvent =>
       '${BaseConfig.baseUrl}/charity/event/create/';
 

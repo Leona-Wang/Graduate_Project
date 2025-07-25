@@ -13,6 +13,8 @@ from django.contrib.auth import authenticate, login
 from datetime import datetime
 from django.utils.timezone import now
 from .Casino import createCasino, createBet, updateBet, removeBet, getSumOfBet, getUserWinProbability, getWinner, saveWinner
+import random
+import string
 
 
 # Create your views here.
@@ -199,38 +201,67 @@ class CreateCharityEvent(APIView):
                 return JsonResponse({'success': False, 'message': '未登入'}, status=401)
 
             # 驗證是否為慈善團體
-            charity_info = CharityInfo.objects.filter(user=user).first()
-            if not charity_info:
+            charityInfo = CharityInfo.objects.filter(user=user).first()
+            if not charityInfo:
                 return JsonResponse({'success': False, 'message': '非慈善團體用戶'}, status=401)
 
             data = request.data if hasattr(request, 'data') else json.loads(request.body)
-            name = data.get('name', '').strip()
-            coOrganizerIds = data.get('coOrganizers', [])
-            eventTypeId = data.get('eventType')
-            locationId = data.get('location')
-            address = data.get('address', '')
+            name = data.get('name')
+            eventTypeName = data.get('eventType', '').strip() # 前端傳來的是typeName
+            locationName = data.get('location', '').strip() # 前端傳來的是locationName(中文縣市)
+            address = data.get('address', '').strip() # (中文詳細地址)
             startTime = data.get('startTime')
             endTime = data.get('endTime')
             signupDeadline = data.get('signupDeadline')
-            description = data.get('description', '')
-            participantIds = data.get('participants', [])
-            createTime = data.get('createTime')
-            status = data.get('status', '')
+            description = data.get('description', '').strip()
 
             # 必填欄位檢查
             if not all([name, startTime, endTime]):
                 return JsonResponse({'success': False, 'message': '缺少必填欄位(name, startTime, endTime)'}, status=400)
 
-            mainOrganizer = charity_info.organization
-            if not mainOrganizer:
-                return JsonResponse({'success': False, 'message': '慈善團體缺少主辦單位'}, status=400)
+            mainOrganizer = charityInfo
 
-            eventType = EventType.objects.filter(id=eventTypeId).first() if eventTypeId else None
-            location = Location.objects.filter(id=locationId).first() if locationId else None
+            eventType = None
+            if eventTypeName:
+                eventType = EventType.objects.filter(typeName=eventTypeName).first()
+                if not eventType:
+                    return JsonResponse({'success': False, 'message': '找不到對應的活動類型'}, status=400)
 
-            # 時間格式轉換
+            location = Location.objects.filter(locationName=locationName).first() if locationName else None
+
+            # 時間格式轉換，前端傳來的是 "2025-07-24 01:03" 格式
             def parse_dt(dt_str):
-                return datetime.fromisoformat(dt_str) if dt_str else None
+                try:
+                    return datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
+                except Exception:
+                    return None
+
+            startTimeObj = parse_dt(startTime)
+            endTimeObj = parse_dt(endTime)
+
+            if not startTimeObj or not endTimeObj:
+                return JsonResponse({'success': False, 'message': '時間格式錯誤，請用 YYYY-MM-DD HH:MM'}, status=400)
+
+            # 判斷活動狀態
+            nowTime = now()
+            if startTimeObj and endTimeObj:
+                if nowTime < startTimeObj:
+                    status = "upcoming"
+                elif startTimeObj <= nowTime <= endTimeObj:
+                    status = "ongoing"
+                else:
+                    status = "finished"
+            else:
+                status = "unknown"
+
+            # 產生6位數邀請碼
+            def generate_invite_code():
+                while True:
+                    code = ''.join(random.choices(string.digits, k=6))
+                    if not CharityEvent.objects.filter(inviteCode=code).exists():
+                        return code
+
+            inviteCode = generate_invite_code()
 
             event = CharityEvent.objects.create(
                 name=name,
@@ -238,26 +269,17 @@ class CreateCharityEvent(APIView):
                 eventType=eventType,
                 location=location,
                 address=address,
-                startTime=parse_dt(startTime),
-                endTime=parse_dt(endTime),
+                startTime=startTimeObj,
+                endTime=endTimeObj,
                 signupDeadline=parse_dt(signupDeadline) if signupDeadline else None,
                 description=description,
-                createTime=parse_dt(createTime) if createTime else None,
-                status=status
+                createTime=nowTime,
+                status=status,
+                inviteCode=inviteCode
             )
 
-            # 協辦單位
-            if coOrganizerIds:
-                coOrganizers = Organization.objects.filter(id__in=coOrganizerIds)
-                event.coOrganizers.set(coOrganizers)
-
-            # 參與者
-            if participantIds:
-                participants = User.objects.filter(id__in=participantIds)
-                event.participants.set(participants)
-
             event.save()
-            return JsonResponse({'success': True, 'eventId': event.id}, status=201)
+            return JsonResponse({'success': True, 'eventId': event.id, 'status': status}, status=201)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
