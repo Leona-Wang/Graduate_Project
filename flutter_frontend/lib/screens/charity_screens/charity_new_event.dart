@@ -4,10 +4,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_frontend/taiwan_address_helper.dart';
 
 class CharityNewEventPage extends StatefulWidget {
   const CharityNewEventPage({super.key});
@@ -20,6 +22,7 @@ class CharityNewEventState extends State<CharityNewEventPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
+  final TextEditingController _ddlController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
@@ -29,15 +32,23 @@ class CharityNewEventState extends State<CharityNewEventPage> {
 
   bool _isLoading = false;
 
-  LatLng? selectedLacationData;
+  LatLng? selectedLocationData;
   DateTime? _startDateTime;
   DateTime? _endDateTime;
+  DateTime? _ddlDateTime;
+
+  //late LatLng location;
 
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     final start = _startController.text;
     final end = _endController.text;
-    final location = _locationController.text.trim();
+    final ddl = _ddlController.text;
+    final type = _selectEventType;
+    final address = _locationController.text.trim();
+    final location = await TaiwanAddressHelper.getCityFromCoordinates(
+      selectedLocationData!,
+    );
     final description = _descriptionController.text.trim();
 
     if (name.isEmpty) {
@@ -52,39 +63,57 @@ class CharityNewEventState extends State<CharityNewEventPage> {
       setState(() => _errorMessage = '請輸入活動結束時程');
       return;
     }
-    if (_selectEventType == null) {
+    if (type == null) {
       setState(() => _errorMessage = '請選擇您的活動類型');
+      return;
     }
-    if (location.isEmpty) {
+    if (address.isEmpty) {
+      setState(() => _errorMessage = '請選擇地點');
+      return;
+    }
+    if (selectedLocationData == null) {
       setState(() => _errorMessage = '請選擇地點');
       return;
     }
     if (description.isEmpty) {
       setState(() => _errorMessage = '請描述你的活動內容');
+      return;
     }
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
+    debugPrint('取得 location:$location');
+
     try {
       final uriData = Uri.parse(ApiPath.createCharityEvent); //新增活動API
+      //需回傳值：{'name':(必填),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間, 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址}
 
       final eventCreate = await http
           .post(
             uriData,
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({}),
+            body: jsonEncode({
+              'name': name,
+              'startTime': start,
+              'endTime': end,
+              'signupDeadline': ddl,
+              'description': description,
+              'eventType': type,
+              'location': location,
+              'address': address,
+            }),
           )
           .timeout(const Duration(seconds: 10));
 
       if (eventCreate.statusCode == 200) {
+        _showMessage('創建成功!');
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/charity_home_tap',
+          '/charity_home',
           (_) => false,
         );
-        setState(() => _showMessage('創建成功!'));
       } else if (eventCreate.statusCode != 200) {
         setState(() => _errorMessage = '創建活動失敗:${eventCreate.body}');
       }
@@ -209,6 +238,30 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  //報名截止期限
+                  TextFormField(
+                    controller: _ddlController,
+                    readOnly: true,
+                    onTap: () async {
+                      final selected = await pickDateTime(
+                        context,
+                        _ddlDateTime,
+                      );
+                      if (selected != null) {
+                        setState(() {
+                          _ddlDateTime = selected;
+                          _ddlController.text = _formatDateTime(selected);
+                        });
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: '活動報名截止期限',
+                      helperText: '請選擇時程',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   //活動類型下拉式選單
                   DropdownButtonFormField<String>(
                     value: _selectEventType,
@@ -261,17 +314,18 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                         MaterialPageRoute(
                           builder:
                               (context) => CharityMapPage(
-                                initialLatLng: selectedLacationData,
+                                initialLatLng: selectedLocationData,
                                 initialAddress: _locationController.text,
                               ),
                         ),
                       );
                       if (result != null) {
-                        selectedLacationData = LatLng(
+                        selectedLocationData = LatLng(
                           result['lat'],
                           result['lng'],
                         ); //儲存完整資訊
                         _locationController.text = result['address'];
+                        //location = LatLng(selectedLacationData!.latitude, selectedLacationData!.longitude);
                       }
                     },
                     decoration: const InputDecoration(

@@ -1,4 +1,5 @@
 //因為很懶一個個設定地圖地址格式所以直接弄了一個函式
+//這是一個會拿到完整地址字串的功能(英文)
 
 import 'package:geocoding/geocoding.dart';
 

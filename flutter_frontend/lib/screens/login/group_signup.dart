@@ -57,10 +57,11 @@ class GroupSignupState extends State<GroupSignupPage> {
     if (_selectType.isEmpty) {
       setState(() => _errorMessage = '請選擇機構類型');
     }
+    /*
     if (id.isEmpty) {
       setState(() => _errorMessage = '請輸入機構代碼');
       return;
-    }
+    }*/
     if (address.isEmpty) {
       setState(() => _errorMessage = '請輸入地址');
       return;
@@ -124,12 +125,12 @@ class GroupSignupState extends State<GroupSignupPage> {
       );
 
       if (infoCreate.statusCode == 200 && accountCreate.statusCode == 200) {
+        _showMessage('註冊成功!');
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/group_signin',
           ModalRoute.withName('/'),
         );
-        setState(() => _showMessage('註冊成功!'));
       } else if (infoCreate.statusCode != 200) {
         setState(() => _errorMessage = '機構資料建立失敗:${infoCreate.body}');
       } else {
