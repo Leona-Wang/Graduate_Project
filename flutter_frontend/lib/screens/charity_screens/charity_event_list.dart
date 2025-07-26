@@ -4,6 +4,7 @@ import 'package:flutter_frontend/config.dart';
 import 'dart:convert';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http show get;
+import 'event_detail_page.dart';
 
 class CharityEventListPage extends StatefulWidget {
   const CharityEventListPage({super.key});
@@ -97,8 +98,13 @@ class CharityEventListState extends State<CharityEventListPage> {
 
   //跳出活動詳情頁控制器
   void _toDetail(Event event) {
-    //頁面跳轉or彈出頁面
-  }
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => EventDetailPage(event: event),
+    ),
+  );
+}
 
   //主架構，其他區域分開寫
   @override
