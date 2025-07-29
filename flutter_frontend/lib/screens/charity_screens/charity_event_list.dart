@@ -98,13 +98,11 @@ class CharityEventListState extends State<CharityEventListPage> {
 
   //跳出活動詳情頁控制器
   void _toDetail(Event event) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => EventDetailPage(event: event),
-    ),
-  );
-}
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EventDetailPage(event: event)),
+    );
+  }
 
   //主架構，其他區域分開寫
   @override
@@ -246,20 +244,28 @@ class CharityEventListState extends State<CharityEventListPage> {
       children: [
         Expanded(
           child: TextField(
-            controller: SearchController(),
+            controller: _searchController,
             decoration: InputDecoration(
               labelText: '搜尋活動',
+              prefixIcon: Icon(Icons.search_outlined),
               border: OutlineInputBorder(),
-              suffixIcon: IconButton(
-                icon: Icon(Icons.search_off_outlined),
-                onPressed: () {
-                  setState(() {
-                    currentPage = 1;
-                    fetchEvents();
-                  });
-                },
-              ),
+              suffixIcon:
+                  _searchController.text.isNotEmpty
+                      ? IconButton(
+                        icon: Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            currentPage = 1;
+                            fetchEvents();
+                          });
+                        },
+                      )
+                      : null,
             ),
+            onChanged: (_) {
+              setState(() {});
+            },
             onSubmitted: (_) => fetchEvents(),
           ),
         ),

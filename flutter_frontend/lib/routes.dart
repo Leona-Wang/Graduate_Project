@@ -37,7 +37,7 @@ class AppRoutes {
   static const String personalSetting = '/personal_setting'; //系統設定
 
   //charity_screens
-  static const String charityHomeTab = '/charity_event_list';
+  static const String charityEventList = '/charity_event_list';
   static const String charityHome = '/charity_home';
   static const String charityMap = '/charity_map';
   static const String charitySetting = '/charity_setting';
@@ -87,7 +87,7 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => PersonalSettingPage());
 
       //charity_screens
-      case charityHomeTab:
+      case charityEventList:
         return MaterialPageRoute(builder: (_) => CharityEventListPage());
 
       case charityHome:
