@@ -57,9 +57,9 @@ class CharityInfo(models.Model):
 
 
 class CharityEvent(models.Model):
-    name = models.CharField(max_length=255, null=True, blank=True) # 活動名稱
+    name = models.CharField(max_length=255, null=False) # 活動名稱
     mainOrganizer = models.ForeignKey(CharityInfo, on_delete=models.CASCADE, related_name="mainEvents") # 主辦單位
-    coOrganizers = models.ManyToManyField(CharityInfo, blank=True, related_name="coEvents") # 協辦單位
+    coOrganizers = models.ManyToManyField(CharityInfo, blank=True, through='CharityEventCoOrganizer', related_name="coEvents") 
     eventType = models.ForeignKey(EventType, null=True, blank=True, on_delete=models.SET_NULL) # 活動類型
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL) # 活動地點
     address = models.TextField(blank=True, null=True) #地址
@@ -73,6 +73,13 @@ class CharityEvent(models.Model):
     status = models.TextField(null=True, blank=True) #活動狀態
     inviteCode = models.TextField(null=True, blank=True)
     recommendedBy = models.ManyToManyField(User, blank=True, related_name="eventRecommendedBy")   
+    
+class CharityEventCoOrganizer(models.Model):
+    charityEvent = models.ForeignKey(CharityEvent, on_delete=models.CASCADE)
+    coOrganizer = models.ForeignKey(CharityInfo, on_delete=models.CASCADE)
+    verified = models.BooleanField(null=True, blank=True)
+
+   
 
 
 class OfficialEvent(models.Model):
