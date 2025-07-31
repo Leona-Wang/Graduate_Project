@@ -128,3 +128,11 @@ ACTIVITY_LIST_TIME_CHOICES = {
     '3 months': timedelta(days=90),
     'permanent': None
 }
+
+CHARITY_EVENT_SAVE = "Save"
+CHARITY_EVENT_JOIN = "Join"
+
+CHARITY_EVENT_USER_RECORD_CHOICES = {
+    (CHARITY_EVENT_SAVE, 'Save'),
+    (CHARITY_EVENT_JOIN, 'Join'),
+}

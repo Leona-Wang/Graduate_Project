@@ -46,10 +46,19 @@ class ApiPath {
   //拿事件清單(個人帳號跟組織都用這個)，需回傳值(有預設值，第一次拿不用給值)(用 GET ，不是 POST )：
   //{'page':,'eventType':,'location':,'time':(到 settings.py 看 ACTIVITY_LIST_TIME_CHOICES ，回傳''裡面的值 )}
   //拿到的值怎麼填可以參考 https://chatgpt.com/share/68824fd7-1740-8001-a131-6c1385e4510b
+  //收藏跟參加人數我寫成 list 格式，就跟 event 的順序一樣，可以照填
   static String get charityEventList => '${BaseConfig.baseUrl}/events/';
 
   //給事件清單看詳情的詳細資訊回傳(個人帳號跟組織都用這個)
   //使用方式：final url = ApiPath.charityEventDetail(eventId); eventId 給前面 event 拿到的 id
   static String charityEventDetail(int eventId) =>
       '${BaseConfig.baseUrl}/events/$eventId/';
+
+  //讓用戶加入收藏清單
+  static String addCharityEventUserSave(int eventId) =>
+      '${BaseConfig.baseUrl}/events/$eventId/?user_record_choice=Save';
+
+  //讓用戶加入參加清單
+  static String addCharityEventUserJoin(int eventId) =>
+      '${BaseConfig.baseUrl}/events/$eventId/?user_record_choice=Join';
 }

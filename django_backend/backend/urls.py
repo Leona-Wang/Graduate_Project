@@ -28,4 +28,9 @@ urlpatterns = [
     path('charity/event/coorganize/', views.CoOrganize.as_view(), name="coOrganize"),
     path('events/', views.CharityEventList.as_view(), name="charityEventList"),
     path('events/<int:eventId>/', views.CharityEventDetail.as_view(), name="charityEventDetail"),
+    path(
+        'events/<int:eventId>/participant_record/',
+        views.AddCharityEventUserRecord.as_view(),
+        name="addCharityEventUserRecord"
+    ),
 ]

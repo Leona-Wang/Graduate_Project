@@ -4,7 +4,7 @@ from .serializers import CharityEventSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent
+from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -358,7 +358,6 @@ class CoOrganize(APIView):
             if not charityInfo:
                 return JsonResponse({'success': False, 'message': '非慈善團體用戶'}, status=401)
 
-
             inviteCode = request.data.get('inviteCode', '').strip()
             if not inviteCode or len(inviteCode) != 6:
                 return JsonResponse({'success': False, 'message': '請輸入6位數邀請碼'}, status=400)
@@ -377,5 +376,35 @@ class CoOrganize(APIView):
             event.save()
 
             return JsonResponse({'success': True, 'message': '協辦成功'}, status=200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AddCharityEventUserRecord(APIView):
+    """選擇收藏/參與活動"""
+
+    def post(self, request, *args, **kwargs):
+        try:
+            recordChoice = request.query_params.get('user_record_choice', "")
+
+            user = request.user
+
+            charityEventID = kwargs.get('eventId')
+
+            event = CharityEvent.objects.filter(id=charityEventID).first()
+
+            eventParticipant = EventParticipant.objects.filter(personalUser=user, charityEvent=event).first()
+
+            if eventParticipant is not None:
+                eventParticipant.joinType = recordChoice
+            else:
+                eventParticipant = EventParticipant.objects.create(
+                    personalUser=user, charityEvent=event, joinType=recordChoice
+                )
+
+            eventParticipant.save()
+
+            return JsonResponse({'success': True}, status=200)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)

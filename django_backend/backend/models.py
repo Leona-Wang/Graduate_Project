@@ -9,7 +9,6 @@ class Location(models.Model):
     locationName = models.TextField(null=False)
 
 
-
 class EventType(models.Model):
     typeName = models.TextField(null=False)
 
@@ -59,7 +58,9 @@ class CharityInfo(models.Model):
 class CharityEvent(models.Model):
     name = models.CharField(max_length=255, null=False) # 活動名稱
     mainOrganizer = models.ForeignKey(CharityInfo, on_delete=models.CASCADE, related_name="mainEvents") # 主辦單位
-    coOrganizers = models.ManyToManyField(CharityInfo, blank=True, through='CharityEventCoOrganizer', related_name="coEvents") 
+    coOrganizers = models.ManyToManyField(
+        CharityInfo, blank=True, through='CharityEventCoOrganizer', related_name="coEvents"
+    )
     eventType = models.ForeignKey(EventType, null=True, blank=True, on_delete=models.SET_NULL) # 活動類型
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL) # 活動地點
     address = models.TextField(blank=True, null=True) #地址
@@ -68,18 +69,27 @@ class CharityEvent(models.Model):
     signupDeadline = models.DateTimeField(null=True, blank=True) # 報名截止時間
     #image = models.ImageField(upload_to='eventImages/', null=True, blank=True)  # 活動圖片
     description = models.TextField(blank=True, null=True) # 活動說明
-    participants = models.ManyToManyField(User, blank=True, related_name="eventParticipants") # 參與者（報名者）
+    participants = models.ManyToManyField(User, blank=True, related_name="EventParticipant") # 參與者（報名者）
     createTime = models.DateTimeField(null=True, blank=True) # 活動上傳時間
     status = models.TextField(null=True, blank=True) #活動狀態
     inviteCode = models.TextField(null=True, blank=True)
-    recommendedBy = models.ManyToManyField(User, blank=True, related_name="eventRecommendedBy")   
-    
+    recommendedBy = models.ManyToManyField(User, blank=True, related_name="eventRecommendedBy")
+
+
+class EventParticipant(models.Model):
+    personalUser = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    charityEvent = models.ForeignKey(CharityEvent, null=True, on_delete=models.SET_NULL)
+    joinType = models.CharField(
+        max_length=20,
+        choices=settings.CHARITY_EVENT_USER_RECORD_CHOICES,
+        default=settings.CHARITY_EVENT_JOIN,
+    )
+
+
 class CharityEventCoOrganizer(models.Model):
     charityEvent = models.ForeignKey(CharityEvent, on_delete=models.CASCADE)
     coOrganizer = models.ForeignKey(CharityInfo, on_delete=models.CASCADE)
     verified = models.BooleanField(null=True, blank=True)
-
-   
 
 
 class OfficialEvent(models.Model):
