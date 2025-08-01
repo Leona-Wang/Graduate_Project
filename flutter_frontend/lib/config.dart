@@ -39,9 +39,13 @@ class ApiPath {
   static String get createCharityEvent =>
       '${BaseConfig.baseUrl}/charity/event/create/';
 
-  //透過邀請碼加入活動協辦，需回傳值：{'inviteCode':(必填)}
+  //透過邀請碼申請協辦活動，需回傳值：{'inviteCode':(必填)}
   static String get coOrganizeEvent =>
       '${BaseConfig.baseUrl}/charity/event/coorganize/';
+
+  //活動主辦方審核協辦者申請，需回傳值：{'charityEventName':(必填),'coOrganizerName':(必填),'approve':true/false(必填，同意/不同意該協辦者申請)}
+  static String get verifyCoOrganize =>
+      '${BaseConfig.baseUrl}/charity/event/coorganize/verify/';
 
   //拿事件清單(個人帳號跟組織都用這個)，需回傳值(有預設值，第一次拿不用給值)(用 GET ，不是 POST )：
   //{'page':,'eventType':,'location':,'time':(到 settings.py 看 ACTIVITY_LIST_TIME_CHOICES ，回傳''裡面的值 )}

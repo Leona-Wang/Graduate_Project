@@ -15,6 +15,7 @@ from django.utils.timezone import now
 from .Casino import createCasino, createBet, updateBet, removeBet, getSumOfBet, getUserWinProbability, getWinner, saveWinner
 import random
 import string
+from .charityEvent import createCharityEvent, coOrganizeEvent, verifyCoOrganize
 
 
 # Create your views here.
@@ -190,101 +191,6 @@ class CreateCasino(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CreateCharityEvent(APIView):
-    """慈善團體用戶新增 CharityEvent"""
-
-    def post(self, request, *args, **kwargs):
-        try:
-            # 驗證是否登入
-            user = request.user
-            if not user or not user.is_authenticated:
-                return JsonResponse({'success': False, 'message': '未登入'}, status=401)
-
-            # 驗證是否為慈善團體
-            charityInfo = CharityInfo.objects.filter(user=user).first()
-            if not charityInfo:
-                return JsonResponse({'success': False, 'message': '非慈善團體用戶'}, status=401)
-
-            data = request.data if hasattr(request, 'data') else json.loads(request.body)
-            name = data.get('name')
-            eventTypeName = data.get('eventType', '').strip() # 前端傳來的是typeName
-            locationName = data.get('location', '').strip() # 前端傳來的是locationName(中文縣市)
-            address = data.get('address', '').strip() # (中文詳細地址)
-            startTime = data.get('startTime')
-            endTime = data.get('endTime')
-            signupDeadline = data.get('signupDeadline')
-            description = data.get('description', '').strip()
-
-            # 必填欄位檢查
-            if not all([name, startTime, endTime]):
-                return JsonResponse({'success': False, 'message': '缺少必填欄位(name, startTime, endTime)'}, status=400)
-
-            mainOrganizer = charityInfo
-
-            eventType = None
-            if eventTypeName:
-                eventType = EventType.objects.filter(typeName=eventTypeName).first()
-                if not eventType:
-                    return JsonResponse({'success': False, 'message': '找不到對應的活動類型'}, status=400)
-
-            location = Location.objects.filter(locationName=locationName).first() if locationName else None
-
-            # 時間格式轉換，前端傳來的是 "2025-07-24 01:03" 格式
-            def parse_dt(dt_str):
-                try:
-                    return datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
-                except Exception:
-                    return None
-
-            startTimeObj = parse_dt(startTime)
-            endTimeObj = parse_dt(endTime)
-
-            if not startTimeObj or not endTimeObj:
-                return JsonResponse({'success': False, 'message': '時間格式錯誤，請用 YYYY-MM-DD HH:MM'}, status=400)
-
-            # 判斷活動狀態
-            nowTime = now()
-            if startTimeObj and endTimeObj:
-                if nowTime < startTimeObj:
-                    status = "upcoming"
-                elif startTimeObj <= nowTime <= endTimeObj:
-                    status = "ongoing"
-                else:
-                    status = "finished"
-            else:
-                status = "unknown"
-
-            # 產生6位數邀請碼
-            def generate_invite_code():
-                while True:
-                    code = ''.join(random.choices(string.digits, k=6))
-                    if not CharityEvent.objects.filter(inviteCode=code).exists():
-                        return code
-
-            inviteCode = generate_invite_code()
-
-            event = CharityEvent.objects.create(
-                name=name,
-                mainOrganizer=mainOrganizer,
-                eventType=eventType,
-                location=location,
-                address=address,
-                startTime=startTimeObj,
-                endTime=endTimeObj,
-                signupDeadline=parse_dt(signupDeadline) if signupDeadline else None,
-                description=description,
-                createTime=nowTime,
-                status=status,
-                inviteCode=inviteCode
-            )
-
-            event.save()
-            return JsonResponse({'success': True, 'eventId': event.id, 'status': status}, status=201)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
 class CharityEventList(APIView):
     """回傳活動清單(根據 request 抓到的 user 判斷是個人用戶還是組織，是組織就給組織自己的活動，個人用戶給全部的)"""
 
@@ -343,44 +249,6 @@ class CharityEventDetail(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CoOrganize(APIView):
-    """慈善團體透過邀請碼協辦 CharityEvent"""
-
-    def post(self, request, *args, **kwargs):
-        try:
-            # 驗證是否登入
-            user = request.user
-            if not user or not user.is_authenticated:
-                return JsonResponse({'success': False, 'message': '未登入'}, status=401)
-
-            # 驗證是否為慈善團體
-            charityInfo = CharityInfo.objects.filter(user=user).first()
-            if not charityInfo:
-                return JsonResponse({'success': False, 'message': '非慈善團體用戶'}, status=401)
-
-            inviteCode = request.data.get('inviteCode', '').strip()
-            if not inviteCode or len(inviteCode) != 6:
-                return JsonResponse({'success': False, 'message': '請輸入6位數邀請碼'}, status=400)
-
-            # 查詢 CharityEvent 是否存在
-            event = CharityEvent.objects.filter(inviteCode=inviteCode).first()
-            if not event:
-                return JsonResponse({'success': False, 'message': '邀請碼錯誤或活動不存在'}, status=404)
-
-            # 檢查是否已協辦
-            if event.coOrganizers.filter(id=charityInfo.id).exists():
-                return JsonResponse({'success': False, 'message': '已是協辦單位'}, status=400)
-
-            # 加入協辦單位
-            event.coOrganizers.add(charityInfo)
-            event.save()
-
-            return JsonResponse({'success': True, 'message': '協辦成功'}, status=200)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
 class AddCharityEventUserRecord(APIView):
     """選擇收藏/參與活動"""
 
@@ -408,3 +276,24 @@ class AddCharityEventUserRecord(APIView):
             return JsonResponse({'success': True}, status=200)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CreateCharityEvent(APIView):
+    """慈善組織創建活動"""
+    def post(self, request, *args, **kwargs):
+        return createCharityEvent(request)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CoOrganizeEvent(APIView):
+    """慈善組織透過邀請碼申請協辦活動"""
+    def post(self, request, *args, **kwargs):
+        return coOrganizeEvent(request)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class VerifyCoOrganize(APIView):
+    """活動主辦方審核協辦者申請"""
+    def post(self, request, *args, **kwargs):
+        return verifyCoOrganize(request)
