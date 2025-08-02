@@ -175,3 +175,36 @@ def verifyCoOrganize(request):
 
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+def getCoOrganizeApplications(request):
+    try:
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        eventName = request.data.get('charityEventName', '').strip()
+        if not eventName:
+            return JsonResponse({'success': False, 'message': '缺少活動名稱'}, status=400)
+
+        # 查詢 CharityEvent
+        event = CharityEvent.objects.filter(name=eventName).first()
+        if not event:
+            return JsonResponse({'success': False, 'message': '查無此活動'}, status=404)
+
+        # 驗證主辦方身分
+        if not CharityInfo.objects.filter(user=user, id=event.mainOrganizer_id).exists():
+            return JsonResponse({'success': False, 'message': '只有主辦方可以查詢協辦申請'}, status=403)
+
+        # 查詢所有協辦申請
+        applications = CharityEventCoOrganizer.objects.filter(charityEvent=event)
+        result = []
+        for app in applications:
+            result.append({
+                'coOrganizerName': app.coOrganizer.name,
+                'coOrganizerEmail': app.coOrganizer.user.email if app.coOrganizer.user else '',
+                'verified': app.verified,  # None=待審核, True=通過, False=不通過
+            })
+
+        return JsonResponse({'success': True, 'applications': result}, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
