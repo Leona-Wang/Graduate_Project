@@ -45,6 +45,7 @@ class AppRoutes {
   static const String charitySetting = '/charity_setting';
   static const String charityNewEvent = '/charity_new_event';
   static const String charityCoorganizer = '/charity_co-organizer';
+  static const String charityCoorganizerNumber = '/charity_co-organizer_number';
   static const String charityEventDetail = '/charity_event_detail_page';
 
   //登入與註冊頁面
