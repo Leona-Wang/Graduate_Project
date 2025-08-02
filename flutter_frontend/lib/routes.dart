@@ -35,6 +35,8 @@ class AppRoutes {
   static const String personalShop = '/personal_shop'; //商城系統
   static const String personalEvent = '/personal_event'; //特殊活動
   static const String personalSetting = '/personal_setting'; //系統設定
+  static const String personalEventDetail = '/personal_event_detail_page';
+  static const String personalEventList = '/personal_event_list';
 
   //charity_screens
   static const String charityEventList = '/charity_event_list';
@@ -42,6 +44,8 @@ class AppRoutes {
   static const String charityMap = '/charity_map';
   static const String charitySetting = '/charity_setting';
   static const String charityNewEvent = '/charity_new_event';
+  static const String charityCoorganizer = '/charity_co-organizer';
+  static const String charityEventDetail = '/charity_event_detail_page';
 
   //登入與註冊頁面
   static const String personalSignin = '/personal_signin'; //個人登入
