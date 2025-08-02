@@ -28,6 +28,7 @@ urlpatterns = [
     path('charity/event/coorganize/', views.CoOrganizeEvent.as_view(), name="coOrganizeEvent"),
     path('charity/event/coorganize/applications/', views.GetCoOrganizeApplications.as_view(), name="getCoOrganizeApplications"),
     path('charity/event/coorganize/verify/', views.VerifyCoOrganize.as_view(), name="verifyCoOrganize"),
+    path('charity/event/coorganize/remove/', views.RemoveCoOrganizer.as_view(), name="removeCoOrganizer"),
     path('events/', views.CharityEventList.as_view(), name="charityEventList"),
     path('events/<int:eventId>/', views.CharityEventDetail.as_view(), name="charityEventDetail"),
     path(

@@ -208,3 +208,43 @@ def getCoOrganizeApplications(request):
         return JsonResponse({'success': True, 'applications': result}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+def removeCoOrganizer(request):
+    try:
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        eventName = request.data.get('charityEventName', '').strip()
+        coOrganizerName = request.data.get('coOrganizerName', '').strip()
+
+        if not eventName or not coOrganizerName:
+            return JsonResponse({'success': False, 'message': '缺少活動名稱或協辦者名稱'}, status=400)
+
+        # 查詢 CharityEvent
+        event = CharityEvent.objects.filter(name=eventName).first()
+        if not event:
+            return JsonResponse({'success': False, 'message': '查無此活動'}, status=404)
+
+        # 驗證主辦方身分
+        if not CharityInfo.objects.filter(user=user, id=event.mainOrganizer_id).exists():
+            return JsonResponse({'success': False, 'message': '只有主辦方可以踢除協辦者'}, status=403)
+
+        # 查詢協辦 CharityInfo
+        co_organizer = CharityInfo.objects.filter(name=coOrganizerName).first()
+        if not co_organizer:
+            return JsonResponse({'success': False, 'message': '查無此協辦者'}, status=404)
+
+        # 查詢協辦申請
+        co_org = CharityEventCoOrganizer.objects.filter(charityEvent=event, coOrganizer=co_organizer).first()
+        if not co_org or co_org.verified is not True:
+            return JsonResponse({'success': False, 'message': '該協辦者目前不是認證協辦者'}, status=400)
+
+        # 踢除協辦者
+        co_org.verified = False
+        co_org.save()
+
+        return JsonResponse({'success': True, 'message': '該協辦者已被踢除'}, status=200)
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
