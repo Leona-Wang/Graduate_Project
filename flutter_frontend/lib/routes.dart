@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_home.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_event_list.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_event_detail_page.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_co-organize_number.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
 import 'package:flutter_frontend/screens/login/group_signin.dart';
@@ -18,7 +21,9 @@ import 'screens/welcome_slides.dart';
 import 'screens/example_1.dart';
 import 'screens/example_2.dart';
 import 'screens/user_register.dart';
-
+import 'package:flutter_frontend/screens/personal_screens/personal_event_list.dart'
+    as pel;
+import 'package:flutter_frontend/screens/personal_screens/personal_event_detail_page.dart';
 import 'screens/personal_screens/personal_home.dart';
 
 class AppRoutes {
@@ -45,7 +50,7 @@ class AppRoutes {
   static const String charitySetting = '/charity_setting';
   static const String charityNewEvent = '/charity_new_event';
   static const String charityCoorganizer = '/charity_co-organizer';
-  static const String charityCoorganizerNumber = '/charity_co-organizer_number';
+  static const String charityCoorganizeNumber = '/charity_co-organizer_number';
   static const String charityEventDetail = '/charity_event_detail_page';
 
   //登入與註冊頁面
@@ -91,6 +96,16 @@ class AppRoutes {
       case personalSetting:
         return MaterialPageRoute(builder: (_) => PersonalSettingPage());
 
+      case personalEventList:
+        return MaterialPageRoute(builder: (_) => PersonalEventPage());
+
+      case AppRoutes.personalEventDetail:
+        final pel.Event event = settings.arguments as pel.Event;
+
+        return MaterialPageRoute(
+          builder: (_) => PersonalEventDetailPage(event: event),
+        );
+
       //charity_screens
       case charityEventList:
         return MaterialPageRoute(builder: (_) => CharityEventListPage());
@@ -106,6 +121,21 @@ class AppRoutes {
 
       case charityNewEvent:
         return MaterialPageRoute(builder: (_) => CharityNewEventPage());
+
+      case charityCoorganizer:
+        final eventId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => CharityCoorganizerPage(eventId: eventId),
+        );
+
+      case charityCoorganizeNumber:
+        return MaterialPageRoute(builder: (_) => CharityCoorganizeNumberPage());
+
+      case AppRoutes.charityEventDetail:
+        final charityEvent = settings.arguments as CharityEvent;
+        return MaterialPageRoute(
+          builder: (_) => CharityEventDetailPage(event: charityEvent),
+        );
 
       //login-out
       case personalSignin:

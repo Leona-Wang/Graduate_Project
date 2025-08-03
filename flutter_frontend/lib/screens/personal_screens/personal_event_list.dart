@@ -6,10 +6,10 @@ import 'package:http/http.dart';
 import 'package:http/http.dart' as http show get;
 import 'personal_event_detail_page.dart';
 
-class CharityEventListPage extends StatefulWidget {
-  const CharityEventListPage({super.key});
+class PersonalEventListPage extends StatefulWidget {
+  const PersonalEventListPage({super.key});
 
-  State<CharityEventListPage> createState() => CharityEventListState();
+  State<PersonalEventListPage> createState() => PersonalEventListState();
 }
 
 //活動類型
@@ -38,7 +38,7 @@ class Event {
   }
 }
 
-class CharityEventListState extends State<CharityEventListPage> {
+class PersonalEventListState extends State<PersonalEventListPage> {
   final TextEditingController _searchController = TextEditingController();
   String? selectedType;
   String? selectedLocation;
@@ -100,7 +100,7 @@ class CharityEventListState extends State<CharityEventListPage> {
   void _toDetail(Event event) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EventDetailPage(event: event)),
+      MaterialPageRoute(builder: (context) => PersonalEventDetailPage(event: event)),
     );
   }
 

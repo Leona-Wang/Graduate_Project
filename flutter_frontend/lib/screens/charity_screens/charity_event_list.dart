@@ -4,7 +4,7 @@ import 'package:flutter_frontend/config.dart';
 import 'dart:convert';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http show get;
-import 'event_detail_page.dart';
+import 'charity_event_detail_page.dart';
 
 class CharityEventListPage extends StatefulWidget {
   const CharityEventListPage({super.key});
@@ -13,22 +13,22 @@ class CharityEventListPage extends StatefulWidget {
 }
 
 //活動類型
-class Event {
+class CharityEvent {
   final int id;
   final String title;
   final String type;
   final String location;
   final DateTime date;
 
-  Event({
+  CharityEvent({
     required this.id,
     required this.title,
     required this.type,
     required this.location,
     required this.date,
   });
-  factory Event.fromJson(Map<String, dynamic> json) {
-    return Event(
+  factory CharityEvent.fromJson(Map<String, dynamic> json) {
+    return CharityEvent(
       id: json['id'],
       title: json['title'],
       type: json['type'],
@@ -44,7 +44,7 @@ class CharityEventListState extends State<CharityEventListPage> {
   String? selectedLocation;
   String? selectedTime;
 
-  List<Event> events = [];
+  List<CharityEvent> events = [];
   //頁面切換
   bool isLoading = false;
   int currentPage = 1;
@@ -83,7 +83,7 @@ class CharityEventListState extends State<CharityEventListPage> {
         final List results = json['results'];
 
         setState(() {
-          events = results.map((e) => Event.fromJson(e)).toList();
+          events = results.map((e) => CharityEvent.fromJson(e)).toList();
           totalPage = (json['count'] / pageSize).ceil();
           isLoading = false;
         });
@@ -97,10 +97,10 @@ class CharityEventListState extends State<CharityEventListPage> {
   }
 
   //跳出活動詳情頁控制器
-  void _toDetail(Event event) {
+  void _toDetail(CharityEvent event) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EventDetailPage(event: event)),
+      MaterialPageRoute(builder: (context) => CharityEventDetailPage(event: event)),
     );
   }
 

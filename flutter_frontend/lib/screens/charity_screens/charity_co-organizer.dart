@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-class ApplicationReviewPage extends StatefulWidget {
+class CharityCoorganizerPage extends StatefulWidget {
   final int eventId; // 活動ID
 
-  const ApplicationReviewPage({Key? key, required this.eventId}) : super(key: key);
+  const CharityCoorganizerPage({Key? key, required this.eventId}) : super(key: key);
 
   @override
-  _ApplicationReviewPageState createState() => _ApplicationReviewPageState();
+  _CharityCoorganizerPageState createState() => _CharityCoorganizerPageState();
 }
 
-class _ApplicationReviewPageState extends State<ApplicationReviewPage> {
-  // 測試用
+class _CharityCoorganizerPageState extends State<CharityCoorganizerPage> {
+  // 測試用假資料
   List<Map<String, dynamic>> applications = [
     {
       "id": 1,
@@ -32,6 +32,12 @@ class _ApplicationReviewPageState extends State<ApplicationReviewPage> {
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('進入協辦審核頁，活動 ID：${widget.eventId}');
+  }
+
   void _updateStatus(int id, String newStatus) {
     setState(() {
       final index = applications.indexWhere((app) => app["id"] == id);
@@ -40,14 +46,14 @@ class _ApplicationReviewPageState extends State<ApplicationReviewPage> {
       }
     });
 
-    // 未來串後端
+    // TODO: 未來串後端更新狀態
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("協辦申請審核"),
+        title: Text("協辦申請審核 (活動 ID: ${widget.eventId})"),
       ),
       body: ListView.builder(
         padding: EdgeInsets.all(12),

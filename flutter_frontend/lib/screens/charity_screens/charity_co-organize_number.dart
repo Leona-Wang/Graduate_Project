@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class JoinByCodePage extends StatefulWidget {
-  const JoinByCodePage({Key? key}) : super(key: key);
+class CharityCoorganizeNumberPage extends StatefulWidget {
+  const CharityCoorganizeNumberPage({Key? key}) : super(key: key);
 
   @override
-  State<JoinByCodePage> createState() => _JoinByCodePageState();
+  State<CharityCoorganizeNumberPage> createState() => _CharityCoorganizeNumberPageState();
 }
 
-class _JoinByCodePageState extends State<JoinByCodePage> {
+class _CharityCoorganizeNumberPageState extends State<CharityCoorganizeNumberPage> {
   final TextEditingController _codeController = TextEditingController();
 
   void _submitCode() {
@@ -20,7 +20,7 @@ class _JoinByCodePageState extends State<JoinByCodePage> {
       return;
     }
 
-    // 後端串
+    // TODO: 後端 API
     print("使用者輸入的邀請碼：$code");
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -44,7 +44,7 @@ class _JoinByCodePageState extends State<JoinByCodePage> {
             TextField(
               controller: _codeController,
               decoration: InputDecoration(
-                hintText: "例如：XZY-123",
+                hintText: "例如：ABNID9839439",
                 border: OutlineInputBorder(),
               ),
             ),

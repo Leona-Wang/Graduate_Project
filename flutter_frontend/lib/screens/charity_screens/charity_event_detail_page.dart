@@ -54,16 +54,16 @@ class FullEvent {
   }
 }
 
-class EventDetailPage extends StatefulWidget {
-  final Event event; // 傳入簡略資料（包含 id）
+class CharityEventDetailPage extends StatefulWidget {
+  final CharityEvent event; // 傳入簡略資料（包含 id）
 
-  const EventDetailPage({super.key, required this.event});
+  const CharityEventDetailPage({super.key, required this.event});
 
   @override
-  State<EventDetailPage> createState() => _EventDetailPageState();
+  State<CharityEventDetailPage> createState() => _EventDetailPageState();
 }
 
-class _EventDetailPageState extends State<EventDetailPage> {
+class _EventDetailPageState extends State<CharityEventDetailPage> {
   late Future<FullEvent> _eventFuture;
   bool isFavorite = false;
 
