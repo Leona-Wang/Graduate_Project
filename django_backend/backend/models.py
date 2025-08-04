@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+import uuid
+
 
 # Create your models here.
 
@@ -74,6 +78,7 @@ class CharityEvent(models.Model):
     status = models.TextField(null=True, blank=True) #活動狀態
     inviteCode = models.TextField(null=True, blank=True)
     recommendedBy = models.ManyToManyField(User, blank=True, related_name="eventRecommendedBy")
+    online = models.BooleanField(null=True, blank=True)
 
 
 class EventParticipant(models.Model):
@@ -108,3 +113,21 @@ class OfficialEventParticipant(models.Model):
     user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     officialEvent = models.ForeignKey(OfficialEvent, null=True, on_delete=models.SET_NULL)
     betAmount = models.IntegerField()
+    
+class QRCodeRecord(models.Model):
+    personalUser = models.ForeignKey(User, on_delete=models.CASCADE)  # 持有人
+    charityEvent = models.ForeignKey(CharityEvent, on_delete=models.CASCADE)  # 活動
+    createTime = models.DateTimeField(auto_now_add=True)  # 生成時間
+    expireTime = models.DateTimeField()  # 過期時間
+    isUsed = models.BooleanField(default=False)  # 
+    token = models.CharField(max_length=64, unique=True)
+
+    def isExpired(self):
+        return timezone.now() > self.expireTime
+
+    def save(self, *args, **kwargs):
+        # 預設 QRCode 有效期限為 5 分鐘
+        if not self.expireTime:
+            self.expireTime = self.createTime + timedelta(minutes=5)
+        super().save(*args, **kwargs)
+
