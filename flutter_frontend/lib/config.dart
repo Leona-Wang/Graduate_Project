@@ -35,9 +35,15 @@ class ApiPath {
   static String get createCharityInfo =>
       '${BaseConfig.baseUrl}/charity/create/';
 
-  //創建慈善活動，需回傳值：{'name':(必填),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間, 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址}
+  //創建慈善活動，需回傳值：{'name':(必填，活動名稱),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間, 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址, 'online':true/false(是否為線上活動)}
   static String get createCharityEvent =>
       '${BaseConfig.baseUrl}/charity/event/create/';
+
+  //活動主辦方編輯活動，需回傳值：{'name':(必填,活動名稱),'eventType':,'location':,'address':,'startTime':,'endTime':,'signupDeadline':,'description':,'online':true/false}
+  //只需傳要修改的欄位即可，未傳欄位不會被修改
+  //現在是做不能改name的，因為name作為唯一識別，如果想改成可以改name的再跟我說
+  static String get editCharityEvent =>
+      '${BaseConfig.baseUrl}/charity/event/edit/';
 
   //透過邀請碼申請協辦活動，需回傳值：{'inviteCode':(必填)}
   static String get coOrganizeEvent =>

@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse
 from django.utils.timezone import now
 from datetime import datetime
@@ -24,6 +25,7 @@ def createCharityEvent(request):
         endTime = data.get('endTime')
         signupDeadline = data.get('signupDeadline')
         description = data.get('description', '').strip()
+        online = data.get('online', False)
 
         if not all([name, startTime, endTime]):
             return JsonResponse({'success': False, 'message': '缺少必填欄位(name, startTime, endTime)'}, status=400)
@@ -36,7 +38,12 @@ def createCharityEvent(request):
             if not eventType:
                 return JsonResponse({'success': False, 'message': '找不到對應的活動類型'}, status=400)
 
-        location = Location.objects.filter(locationName=locationName).first() if locationName else None
+        # 判斷是否為線上活動
+        if online:
+            location = None
+            address = None
+        else:
+            location = Location.objects.filter(locationName=locationName).first() if locationName else None
 
         def parseDt(dt_str):
             try:
@@ -81,11 +88,83 @@ def createCharityEvent(request):
             description=description,
             createTime=nowTime,
             status=status,
-            inviteCode=inviteCode
+            inviteCode=inviteCode,
+            online=online
         )
 
         event.save()
         return JsonResponse({'success': True, 'eventId': event.id, 'status': status}, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+    
+def editCharityEvent(request):
+    try:
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        data = request.data if hasattr(request, 'data') else json.loads(request.body)
+        eventName = data.get('name', '').strip()
+        if not eventName:
+            return JsonResponse({'success': False, 'message': '缺少活動名稱'}, status=400)
+
+        # 查詢 CharityEvent
+        event = CharityEvent.objects.filter(name=eventName).first()
+        if not event:
+            return JsonResponse({'success': False, 'message': '查無此活動'}, status=404)
+
+        # 驗證主辦方身分
+        if not CharityInfo.objects.filter(user=user, id=event.mainOrganizer_id).exists():
+            return JsonResponse({'success': False, 'message': '只有主辦方可以編輯活動'}, status=403)
+
+        # 允許更新的欄位
+        eventTypeName = data.get('eventType', None)
+        locationName = data.get('location', None)
+        address = data.get('address', None)
+        startTime = data.get('startTime', None)
+        endTime = data.get('endTime', None)
+        signupDeadline = data.get('signupDeadline', None)
+        description = data.get('description', None)
+        online = data.get('online', None)
+
+        # eventType
+        if eventTypeName is not None:
+            eventType = EventType.objects.filter(typeName=eventTypeName).first()
+            if not eventType:
+                return JsonResponse({'success': False, 'message': '找不到對應的活動類型'}, status=400)
+            event.eventType = eventType
+
+        # 線上活動判斷
+        if online is not None:
+            event.online = online
+            if online:
+                event.location = None
+                event.address = None
+            else:
+                if locationName is not None:
+                    location = Location.objects.filter(locationName=locationName).first()
+                    event.location = location
+                if address is not None:
+                    event.address = address
+        else:
+            if locationName is not None:
+                location = Location.objects.filter(locationName=locationName).first()
+                event.location = location
+            if address is not None:
+                event.address = address
+
+        # 其他欄位
+        if startTime is not None:
+            event.startTime = datetime.strptime(startTime, "%Y-%m-%d %H:%M")
+        if endTime is not None:
+            event.endTime = datetime.strptime(endTime, "%Y-%m-%d %H:%M")
+        if signupDeadline is not None:
+            event.signupDeadline = datetime.strptime(signupDeadline, "%Y-%m-%d %H:%M")
+        if description is not None:
+            event.description = description
+
+        event.save()
+        return JsonResponse({'success': True, 'message': '活動已更新'}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 

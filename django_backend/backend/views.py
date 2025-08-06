@@ -15,7 +15,10 @@ from django.utils.timezone import now
 from .Casino import createCasino, createBet, updateBet, removeBet, getSumOfBet, getUserWinProbability, getWinner, saveWinner
 import random
 import string
-from .charityEvent import createCharityEvent, coOrganizeEvent, verifyCoOrganize, getCoOrganizeApplications, removeCoOrganizer
+from .charityEvent import (
+    createCharityEvent, coOrganizeEvent, verifyCoOrganize,
+    getCoOrganizeApplications, removeCoOrganizer, editCharityEvent
+)
 
 
 # Create your views here.
@@ -284,6 +287,12 @@ class CreateCharityEvent(APIView):
     def post(self, request, *args, **kwargs):
         return createCharityEvent(request)
 
+@method_decorator(csrf_exempt, name='dispatch')
+class EditCharityEvent(APIView):
+    """活動主辦方編輯活動"""
+    def post(self, request, *args, **kwargs):
+        return editCharityEvent(request)
+    
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CoOrganizeEvent(APIView):
