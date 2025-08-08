@@ -6,6 +6,7 @@ import random
 import string
 from .models import CharityInfo, CharityEvent, CharityEventCoOrganizer, EventType, Location
 
+
 def createCharityEvent(request):
     try:
         user = request.user
@@ -96,7 +97,8 @@ def createCharityEvent(request):
         return JsonResponse({'success': True, 'eventId': event.id, 'status': status}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
-    
+
+
 def editCharityEvent(request):
     try:
         user = request.user
@@ -168,6 +170,7 @@ def editCharityEvent(request):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
+
 def coOrganizeEvent(request):
     try:
         user = request.user
@@ -200,15 +203,12 @@ def coOrganizeEvent(request):
                 return JsonResponse({'success': True, 'message': '重新申請協辦成功，請等待主辦方審核'}, status=200)
         else:
             # 建立新申請，verified=None
-            CharityEventCoOrganizer.objects.create(
-                charityEvent=event,
-                coOrganizer=charityInfo,
-                verified=None
-            )
+            CharityEventCoOrganizer.objects.create(charityEvent=event, coOrganizer=charityInfo, verified=None)
             return JsonResponse({'success': True, 'message': '協辦申請已送出，請等待主辦方審核'}, status=200)
 
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
 
 def verifyCoOrganize(request):
     try:
@@ -255,6 +255,7 @@ def verifyCoOrganize(request):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
+
 def getCoOrganizeApplications(request):
     try:
         user = request.user
@@ -281,12 +282,13 @@ def getCoOrganizeApplications(request):
             result.append({
                 'coOrganizerName': app.coOrganizer.name,
                 'coOrganizerEmail': app.coOrganizer.user.email if app.coOrganizer.user else '',
-                'verified': app.verified,  # None=待審核, True=通過, False=不通過
+                'verified': app.verified, # None=待審核, True=通過, False=不通過
             })
 
         return JsonResponse({'success': True, 'applications': result}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
 
 def removeCoOrganizer(request):
     try:

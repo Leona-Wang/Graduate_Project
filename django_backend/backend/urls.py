@@ -27,7 +27,11 @@ urlpatterns = [
     path('charity/event/create/', views.CreateCharityEvent.as_view(), name="createCharityEvent"),
     path('charity/event/edit/', views.EditCharityEvent.as_view(), name="editCharityEvent"),
     path('charity/event/coorganize/', views.CoOrganizeEvent.as_view(), name="coOrganizeEvent"),
-    path('charity/event/coorganize/applications/', views.GetCoOrganizeApplications.as_view(), name="getCoOrganizeApplications"),
+    path(
+        'charity/event/coorganize/applications/',
+        views.GetCoOrganizeApplications.as_view(),
+        name="getCoOrganizeApplications"
+    ),
     path('charity/event/coorganize/verify/', views.VerifyCoOrganize.as_view(), name="verifyCoOrganize"),
     path('charity/event/coorganize/remove/', views.RemoveCoOrganizer.as_view(), name="removeCoOrganizer"),
     path('events/', views.CharityEventList.as_view(), name="charityEventList"),
@@ -36,5 +40,6 @@ urlpatterns = [
         'events/<int:eventId>/participant_record/',
         views.AddCharityEventUserRecord.as_view(),
         name="addCharityEventUserRecord"
-    ), 
+    ),
+    path('events/user_QRCode/', views.ProcessUserQRCode.as_view(), name="ProcessUserQRCode"),
 ]

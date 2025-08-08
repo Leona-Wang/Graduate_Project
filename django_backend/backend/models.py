@@ -5,7 +5,6 @@ from django.utils import timezone
 from datetime import timedelta
 import uuid
 
-
 # Create your models here.
 
 
@@ -113,13 +112,13 @@ class OfficialEventParticipant(models.Model):
     user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     officialEvent = models.ForeignKey(OfficialEvent, null=True, on_delete=models.SET_NULL)
     betAmount = models.IntegerField()
-    
+
+
 class QRCodeRecord(models.Model):
-    personalUser = models.ForeignKey(User, on_delete=models.CASCADE)  # 持有人
-    charityEvent = models.ForeignKey(CharityEvent, on_delete=models.CASCADE)  # 活動
-    createTime = models.DateTimeField(auto_now_add=True)  # 生成時間
-    expireTime = models.DateTimeField()  # 過期時間
-    isUsed = models.BooleanField(default=False)  # 
+    personalUser = models.ForeignKey(User, on_delete=models.CASCADE) # 持有人
+    createTime = models.DateTimeField(auto_now_add=True) # 生成時間
+    expireTime = models.DateTimeField() # 過期時間
+    isUsed = models.BooleanField(default=False) #
     token = models.CharField(max_length=64, unique=True)
 
     def isExpired(self):
@@ -130,4 +129,3 @@ class QRCodeRecord(models.Model):
         if not self.expireTime:
             self.expireTime = self.createTime + timedelta(minutes=5)
         super().save(*args, **kwargs)
-

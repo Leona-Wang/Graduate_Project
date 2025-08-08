@@ -79,4 +79,13 @@ class ApiPath {
   //讓用戶加入參加清單
   static String addCharityEventUserJoin(int eventId) =>
       '${BaseConfig.baseUrl}/events/$eventId/?user_record_choice=Join';
+
+  //用 GET ，後端回傳：{'success': True, 'code': code} 拿 code 產 QRcode
+  static String get createUserQRCode =>
+      '${BaseConfig.baseUrl}/events/user_QRCode/';
+
+  //用 POST ，前端給：{'code':,'eventName':}
+  //不用擔心兩個 url 一樣的問題，我有區分開
+  static String get verifyUserQRCode =>
+      '${BaseConfig.baseUrl}/events/user_QRCode/';
 }

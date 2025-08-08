@@ -4,7 +4,7 @@ from .serializers import CharityEventSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant
+from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -16,8 +16,8 @@ from .Casino import createCasino, createBet, updateBet, removeBet, getSumOfBet, 
 import random
 import string
 from .charityEvent import (
-    createCharityEvent, coOrganizeEvent, verifyCoOrganize,
-    getCoOrganizeApplications, removeCoOrganizer, editCharityEvent
+    createCharityEvent, coOrganizeEvent, verifyCoOrganize, getCoOrganizeApplications, removeCoOrganizer,
+    editCharityEvent
 )
 
 
@@ -284,19 +284,23 @@ class AddCharityEventUserRecord(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class CreateCharityEvent(APIView):
     """慈善組織創建活動"""
+
     def post(self, request, *args, **kwargs):
         return createCharityEvent(request)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class EditCharityEvent(APIView):
     """活動主辦方編輯活動"""
+
     def post(self, request, *args, **kwargs):
         return editCharityEvent(request)
-    
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CoOrganizeEvent(APIView):
     """慈善組織透過邀請碼申請協辦活動"""
+
     def post(self, request, *args, **kwargs):
         return coOrganizeEvent(request)
 
@@ -304,13 +308,15 @@ class CoOrganizeEvent(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class GetCoOrganizeApplications(APIView):
     """活動主辦方查詢協辦申請列表"""
+
     def post(self, request, *args, **kwargs):
         return getCoOrganizeApplications(request)
-    
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class VerifyCoOrganize(APIView):
     """活動主辦方審核協辦者申請"""
+
     def post(self, request, *args, **kwargs):
         return verifyCoOrganize(request)
 
@@ -318,5 +324,38 @@ class VerifyCoOrganize(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class RemoveCoOrganizer(APIView):
     """活動主辦方移除協辦者"""
+
     def post(self, request, *args, **kwargs):
         return removeCoOrganizer(request)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ProcessUserQRCode(APIView):
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        code = random.randint(100000, 999999)
+        qrcodeRecord = QRCodeRecord.objects.create(personalUser=user, token=code)
+        qrcodeRecord.save()
+        return JsonResponse({'success': True, 'code': code}, status=200)
+
+    def post(self, request, *args, **kwargs):
+        code = request.data.get('code', None)
+        charityEventName = request.data.get('eventName', None)
+
+        charityEvent = CharityEvent.objects.filter(name=charityEventName).first()
+        codeRecord = QRCodeRecord.objects.filter(token=code).first()
+
+        if not codeRecord.isExpired():
+            user = codeRecord.personalUser
+
+        if user:
+            isJoined = EventParticipant.objects.filter(
+                personalUser=user, charityEvent=charityEvent, joinType=settings.CHARITY_EVENT_JOIN
+            ).exists()
+            if isJoined:
+                return JsonResponse({'success': True}, status=200)
+            else:
+                return JsonResponse({'success': False, 'message': '無參加資訊'}, status=404)
+        else:
+            return JsonResponse({'success': False, 'message': '無此code或code過期'}, status=404)
