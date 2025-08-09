@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_QRCode.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_home.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_event_list.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_event_detail_page.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart'
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organize_number.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_QRCode.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
 import 'package:flutter_frontend/screens/login/group_signin.dart';
@@ -41,17 +43,20 @@ class AppRoutes {
   static const String personalEvent = '/personal_event'; //特殊活動
   static const String personalSetting = '/personal_setting'; //系統設定
   static const String personalEventDetail = '/personal_event_detail_page';
-  static const String personalEventList = '/personal_event_list';
+  static const String personalEventList =
+      '/personal_event_list'; //活動清單(包含在map裡面)
+  static const String personalQRCode = '/personal_QRCode'; //個人用戶QRcode(生產)
 
   //charity_screens
-  static const String charityEventList = '/charity_event_list';
-  static const String charityHome = '/charity_home';
-  static const String charityMap = '/charity_map';
-  static const String charitySetting = '/charity_setting';
-  static const String charityNewEvent = '/charity_new_event';
+  static const String charityEventList = '/charity_event_list'; //活動清單
+  static const String charityHome = '/charity_home'; //主頁
+  static const String charityMap = '/charity_map'; //新增活動的地址選擇頁面
+  static const String charitySetting = '/charity_setting'; //系統設定
+  static const String charityNewEvent = '/charity_new_event'; //新增活動
   static const String charityCoorganizer = '/charity_co-organizer';
   static const String charityCoorganizeNumber = '/charity_co-organizer_number';
   static const String charityEventDetail = '/charity_event_detail_page';
+  static const String charityQRCode = '/charity_QRCode';
 
   //登入與註冊頁面
   static const String personalSignin = '/personal_signin'; //個人登入
@@ -106,6 +111,9 @@ class AppRoutes {
           builder: (_) => PersonalEventDetailPage(event: event),
         );
 
+      case personalQRCode:
+        return MaterialPageRoute(builder: (_) => PersonalQRCodePage());
+
       //charity_screens
       case charityEventList:
         return MaterialPageRoute(builder: (_) => CharityEventListPage());
@@ -136,6 +144,9 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => CharityEventDetailPage(event: charityEvent),
         );
+
+      case charityQRCode:
+        return MaterialPageRoute(builder: (_) => CharityQRCodePage());
 
       //login-out
       case personalSignin:

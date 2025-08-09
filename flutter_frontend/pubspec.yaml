@@ -48,6 +48,10 @@ dependencies:
   geocoding: ^4.0.0
   url_launcher: ^6.3.2
 
+  #QRcode
+  qr_flutter: ^4.0.0
+  mobile_scanner: ^3.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
