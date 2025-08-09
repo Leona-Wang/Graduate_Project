@@ -19,6 +19,7 @@ class CharityEvent {
   final String type;
   final String location;
   final DateTime date;
+  final bool online; // ← 新增：線上活動
 
   CharityEvent({
     required this.id,
@@ -26,7 +27,9 @@ class CharityEvent {
     required this.type,
     required this.location,
     required this.date,
+    required this.online, // ← 新增
   });
+
   factory CharityEvent.fromJson(Map<String, dynamic> json) {
     return CharityEvent(
       id: json['id'],
@@ -34,6 +37,7 @@ class CharityEvent {
       type: json['type'],
       location: json['location'],
       date: DateTime.parse(json['date']),
+      online: (json['online'] ?? false) == true, // ← 新增
     );
   }
 }
@@ -52,6 +56,7 @@ class CharityEventListState extends State<CharityEventListPage> {
   final int pageSize = 0;
   //篩選器
   bool sortAscending = true;
+  bool? filterOnline; // ← 新增：null=全部, true=線上, false=線下
 
   void initState() {
     super.initState();
@@ -71,6 +76,7 @@ class CharityEventListState extends State<CharityEventListPage> {
         if (selectedTime != null && selectedTime!.isNotEmpty)
           'time': selectedTime,
         if (_searchController.text.isNotEmpty) 'search': _searchController.text,
+        if (filterOnline != null) 'online': filterOnline!.toString(), // ← 新增
         'ordering': sortAscending ? 'date' : '-date',
       },
     );
@@ -212,6 +218,47 @@ class CharityEventListState extends State<CharityEventListPage> {
               fetchEvents();
             }),
           ),
+          const SizedBox(width: 12),
+
+          //線上/線下篩選
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('全部'),
+                selected: filterOnline == null,
+                onSelected: (_) {
+                  setState(() {
+                    filterOnline = null;
+                    currentPage = 1;
+                    fetchEvents();
+                  });
+                },
+              ),
+              ChoiceChip(
+                label: const Text('線上'),
+                selected: filterOnline == true,
+                onSelected: (_) {
+                  setState(() {
+                    filterOnline = true;
+                    currentPage = 1;
+                    fetchEvents();
+                  });
+                },
+              ),
+              ChoiceChip(
+                label: const Text('線下'),
+                selected: filterOnline == false,
+                onSelected: (_) {
+                  setState(() {
+                    filterOnline = false;
+                    currentPage = 1;
+                    fetchEvents();
+                  });
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -229,10 +276,9 @@ class CharityEventListState extends State<CharityEventListPage> {
       child: DropdownButtonFormField<String>(
         decoration: InputDecoration(labelText: label),
         value: value,
-        items:
-            items
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
+        items: items
+            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+            .toList(),
         onChanged: onChanged,
       ),
     );
@@ -249,19 +295,18 @@ class CharityEventListState extends State<CharityEventListPage> {
               labelText: '搜尋活動',
               prefixIcon: Icon(Icons.search_outlined),
               border: OutlineInputBorder(),
-              suffixIcon:
-                  _searchController.text.isNotEmpty
-                      ? IconButton(
-                        icon: Icon(Icons.clear),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            currentPage = 1;
-                            fetchEvents();
-                          });
-                        },
-                      )
-                      : null,
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(Icons.clear),
+                      onPressed: () {
+                        setState(() {
+                          _searchController.clear();
+                          currentPage = 1;
+                          fetchEvents();
+                        });
+                      },
+                    )
+                  : null,
             ),
             onChanged: (_) {
               setState(() {});
@@ -285,17 +330,26 @@ class CharityEventListState extends State<CharityEventListPage> {
   //活動卡
   Widget buildEventList() {
     if (isLoading) return Center(child: CircularProgressIndicator());
-    if (events.isEmpty) return Center(child: Text('找不到該活動'));
+
+    // 前端保底過濾（就算後端沒處理 online query）
+    final visible = events.where((e) {
+      if (filterOnline == null) return true;
+      return e.online == filterOnline;
+    }).toList();
+
+    if (visible.isEmpty) return Center(child: Text('找不到該活動'));
 
     return ListView.builder(
-      itemCount: events.length,
+      itemCount: visible.length,
       itemBuilder: (context, index) {
-        final event = events[index];
+        final event = visible[index];
         return Card(
           child: ListTile(
             title: Text(event.title),
             subtitle: Text(
-              '${event.location} | ${event.date.toLocal().toString().split(" ")[0]}',
+              event.online
+                  ? '線上活動 | ${event.date.toLocal().toString().split(" ")[0]}'
+                  : '${event.location} | ${event.date.toLocal().toString().split(" ")[0]}',
             ),
             trailing: TextButton(
               onPressed: () => _toDetail(event),
@@ -313,28 +367,26 @@ class CharityEventListState extends State<CharityEventListPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          onPressed:
-              currentPage > 1
-                  ? () {
-                    setState(() {
-                      currentPage--;
-                      fetchEvents();
-                    });
-                  }
-                  : null,
+          onPressed: currentPage > 1
+              ? () {
+                  setState(() {
+                    currentPage--;
+                    fetchEvents();
+                  });
+                }
+              : null,
           icon: Icon(Icons.arrow_back),
         ),
         Text('第 $currentPage 頁 / 共 $totalPage 頁'),
         IconButton(
-          onPressed:
-              currentPage < totalPage
-                  ? () {
-                    setState(() {
-                      currentPage++;
-                      fetchEvents();
-                    });
-                  }
-                  : null,
+          onPressed: currentPage < totalPage
+              ? () {
+                  setState(() {
+                    currentPage++;
+                    fetchEvents();
+                  });
+                }
+              : null,
           icon: Icon(Icons.arrow_forward),
         ),
       ],

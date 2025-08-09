@@ -5,6 +5,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_event_list.dart
 import 'package:flutter_frontend/screens/charity_screens/charity_event_detail_page.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_edit_event.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organize_number.dart';
@@ -48,11 +49,18 @@ class AppRoutes {
   static const String personalQRCode = '/personal_QRCode'; //個人用戶QRcode(生產)
 
   //charity_screens
+
   static const String charityEventList = '/charity_event_list'; //活動清單
   static const String charityHome = '/charity_home'; //主頁
   static const String charityMap = '/charity_map'; //新增活動的地址選擇頁面
   static const String charitySetting = '/charity_setting'; //系統設定
   static const String charityNewEvent = '/charity_new_event'; //新增活動
+  static const String charityEventList = '/charity_event_list';
+  static const String charityHome = '/charity_home';
+  static const String charityMap = '/charity_map';
+  static const String charitySetting = '/charity_setting';
+  static const String charityNewEvent = '/charity_new_event';
+  static const String charityEditEvent = '/charity_edit_event';
   static const String charityCoorganizer = '/charity_co-organizer';
   static const String charityCoorganizeNumber = '/charity_co-organizer_number';
   static const String charityEventDetail = '/charity_event_detail_page';
@@ -129,6 +137,12 @@ class AppRoutes {
 
       case charityNewEvent:
         return MaterialPageRoute(builder: (_) => CharityNewEventPage());
+
+      case charityEditEvent:
+        final eventId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => CharityEditEventPage(eventId: eventId),
+        );
 
       case charityCoorganizer:
         final eventId = settings.arguments as int;

@@ -32,6 +32,9 @@ class CharityNewEventState extends State<CharityNewEventPage> {
 
   bool _isLoading = false;
 
+  // 新增：線上活動開關
+  bool _isOnline = false;
+
   LatLng? selectedLocationData;
   DateTime? _startDateTime;
   DateTime? _endDateTime;
@@ -46,9 +49,7 @@ class CharityNewEventState extends State<CharityNewEventPage> {
     final ddl = _ddlController.text;
     final type = _selectEventType;
     final address = _locationController.text.trim();
-    final location = await TaiwanAddressHelper.getCityFromCoordinates(
-      selectedLocationData!,
-    );
+    String? cityLocation; // 改名避免混淆，僅線下活動時才會計算
     final description = _descriptionController.text.trim();
 
     if (name.isEmpty) {
@@ -67,13 +68,19 @@ class CharityNewEventState extends State<CharityNewEventPage> {
       setState(() => _errorMessage = '請選擇您的活動類型');
       return;
     }
-    if (address.isEmpty) {
-      setState(() => _errorMessage = '請選擇地點');
-      return;
-    }
-    if (selectedLocationData == null) {
-      setState(() => _errorMessage = '請選擇地點');
-      return;
+    if (!_isOnline) {
+      if (address.isEmpty) {
+        setState(() => _errorMessage = '請選擇地點');
+        return;
+      }
+      if (selectedLocationData == null) {
+        setState(() => _errorMessage = '請選擇地點');
+        return;
+      }
+      // 線下活動才需要推回縣市
+      cityLocation = await TaiwanAddressHelper.getCityFromCoordinates(
+        selectedLocationData!,
+      );
     }
     if (description.isEmpty) {
       setState(() => _errorMessage = '請描述你的活動內容');
@@ -84,11 +91,12 @@ class CharityNewEventState extends State<CharityNewEventPage> {
       _errorMessage = '';
     });
 
-    debugPrint('取得 location:$location');
+    debugPrint('取得 location:$cityLocation, online=$_isOnline');
 
     try {
       final uriData = Uri.parse(ApiPath.createCharityEvent); //新增活動API
-      //需回傳值：{'name':(必填),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間, 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址}
+      //需回傳值：{'name':(必填),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間,
+      // 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址, 'online':true/false}
 
       final eventCreate = await http
           .post(
@@ -101,20 +109,23 @@ class CharityNewEventState extends State<CharityNewEventPage> {
               'signupDeadline': ddl,
               'description': description,
               'eventType': type,
-              'location': location,
-              'address': address,
+              'online': _isOnline,            // 新增：線上活動欄位
+              if (!_isOnline) 'location': cityLocation, // 線下活動才傳
+              if (!_isOnline) 'address': address,       // 線下活動才傳
             }),
           )
           .timeout(const Duration(seconds: 10));
 
       if (eventCreate.statusCode == 200) {
         _showMessage('創建成功!');
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/charity_home',
-          (_) => false,
-        );
-      } else if (eventCreate.statusCode != 200) {
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/charity_home',
+            (_) => false,
+          );
+        }
+      } else {
         setState(() => _errorMessage = '創建活動失敗:${eventCreate.body}');
       }
     } catch (e) {
@@ -167,11 +178,28 @@ class CharityNewEventState extends State<CharityNewEventPage> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 500),
+              constraints: const BoxConstraints(maxWidth: 500),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 16),
+
+                  // 新增：線上活動開關
+                  SwitchListTile(
+                    title: const Text('線上活動'),
+                    value: _isOnline,
+                    onChanged: (v) {
+                      setState(() {
+                        _isOnline = v;
+                        if (_isOnline) {
+                          _locationController.clear();
+                          selectedLocationData = null;
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+
                   //名稱輸入欄
                   TextFormField(
                     controller: _nameController,
@@ -266,29 +294,28 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                   DropdownButtonFormField<String>(
                     value: _selectEventType,
                     hint: const Text('請選擇您的活動類型'),
-                    items:
-                        [
-                          '綜合性服務',
-                          '兒童青少年福利',
-                          '婦女福利',
-                          '老人福利',
-                          '身心障礙福利',
-                          '家庭福利',
-                          '健康醫療',
-                          '心理衛生',
-                          '社區規劃(營造)',
-                          '環境保護',
-                          '國際合作交流',
-                          '教育與科學',
-                          '文化藝術',
-                          '人權和平',
-                          '消費者保護',
-                          '性別平等',
-                          '政府單位',
-                          '動物保護',
-                        ].map((e) {
-                          return DropdownMenuItem(value: e, child: Text(e));
-                        }).toList(),
+                    items: [
+                      '綜合性服務',
+                      '兒童青少年福利',
+                      '婦女福利',
+                      '老人福利',
+                      '身心障礙福利',
+                      '家庭福利',
+                      '健康醫療',
+                      '心理衛生',
+                      '社區規劃(營造)',
+                      '環境保護',
+                      '國際合作交流',
+                      '教育與科學',
+                      '文化藝術',
+                      '人權和平',
+                      '消費者保護',
+                      '性別平等',
+                      '政府單位',
+                      '動物保護',
+                    ].map((e) {
+                      return DropdownMenuItem(value: e, child: Text(e));
+                    }).toList(),
                     onChanged: (val) {
                       setState(() {
                         _selectEventType = val;
@@ -304,33 +331,35 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  //地址輸入欄
+                  //地址輸入欄（線上活動停用）
                   TextFormField(
                     controller: _locationController,
                     readOnly: true,
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => CharityMapPage(
-                                initialLatLng: selectedLocationData,
-                                initialAddress: _locationController.text,
+                    enabled: !_isOnline,
+                    onTap: _isOnline
+                        ? null
+                        : () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CharityMapPage(
+                                  initialLatLng: selectedLocationData,
+                                  initialAddress: _locationController.text,
+                                ),
                               ),
-                        ),
-                      );
-                      if (result != null) {
-                        selectedLocationData = LatLng(
-                          result['lat'],
-                          result['lng'],
-                        ); //儲存完整資訊
-                        _locationController.text = result['address'];
-                        //location = LatLng(selectedLacationData!.latitude, selectedLacationData!.longitude);
-                      }
-                    },
+                            );
+                            if (result != null) {
+                              selectedLocationData = LatLng(
+                                result['lat'],
+                                result['lng'],
+                              ); //儲存完整資訊
+                              _locationController.text = result['address'];
+                            }
+                          },
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: '活動地點',
+                      helperText: '線上活動不需選擇地點',
                       suffixIcon: Icon(Icons.map),
                     ),
                   ),
@@ -351,10 +380,9 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                   //提交
                   ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
-                    child:
-                        _isLoading
-                            ? const CircularProgressIndicator()
-                            : const Text('新增活動'),
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('新增活動'),
                   ),
 
                   //錯誤訊息
