@@ -129,3 +129,17 @@ class QRCodeRecord(models.Model):
         if not self.expireTime:
             self.expireTime = self.createTime + timedelta(minutes=5)
         super().save(*args, **kwargs)
+        
+class LetterType(models.Model):
+    type = models.CharField(max_length=10, null=False, blank=False)
+
+class Letter(models.Model):
+    sender = models.ForeignKey(CharityInfo, null=True, blank=True, on_delete=models.SET_NULL, related_name="sentLetters")  # 寄件人
+    receiver = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="receivedLetters")  # 收件人
+    date = models.DateTimeField(auto_now_add=True)  # 寄信日期
+    type = models.ForeignKey(LetterType, null=True, blank=True, on_delete=models.SET_NULL)  # 信件類型
+    title = models.CharField(max_length=255, null=False, blank=False)  # 標題
+    content = models.TextField(null=False, blank=False)  # 內容
+    isRead = models.BooleanField(default=False)  # 是否已讀
+        
+
