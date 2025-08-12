@@ -19,6 +19,7 @@ from .charityEvent import (
     createCharityEvent, coOrganizeEvent, verifyCoOrganize, getCoOrganizeApplications, removeCoOrganizer,
     editCharityEvent
 )
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 # Create your views here.
@@ -72,8 +73,13 @@ class VerifyPassword(APIView):
         password = request.data.get('password', "")
         user = authenticate(request, username=email, password=password)
         if user is not None:
-            login(request, user)
-            return JsonResponse({'success': True}, status=200)
+            refresh = RefreshToken.for_user(user)
+            return JsonResponse({
+                'success': True,
+                'access': str(refresh.access_token),
+                'refresh': str(refresh)
+            },
+                                status=200)
         else:
             return JsonResponse({'success': False, 'message': '輸入錯誤'}, status=400)
 

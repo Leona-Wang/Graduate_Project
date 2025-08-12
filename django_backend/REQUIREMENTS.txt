@@ -3,3 +3,4 @@ pylint
 yapf
 django-cors-headers
 djangorestframework
+djangorestframework-simplejwt

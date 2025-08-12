@@ -5,11 +5,18 @@ from datetime import datetime
 import random
 import string
 from .models import CharityInfo, CharityEvent, CharityEventCoOrganizer, EventType, Location
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import api_view, permission_classes
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def createCharityEvent(request):
+
     try:
         user = request.user
+        print(user)
         if not user or not user.is_authenticated:
             return JsonResponse({'success': False, 'message': '未登入'}, status=401)
 

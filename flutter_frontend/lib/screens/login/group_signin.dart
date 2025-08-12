@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -82,51 +83,39 @@ class GroupSigninState extends State<GroupSigninPage> {
       _isLoading = true;
     });
 
-    /*
-    //測試用
     try {
-      await Future.delayed(const Duration(seconds: 1));
-
-      bool isCorret = groupPassword == '123';
-
-      if (isCorret) {
-        _showMessage('登入成功');
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } else {
-        setState(() => _showMessage('密碼錯誤，請再次嘗試'));
-      }
-    } catch (e) {
-      _showMessage('模擬錯誤:$e');
-    } finally {
-      setState(() => _isLoading = false);
-    }*/
-
-    try {
-      final uri = Uri.parse(ApiPath.checkPassword); //驗證密碼 API
+      final uri = Uri.parse(ApiPath.checkPassword); // 驗證密碼 API
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': groupEmail,
-          'password': groupPassword,
-        }), //password json
+        body: jsonEncode({'email': groupEmail, 'password': groupPassword}),
       );
 
       final result = jsonDecode(response.body);
 
       if (response.statusCode == 200 && result['success'] == true) {
-        //密碼正確
+        // 儲存 token
+        final prefs = await SharedPreferences.getInstance();
+        print(result['access']);
+        await prefs.setString('accessToken', result['access']);
+        print(prefs.getString('accessToken'));
+        print(result['refresh']);
+        await prefs.setString('refreshToken', result['refresh']);
+        print(prefs.getString('refreshToken'));
+
+        print("✅ Token 已儲存");
+
+        // 跳轉頁面
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/charity_home',
           (route) => false,
         );
       } else {
-        //密碼錯誤
-        setState(() => _showMessage('密碼錯誤，請再次嘗試'));
+        setState(() => _showMessage(result['message'] ?? '密碼錯誤，請再次嘗試'));
       }
     } catch (e) {
-      _showMessage('錯誤:$e');
+      _showMessage('錯誤: $e');
     } finally {
       setState(() => _isLoading = false);
     }

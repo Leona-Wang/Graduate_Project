@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_frontend/taiwan_address_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CharityNewEventPage extends StatefulWidget {
   const CharityNewEventPage({super.key});
@@ -94,6 +95,9 @@ class CharityNewEventState extends State<CharityNewEventPage> {
     debugPrint('取得 location:$cityLocation, online=$_isOnline');
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
+
       final uriData = Uri.parse(ApiPath.createCharityEvent); //新增活動API
       //需回傳值：{'name':(必填),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間,
       // 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址, 'online':true/false}
@@ -101,7 +105,10 @@ class CharityNewEventState extends State<CharityNewEventPage> {
       final eventCreate = await http
           .post(
             uriData,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token', // 🔹 加上 Token 驗證
+            },
             body: jsonEncode({
               'name': name,
               'startTime': start,
@@ -109,9 +116,9 @@ class CharityNewEventState extends State<CharityNewEventPage> {
               'signupDeadline': ddl,
               'description': description,
               'eventType': type,
-              'online': _isOnline,            // 新增：線上活動欄位
-              if (!_isOnline) 'location': cityLocation, // 線下活動才傳
-              if (!_isOnline) 'address': address,       // 線下活動才傳
+              'online': _isOnline,
+              if (!_isOnline) 'location': cityLocation,
+              if (!_isOnline) 'address': address,
             }),
           )
           .timeout(const Duration(seconds: 10));
@@ -294,28 +301,29 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                   DropdownButtonFormField<String>(
                     value: _selectEventType,
                     hint: const Text('請選擇您的活動類型'),
-                    items: [
-                      '綜合性服務',
-                      '兒童青少年福利',
-                      '婦女福利',
-                      '老人福利',
-                      '身心障礙福利',
-                      '家庭福利',
-                      '健康醫療',
-                      '心理衛生',
-                      '社區規劃(營造)',
-                      '環境保護',
-                      '國際合作交流',
-                      '教育與科學',
-                      '文化藝術',
-                      '人權和平',
-                      '消費者保護',
-                      '性別平等',
-                      '政府單位',
-                      '動物保護',
-                    ].map((e) {
-                      return DropdownMenuItem(value: e, child: Text(e));
-                    }).toList(),
+                    items:
+                        [
+                          '綜合性服務',
+                          '兒童青少年福利',
+                          '婦女福利',
+                          '老人福利',
+                          '身心障礙福利',
+                          '家庭福利',
+                          '健康醫療',
+                          '心理衛生',
+                          '社區規劃(營造)',
+                          '環境保護',
+                          '國際合作交流',
+                          '教育與科學',
+                          '文化藝術',
+                          '人權和平',
+                          '消費者保護',
+                          '性別平等',
+                          '政府單位',
+                          '動物保護',
+                        ].map((e) {
+                          return DropdownMenuItem(value: e, child: Text(e));
+                        }).toList(),
                     onChanged: (val) {
                       setState(() {
                         _selectEventType = val;
@@ -336,26 +344,29 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                     controller: _locationController,
                     readOnly: true,
                     enabled: !_isOnline,
-                    onTap: _isOnline
-                        ? null
-                        : () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CharityMapPage(
-                                  initialLatLng: selectedLocationData,
-                                  initialAddress: _locationController.text,
+                    onTap:
+                        _isOnline
+                            ? null
+                            : () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => CharityMapPage(
+                                        initialLatLng: selectedLocationData,
+                                        initialAddress:
+                                            _locationController.text,
+                                      ),
                                 ),
-                              ),
-                            );
-                            if (result != null) {
-                              selectedLocationData = LatLng(
-                                result['lat'],
-                                result['lng'],
-                              ); //儲存完整資訊
-                              _locationController.text = result['address'];
-                            }
-                          },
+                              );
+                              if (result != null) {
+                                selectedLocationData = LatLng(
+                                  result['lat'],
+                                  result['lng'],
+                                ); //儲存完整資訊
+                                _locationController.text = result['address'];
+                              }
+                            },
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: '活動地點',
@@ -380,9 +391,10 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                   //提交
                   ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('新增活動'),
+                    child:
+                        _isLoading
+                            ? const CircularProgressIndicator()
+                            : const Text('新增活動'),
                   ),
 
                   //錯誤訊息
