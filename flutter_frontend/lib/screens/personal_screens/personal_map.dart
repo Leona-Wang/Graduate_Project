@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_frontend/config.dart';
 import 'dart:convert';
-import 'package:http/http.dart';
-import 'package:http/http.dart' as http show get;
+import '../../api_client.dart';
 
 class PersonalMapPage extends StatefulWidget {
   const PersonalMapPage({super.key});
@@ -60,7 +58,7 @@ class PersonalMapState extends State<PersonalMapPage> {
   Future<void> fetchEvents() async {
     setState(() => isLoading = true);
 
-    final uri = Uri.parse(ApiPath.charityEventList).replace(
+    final uriData = Uri.parse(ApiPath.charityEventList).replace(
       queryParameters: {
         'page': currentPage.toString(),
         if (selectedType != null && selectedType!.isNotEmpty)
@@ -75,7 +73,11 @@ class PersonalMapState extends State<PersonalMapPage> {
     );
 
     try {
-      final response = await http.get(uri);
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final response = await apiClient.get(uriData.toString());
+
       print(response.statusCode);
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);

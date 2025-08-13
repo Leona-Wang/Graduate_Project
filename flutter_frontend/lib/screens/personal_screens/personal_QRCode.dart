@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_frontend/qr_code_generator.dart';
+import '../../api_client.dart';
 
 class PersonalQRCodePage extends StatefulWidget {
   const PersonalQRCodePage({super.key});
@@ -32,7 +32,11 @@ class PersonalQRCodePageState extends State<PersonalQRCodePage> {
 
   Future<void> fetchToken() async {
     try {
-      final getToken = await http.get(Uri.parse(ApiPath.createUserQRCode));
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final getToken = await apiClient.get(ApiPath.createUserQRCode);
+
       if (getToken.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(getToken.body); //解析
         if (data['success'] == true && data['code'] != null) {

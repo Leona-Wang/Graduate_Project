@@ -1,16 +1,11 @@
-import 'dart:isolate';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_frontend/taiwan_address_helper.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../api_client.dart';
 
 class CharityNewEventPage extends StatefulWidget {

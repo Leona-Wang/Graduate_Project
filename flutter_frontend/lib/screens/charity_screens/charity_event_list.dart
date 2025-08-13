@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:flutter_frontend/config.dart';
 import 'dart:convert';
-import 'package:http/http.dart';
-import 'package:http/http.dart' as http show get;
+
 import 'charity_event_detail_page.dart';
+import '../../api_client.dart';
 
 class CharityEventListPage extends StatefulWidget {
   const CharityEventListPage({super.key});
@@ -66,7 +66,7 @@ class CharityEventListState extends State<CharityEventListPage> {
   Future<void> fetchEvents() async {
     setState(() => isLoading = true);
 
-    final uri = Uri.parse(ApiPath.charityEventList).replace(
+    final uriData = Uri.parse(ApiPath.charityEventList).replace(
       queryParameters: {
         'page': currentPage.toString(),
         if (selectedType != null && selectedType!.isNotEmpty)
@@ -82,7 +82,11 @@ class CharityEventListState extends State<CharityEventListPage> {
     );
 
     try {
-      final response = await http.get(uri);
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final response = await apiClient.get(uriData.toString());
+
       print(response.statusCode);
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
@@ -106,7 +110,9 @@ class CharityEventListState extends State<CharityEventListPage> {
   void _toDetail(CharityEvent event) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CharityEventDetailPage(event: event)),
+      MaterialPageRoute(
+        builder: (context) => CharityEventDetailPage(event: event),
+      ),
     );
   }
 
@@ -276,9 +282,10 @@ class CharityEventListState extends State<CharityEventListPage> {
       child: DropdownButtonFormField<String>(
         decoration: InputDecoration(labelText: label),
         value: value,
-        items: items
-            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-            .toList(),
+        items:
+            items
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
         onChanged: onChanged,
       ),
     );
@@ -295,18 +302,19 @@ class CharityEventListState extends State<CharityEventListPage> {
               labelText: '搜尋活動',
               prefixIcon: Icon(Icons.search_outlined),
               border: OutlineInputBorder(),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Icons.clear),
-                      onPressed: () {
-                        setState(() {
-                          _searchController.clear();
-                          currentPage = 1;
-                          fetchEvents();
-                        });
-                      },
-                    )
-                  : null,
+              suffixIcon:
+                  _searchController.text.isNotEmpty
+                      ? IconButton(
+                        icon: Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            currentPage = 1;
+                            fetchEvents();
+                          });
+                        },
+                      )
+                      : null,
             ),
             onChanged: (_) {
               setState(() {});
@@ -332,10 +340,11 @@ class CharityEventListState extends State<CharityEventListPage> {
     if (isLoading) return Center(child: CircularProgressIndicator());
 
     // 前端保底過濾（就算後端沒處理 online query）
-    final visible = events.where((e) {
-      if (filterOnline == null) return true;
-      return e.online == filterOnline;
-    }).toList();
+    final visible =
+        events.where((e) {
+          if (filterOnline == null) return true;
+          return e.online == filterOnline;
+        }).toList();
 
     if (visible.isEmpty) return Center(child: Text('找不到該活動'));
 
@@ -367,26 +376,28 @@ class CharityEventListState extends State<CharityEventListPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          onPressed: currentPage > 1
-              ? () {
-                  setState(() {
-                    currentPage--;
-                    fetchEvents();
-                  });
-                }
-              : null,
+          onPressed:
+              currentPage > 1
+                  ? () {
+                    setState(() {
+                      currentPage--;
+                      fetchEvents();
+                    });
+                  }
+                  : null,
           icon: Icon(Icons.arrow_back),
         ),
         Text('第 $currentPage 頁 / 共 $totalPage 頁'),
         IconButton(
-          onPressed: currentPage < totalPage
-              ? () {
-                  setState(() {
-                    currentPage++;
-                    fetchEvents();
-                  });
-                }
-              : null,
+          onPressed:
+              currentPage < totalPage
+                  ? () {
+                    setState(() {
+                      currentPage++;
+                      fetchEvents();
+                    });
+                  }
+                  : null,
           icon: Icon(Icons.arrow_forward),
         ),
       ],

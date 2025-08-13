@@ -1,10 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/qr_code_scanner.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_frontend/qr_code_scanner.dart';
+
+import '../../api_client.dart';
 
 class CharityQRCodePage extends StatefulWidget {
   const CharityQRCodePage({super.key});
@@ -15,10 +13,14 @@ class CharityQRCodePage extends StatefulWidget {
 
 class CharityQRCodePageState extends State<CharityQRCodePage> {
   Future<void> verifyTokenWithBackend(String scannedToken) async {
-    final verifyToken = await http.post(
-      Uri.parse(ApiPath.verifyUserQRCode),
-      body: {'code': scannedToken},
-    );
+    final apiClient = ApiClient();
+    await apiClient.init();
+
+    final uriData = ApiPath.verifyUserQRCode;
+    final body = {'code': scannedToken};
+
+    final verifyToken = await apiClient.post(uriData, body);
+
     if (verifyToken.statusCode == 200) {
       ScaffoldMessenger.of(
         context,
