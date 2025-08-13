@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import '../../routes.dart';
 import '../../config.dart';
+import '../../api_client.dart';
 
 class GroupSigninPage extends StatefulWidget {
   const GroupSigninPage({super.key});
@@ -95,13 +96,8 @@ class GroupSigninState extends State<GroupSigninPage> {
 
       if (response.statusCode == 200 && result['success'] == true) {
         // 儲存 token
-        final prefs = await SharedPreferences.getInstance();
-        print(result['access']);
-        await prefs.setString('accessToken', result['access']);
-        print(prefs.getString('accessToken'));
-        print(result['refresh']);
-        await prefs.setString('refreshToken', result['refresh']);
-        print(prefs.getString('refreshToken'));
+        final apiClient = ApiClient();
+        await apiClient.setToken(result['access']);
 
         print("✅ Token 已儲存");
 

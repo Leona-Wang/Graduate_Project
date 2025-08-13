@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_frontend/taiwan_address_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../api_client.dart';
 
 class CharityNewEventPage extends StatefulWidget {
   const CharityNewEventPage({super.key});
@@ -95,32 +96,27 @@ class CharityNewEventState extends State<CharityNewEventPage> {
     debugPrint('取得 location:$cityLocation, online=$_isOnline');
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('accessToken');
+      final apiClient = ApiClient();
+      await apiClient.init();
 
-      final uriData = Uri.parse(ApiPath.createCharityEvent); //新增活動API
+      final uriData = ApiPath.createCharityEvent; //新增活動API
       //需回傳值：{'name':(必填),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間,
       // 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址, 'online':true/false}
 
-      final eventCreate = await http
-          .post(
-            uriData,
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token', // 🔹 加上 Token 驗證
-            },
-            body: jsonEncode({
-              'name': name,
-              'startTime': start,
-              'endTime': end,
-              'signupDeadline': ddl,
-              'description': description,
-              'eventType': type,
-              'online': _isOnline,
-              if (!_isOnline) 'location': cityLocation,
-              if (!_isOnline) 'address': address,
-            }),
-          )
+      final body = {
+        'name': name,
+        'startTime': start,
+        'endTime': end,
+        'signupDeadline': ddl,
+        'description': description,
+        'eventType': type,
+        'online': _isOnline,
+        if (!_isOnline) 'location': cityLocation,
+        if (!_isOnline) 'address': address,
+      };
+
+      final eventCreate = await apiClient
+          .post(uriData, body)
           .timeout(const Duration(seconds: 10));
 
       if (eventCreate.statusCode == 200) {

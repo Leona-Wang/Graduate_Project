@@ -20,6 +20,7 @@ from .charityEvent import (
     editCharityEvent
 )
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
 
 
 # Create your views here.
@@ -44,6 +45,8 @@ def testApi(request):
 class CheckEmail(APIView):
     """根據 query string 的 type 來驗證個人或慈善 email"""
 
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         try:
             type_ = request.query_params.get('type', '').lower()
@@ -67,6 +70,8 @@ class CheckEmail(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class VerifyPassword(APIView):
+
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         email = request.data.get('email', "")

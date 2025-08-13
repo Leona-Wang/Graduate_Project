@@ -8,9 +8,9 @@ from .models import CharityInfo, CharityEvent, CharityEventCoOrganizer, EventTyp
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.decorators import api_view, permission_classes
+from django.utils import timezone
 
 
-@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def createCharityEvent(request):
 
@@ -53,9 +53,10 @@ def createCharityEvent(request):
         else:
             location = Location.objects.filter(locationName=locationName).first() if locationName else None
 
-        def parseDt(dt_str):
+        def parseDt(dtStr):
             try:
-                return datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
+                naiveDt = datetime.strptime(dtStr, "%Y-%m-%d %H:%M")
+                return timezone.make_aware(naiveDt)
             except Exception:
                 return None
 
