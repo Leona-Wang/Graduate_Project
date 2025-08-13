@@ -3,11 +3,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../routes.dart';
 import '../../config.dart';
+import '../../api_client.dart';
 
 class PersonalSigninPage extends StatefulWidget {
   const PersonalSigninPage({super.key});
@@ -29,23 +28,6 @@ class PersonalSigninState extends State<PersonalSigninPage> {
     if (personalEmail.isEmpty) return;
 
     setState(() => _isLoading = true);
-
-    //測試用
-    /*try {
-      await Future.delayed(const Duration(seconds: 1));
-
-      bool accountExists = personalEmail.contains('test');
-
-      if (accountExists) {
-        setState(() => _showPasswordField = true);
-      } else {
-        _showRegisterDialog();
-      }
-    } catch (e) {
-      _showMessage('模擬錯誤:$e');
-    } finally {
-      setState(() => _isLoading = false);
-    }*/
 
     try {
       final uri = Uri.parse(ApiPath.checkPersonalEmail); //API
@@ -83,25 +65,6 @@ class PersonalSigninState extends State<PersonalSigninPage> {
       _isLoading = true;
     });
 
-    /*
-    //測試用
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-
-      bool isCorret = personalPassword == '123';
-
-      if (isCorret) {
-        _showMessage('登入成功');
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      } else {
-        setState(() => _showMessage('密碼錯誤，請再次嘗試'));
-      }
-    } catch (e) {
-      _showMessage('模擬錯誤:$e');
-    } finally {
-      setState(() => _isLoading = false);
-    }*/
-
     try {
       final uri = Uri.parse(ApiPath.checkPassword); //API
       final response = await http.post(
@@ -116,6 +79,8 @@ class PersonalSigninState extends State<PersonalSigninPage> {
       final result = jsonDecode(response.body);
 
       if (response.statusCode == 200 && result['success'] == true) {
+        final apiClient = ApiClient();
+        await apiClient.setToken(result['access']);
         //密碼正確
         Navigator.pushNamedAndRemoveUntil(
           context,

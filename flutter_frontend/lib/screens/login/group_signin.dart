@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import '../../routes.dart';
 import '../../config.dart';
 import '../../api_client.dart';
 
@@ -27,25 +25,6 @@ class GroupSigninState extends State<GroupSigninPage> {
     if (groupEmail.isEmpty) return;
 
     setState(() => _isLoading = true);
-
-    //print(groupEmail);
-
-    //測試用
-    /*try {
-      await Future.delayed(const Duration(seconds: 1));
-
-      bool accountExists = groupEmail.contains('test');
-
-      if (accountExists) {
-        setState(() => _showPasswordField = true);
-      } else {
-        _showRegisterDialog();
-      }
-    } catch (e) {
-      _showMessage('模擬錯誤:$e');
-    } finally {
-      setState(() => _isLoading = false);
-    }*/
 
     try {
       final uri = Uri.parse(ApiPath.checkCharityEmail); //驗證email API

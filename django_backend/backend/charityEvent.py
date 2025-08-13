@@ -11,12 +11,10 @@ from rest_framework.decorators import api_view, permission_classes
 from django.utils import timezone
 
 
-@permission_classes([IsAuthenticated])
 def createCharityEvent(request):
 
     try:
         user = request.user
-        print(user)
         if not user or not user.is_authenticated:
             return JsonResponse({'success': False, 'message': '未登入'}, status=401)
 

@@ -93,6 +93,8 @@ class VerifyPassword(APIView):
 class CreateUser(APIView):
     """創建帳號"""
 
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         try:
             accountType = request.query_params.get('type', "")
@@ -124,6 +126,8 @@ class CreateUser(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class CreatePersonalInfo(APIView):
     """創建個人資料"""
+
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
 
@@ -159,6 +163,8 @@ class CreatePersonalInfo(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class CreateCharityInfo(APIView):
     """創建團體資料"""
+
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         try:
