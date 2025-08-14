@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/charity_screens/charity_QRCode.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_QRCode.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_qr_code.dart';
 
 class CharitySettingPage extends StatefulWidget {
   const CharitySettingPage({super.key});

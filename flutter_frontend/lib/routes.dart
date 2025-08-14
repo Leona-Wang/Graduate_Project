@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/charity_screens/charity_QRCode.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_qr_code.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_home.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_event_list.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_event_detail_page.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_mailbox.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_edit_event.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organize_number.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_QRCode.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
 import 'package:flutter_frontend/screens/login/group_signin.dart';
@@ -17,6 +18,7 @@ import 'package:flutter_frontend/screens/login/group_signup.dart';
 import 'package:flutter_frontend/screens/login/personal_signin.dart';
 import 'package:flutter_frontend/screens/login/personal_signup.dart';
 import 'package:flutter_frontend/screens/login/test_image.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_mailbox.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_map.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_pet.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_setting.dart';
@@ -47,7 +49,8 @@ class AppRoutes {
   static const String personalEventDetail = '/personal_event_detail_page';
   static const String personalEventList =
       '/personal_event_list'; //活動清單(包含在map裡面)
-  static const String personalQRCode = '/personal_QRCode'; //個人用戶QRcode(生產)
+  static const String personalQRCode = '/personal_qr_code'; //個人用戶QRcode(生產)
+  static const String personalMailbox = '/personal_mailbox'; //個人用戶信箱
 
   //charity_screens
 
@@ -60,7 +63,8 @@ class AppRoutes {
   static const String charityCoorganizer = '/charity_co-organizer';
   static const String charityCoorganizeNumber = '/charity_co-organizer_number';
   static const String charityEventDetail = '/charity_event_detail_page';
-  static const String charityQRCode = '/charity_QRCode'; //掃描QRCode
+  static const String charityQRCode = '/charity_qr_code'; //掃描QRCode
+  static const String charityMailbox = '/charity_mailbox'; //機構信箱
 
   //登入與註冊頁面
   static const String personalSignin = '/personal_signin'; //個人登入
@@ -122,6 +126,9 @@ class AppRoutes {
       case personalQRCode:
         return MaterialPageRoute(builder: (_) => PersonalQRCodePage());
 
+      case personalMailbox:
+        return MaterialPageRoute(builder: (_) => PersonalMailboxPage());
+
       //charity_screens
       case charityEventList:
         return MaterialPageRoute(builder: (_) => CharityEventListPage());
@@ -161,6 +168,9 @@ class AppRoutes {
 
       case charityQRCode:
         return MaterialPageRoute(builder: (_) => CharityQRCodePage());
+
+      case charityMailbox:
+        return MaterialPageRoute(builder: (_) => CharityMailboxPage());
 
       //login-out
       case personalSignin:

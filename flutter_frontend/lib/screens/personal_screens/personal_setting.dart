@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_QRCode.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
 
 class PersonalSettingPage extends StatefulWidget {
   const PersonalSettingPage({super.key});
