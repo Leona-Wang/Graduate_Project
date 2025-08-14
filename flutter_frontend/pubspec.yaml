@@ -52,7 +52,11 @@ dependencies:
   qr_flutter: ^4.0.0
   mobile_scanner: ^3.5.1
 
+  #session record
   shared_preferences: ^2.5.3
+
+  #select image
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

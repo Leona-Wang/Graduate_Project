@@ -16,6 +16,7 @@ import 'package:flutter_frontend/screens/login/group_signin.dart';
 import 'package:flutter_frontend/screens/login/group_signup.dart';
 import 'package:flutter_frontend/screens/login/personal_signin.dart';
 import 'package:flutter_frontend/screens/login/personal_signup.dart';
+import 'package:flutter_frontend/screens/login/test_image.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_map.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_pet.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_setting.dart';
@@ -66,6 +67,7 @@ class AppRoutes {
   static const String personalSignup = '/personal_signup'; //個人註冊
   static const String groupSignin = '/group_signin'; //團體登入
   static const String groupSignup = '/group_signup'; //團體註冊
+  static const String testImage = '/test_image';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -74,6 +76,9 @@ class AppRoutes {
 
       case userRegister:
         return MaterialPageRoute(builder: (_) => const UserRegisterPage());
+
+      case testImage:
+        return MaterialPageRoute(builder: (_) => const TestImagePage());
 
       case example1:
         return MaterialPageRoute(builder: (_) => const Example1Page());

@@ -130,29 +130,38 @@ class CreatePersonalInfo(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-
         try:
             email = request.data.get('email', "")
             nickname = request.data.get('nickname', "")
-            location = request.data.get('location', "")
-            eventTypeNames = request.data.get('eventType', [])
+            location_name = request.data.get('location', "")
+            eventTypeNames = request.data.getlist('eventType', []) # 如果是 multipart/form-data 要用 getlist
 
+            # 找到對應的使用者
             user = User.objects.filter(email=email).first()
+            if not user:
+                return JsonResponse({'success': False, 'message': '找不到使用者'}, status=404)
+
             user.first_name = nickname
             user.save()
 
-            location = Location.objects.filter(locationName=location).first()
+            # 找到對應的地區
+            location = Location.objects.filter(locationName=location_name).first()
 
+            # 建立 PersonalInfo
             personalInfo = PersonalInfo.objects.create(user=user, location=location)
+
+            # 如果有圖片
+            avatar_file = request.FILES.get('avatar')
+            if avatar_file:
+                personalInfo.avatar = avatar_file
+
             personalInfo.save()
 
+            # 加入活動類型
             for eventTypeName in eventTypeNames:
-
                 eventType = EventType.objects.filter(typeName=eventTypeName).first()
-                if eventType is not None:
+                if eventType:
                     personalInfo.eventType.add(eventType)
-
-            personalInfo.save()
 
             return JsonResponse({'success': True}, status=200)
 

@@ -1,7 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
 
 import '../../config.dart';
 
@@ -28,7 +30,20 @@ class PersonalSignupState extends State<PersonalSignupPage> {
 
   String _errorMessage = '';
 
-  //帶email過來
+  // 大頭照檔案
+  File? _avatarFile;
+  final picker = ImagePicker();
+
+  // 選取圖片
+  Future<void> _pickAvatar() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _avatarFile = File(pickedFile.path);
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -69,7 +84,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
       setState(() => _errorMessage = '請設定密碼');
       return;
     }
-    //暫定的密碼檢驗機制，可更改
     if (personalPassword.length < 8) {
       setState(() => _errorMessage = '密碼須至少8個字元');
       return;
@@ -85,9 +99,8 @@ class PersonalSignupState extends State<PersonalSignupPage> {
     });
 
     try {
-      final uriData = Uri.parse(ApiPath.createPersonalInfo); //個人資料API
-      final uriPassword = Uri.parse(ApiPath.createPersonalUser); //密碼API
-
+      // 1. 先建立帳號（密碼 API）
+      final uriPassword = Uri.parse(ApiPath.createPersonalUser);
       final accountCreate = await http.post(
         uriPassword,
         headers: {'Content-Type': 'application/json'},
@@ -98,20 +111,23 @@ class PersonalSignupState extends State<PersonalSignupPage> {
         }),
       );
 
-      final infoCreate = await http
-          .post(
-            uriData,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'email': _emailController.text.trim(),
-              'nickname': _nicknameController.text.trim(),
-              'location': _selectLocation,
-              'eventType': _selectPrefer.toList(),
-            }),
-          )
-          .timeout(const Duration(seconds: 10));
+      // 2. 再建立個人資料（用 Multipart 上傳圖片）
+      final uriData = Uri.parse(ApiPath.createPersonalInfo);
+      var request = http.MultipartRequest('POST', uriData);
+      request.fields['email'] = _emailController.text.trim();
+      request.fields['nickname'] = _nicknameController.text.trim();
+      request.fields['location'] = _selectLocation ?? '';
+      request.fields['eventType'] = jsonEncode(_selectPrefer.toList());
 
-      if (accountCreate.statusCode == 200 && infoCreate.statusCode == 200) {
+      if (_avatarFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('avatar', _avatarFile!.path),
+        );
+      }
+
+      var infoResponse = await request.send();
+
+      if (accountCreate.statusCode == 200 && infoResponse.statusCode == 200) {
         _showMessage('註冊成功!');
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -121,13 +137,8 @@ class PersonalSignupState extends State<PersonalSignupPage> {
       } else if (accountCreate.statusCode != 200) {
         setState(() => _errorMessage = '密碼設定失敗:${accountCreate.body}');
       } else {
-        setState(() => _errorMessage = '個人資料建立失敗:${infoCreate.body}');
+        setState(() => _errorMessage = '個人資料建立失敗:${infoResponse.statusCode}');
       }
-
-      print(infoCreate.statusCode);
-      print(infoCreate.body);
-      print(accountCreate.statusCode);
-      print(accountCreate.body);
     } catch (e) {
       setState(() => _errorMessage = '錯誤:$e');
     } finally {
@@ -149,14 +160,30 @@ class PersonalSignupState extends State<PersonalSignupPage> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 500),
+              constraints: const BoxConstraints(maxWidth: 500),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 16),
-                  //設定個人資料
                   if (!_isPasswordState) ...[
-                    //email 有預設輸入的值
+                    // 大頭照選擇
+                    GestureDetector(
+                      onTap: _pickAvatar,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage:
+                            _avatarFile != null
+                                ? FileImage(_avatarFile!)
+                                : null,
+                        child:
+                            _avatarFile == null
+                                ? const Icon(Icons.camera_alt, size: 40)
+                                : null,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // email
                     TextField(
                       controller: _emailController,
                       decoration: const InputDecoration(
@@ -172,7 +199,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    //暱稱
+                    // 暱稱
                     TextField(
                       controller: _nicknameController,
                       decoration: const InputDecoration(
@@ -188,7 +215,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    //使用者活動地區
+                    // 地區
                     DropdownButtonFormField<String>(
                       value: _selectLocation,
                       hint: const Text('請選擇您經常活動的地區'),
@@ -235,7 +262,7 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    //使用者偏好
+                    // 偏好活動
                     DropdownButtonFormField(
                       hint: const Text('請選擇您偏好的慈善活動'),
                       items:
@@ -265,7 +292,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                                 builder: (context, _setState) {
                                   return Row(
                                     children: [
-                                      //選取
                                       Checkbox(
                                         value: _selectPrefer.contains(e),
                                         onChanged: (isSelected) {
@@ -293,14 +319,12 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                     ),
                     const SizedBox(height: 24),
 
-                    //下一步按鈕
                     ElevatedButton(
                       onPressed: _isLoading ? null : _nextStep,
                       child: const Text('下一步'),
                     ),
                   ],
 
-                  //設定密碼頁面
                   if (_isPasswordState) ...[
                     Align(
                       alignment: Alignment.centerLeft,
@@ -314,7 +338,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                         child: const Text('← 上一步'),
                       ),
                     ),
-                    //密碼輸入
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
@@ -325,8 +348,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    //再次輸入密碼
                     TextField(
                       controller: _confirmController,
                       obscureText: true,
@@ -337,8 +358,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    //提交按鈕
                     ElevatedButton(
                       onPressed: _isLoading ? null : _submitRegister,
                       child:
@@ -348,7 +367,6 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                     ),
                   ],
 
-                  //錯誤訊息
                   if (_errorMessage.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Text(
