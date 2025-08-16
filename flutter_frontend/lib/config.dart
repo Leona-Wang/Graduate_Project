@@ -89,7 +89,7 @@ class ApiPath {
   static String get verifyUserQRCode =>
       '${BaseConfig.baseUrl}/events/user_QRCode/';
 
-  //查看單一郵件詳細資訊與內容，用 GET，mailId填入信件的id，後端回傳範例:
+  //查看單一郵件詳細資訊與內容(查看後該信件會自動設為已讀)，用 GET，mailId填入信件的id，後端回傳範例:
   // {
   //   "success": true,
   //   "mail": {
