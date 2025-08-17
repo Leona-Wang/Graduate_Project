@@ -7,6 +7,7 @@ import uuid
 
 # Create your models here.
 
+# user 的設定: first_name 是暱稱，username 是 email (unique)，last_name 沒有東西，email 還是 email
 
 class Location(models.Model):
     locationName = models.TextField(null=False)

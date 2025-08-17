@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_frontend/config.dart';
 
 import 'personal_event_list.dart';
 
@@ -74,14 +75,14 @@ class _EventDetailPageState extends State<PersonalEventDetailPage> {
   }
 
   Future<FullEvent> fetchDetail(int id) async {
-    final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/charity-events/$id/'),
-    );
+    final url = ApiPath.charityEventDetail(id);
+    final resp = await http.get(Uri.parse(url));
 
-    if (response.statusCode == 200) {
-      return FullEvent.fromJson(json.decode(response.body));
+    if (resp.statusCode == 200) {
+      final map = json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+      return FullEvent.fromJson(map);
     } else {
-      throw Exception('載入詳情失敗 (${response.statusCode})');
+      throw Exception('載入詳情失敗 (${resp.statusCode})');
     }
   }
 

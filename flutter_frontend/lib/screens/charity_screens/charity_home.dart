@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_event_list.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_mailbox.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
 
 class CharityHomePage extends StatefulWidget {
   const CharityHomePage({super.key});
@@ -23,11 +24,9 @@ class CharityHomePageState extends State<CharityHomePage> {
   }
 
   void _coEventPage() {
-    /*
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const ()))
-    */
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const CharityCoorganizerPage()),
+      );
     //或是可以做成彈出式框框，直接在這裡接API
   }
 

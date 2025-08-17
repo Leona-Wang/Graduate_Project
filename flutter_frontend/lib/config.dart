@@ -88,4 +88,20 @@ class ApiPath {
   //不用擔心兩個 url 一樣的問題，我有區分開
   static String get verifyUserQRCode =>
       '${BaseConfig.baseUrl}/events/user_QRCode/';
+
+  //查看單一郵件詳細資訊與內容(查看後該信件會自動設為已讀)，用 GET，mailId填入信件的id，後端回傳範例:
+  // {
+  //   "success": true,
+  //   "mail": {
+  //     "sender": "慈善團體A",
+  //     "receiver": "使用者暱稱A",
+  //     "date": "2025-08-16T12:34:56",
+  //     "type": "活動",
+  //     "title": "活動提醒",
+  //     "content": "您的活動...即將開始！",
+  //     "isRead": true
+  //   }
+  // }
+  static String getMailDetail(int mailId) =>
+    '${BaseConfig.baseUrl}/mail/$mailId/';
 }

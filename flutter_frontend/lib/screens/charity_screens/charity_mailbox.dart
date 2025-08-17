@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../api_client.dart';
+import 'package:flutter_frontend/routes.dart';
 
 class CharityMailboxPage extends StatefulWidget {
   const CharityMailboxPage({super.key});
@@ -69,10 +70,13 @@ class CharityMailboxPageState extends State<CharityMailboxPage>
         return ListTile(
           title: Text(mail['title'] ?? ''),
           subtitle: Text('ID: ${mail['id']}'),
-          //trailing: const Icon(Icons.chevron_right),
-          /*onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => 這裡放詳情頁面(mail: mail)));
-          },*/
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              AppRoutes.charityMailDetail, // 路由
+              arguments: mail['id'] as int, // 傳 int
+            );
+          },
         );
       },
     );

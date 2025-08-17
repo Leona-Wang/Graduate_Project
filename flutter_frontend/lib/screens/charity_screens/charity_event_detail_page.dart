@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_frontend/config.dart';
 
 import 'charity_event_list.dart';
 
@@ -74,14 +75,14 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
   }
 
   Future<FullEvent> fetchDetail(int id) async {
-    final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/charity-events/$id/'),
-    );
+    final url = ApiPath.charityEventDetail(id);
+    final resp = await http.get(Uri.parse(url));
 
-    if (response.statusCode == 200) {
-      return FullEvent.fromJson(json.decode(response.body));
+    if (resp.statusCode == 200) {
+      final map = json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+      return FullEvent.fromJson(map);
     } else {
-      throw Exception('載入詳情失敗 (${response.statusCode})');
+      throw Exception('載入詳情失敗 (${resp.statusCode})');
     }
   }
 
@@ -103,7 +104,7 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
                 SnackBar(content: Text(isFavorite ? "已加入收藏" : "已取消收藏")),
               );
             },
-          )
+          ),
         ],
       ),
       body: FutureBuilder<FullEvent>(
@@ -122,9 +123,13 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(event.title,
-                      style:
-                          const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(
+                    event.title,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Text("主辦單位：${event.mainOrganizer}"),
                   if (event.coOrganizers.isNotEmpty)
@@ -135,13 +140,18 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
                   Text("地址：${event.address}"),
                   const SizedBox(height: 16),
                   Text("活動時間："),
-                  Text("${formatDateTime(event.startTime)} ～ ${formatDateTime(event.endTime)}"),
+                  Text(
+                    "${formatDateTime(event.startTime)} ～ ${formatDateTime(event.endTime)}",
+                  ),
                   const SizedBox(height: 8),
                   Text("報名截止：${formatDateTime(event.signupDeadline)}"),
                   Text("狀態：${event.status}"),
                   Text("目前報名人數：${event.participants}"),
                   const SizedBox(height: 24),
-                  const Text("活動介紹", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "活動介紹",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   Text(event.description),
                   const SizedBox(height: 32),
@@ -152,9 +162,9 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text("我要參加"),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("報名成功！")),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(const SnackBar(content: Text("報名成功！")));
                       },
                     ),
                   ),

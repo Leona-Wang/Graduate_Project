@@ -42,4 +42,5 @@ urlpatterns = [
         name="addCharityEventUserRecord"
     ),
     path('events/user_QRCode/', views.ProcessUserQRCode.as_view(), name="ProcessUserQRCode"),
+    path('mail/<int:mailId>/', views.GetMailDetail.as_view(), name="mailDetail"),
 ]

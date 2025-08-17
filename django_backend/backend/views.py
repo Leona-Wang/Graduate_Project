@@ -21,6 +21,7 @@ from .charityEvent import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
+from .mails import getMailDetail
 
 
 # Create your views here.
@@ -385,3 +386,11 @@ class ProcessUserQRCode(APIView):
                 return JsonResponse({'success': False, 'message': '無參加資訊'}, status=404)
         else:
             return JsonResponse({'success': False, 'message': '無此code或code過期'}, status=404)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GetMailDetail(APIView):
+    """查看單一郵件詳細資訊與內容"""
+    def get(self, request, *args, **kwargs):
+        mailId = kwargs.get('mailId')
+        return getMailDetail(request, mailId)

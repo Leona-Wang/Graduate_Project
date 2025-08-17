@@ -4,6 +4,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_home.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_event_list.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_event_detail_page.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_mailbox.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_mail_detail.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_edit_event.dart';
@@ -19,6 +20,7 @@ import 'package:flutter_frontend/screens/login/personal_signin.dart';
 import 'package:flutter_frontend/screens/login/personal_signup.dart';
 import 'package:flutter_frontend/screens/login/test_image.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_mailbox.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_mail_detail.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_map.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_pet.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_setting.dart';
@@ -51,6 +53,7 @@ class AppRoutes {
       '/personal_event_list'; //活動清單(包含在map裡面)
   static const String personalQRCode = '/personal_qr_code'; //個人用戶QRcode(生產)
   static const String personalMailbox = '/personal_mailbox'; //個人用戶信箱
+  static const String personalMailDetail = '/personal_maildetail'; //個人信箱詳情
 
   //charity_screens
 
@@ -65,6 +68,7 @@ class AppRoutes {
   static const String charityEventDetail = '/charity_event_detail_page';
   static const String charityQRCode = '/charity_qr_code'; //掃描QRCode
   static const String charityMailbox = '/charity_mailbox'; //機構信箱
+  static const String charityMailDetail = '/charity_maildetail'; //機構信箱詳情
 
   //登入與註冊頁面
   static const String personalSignin = '/personal_signin'; //個人登入
@@ -129,6 +133,12 @@ class AppRoutes {
       case personalMailbox:
         return MaterialPageRoute(builder: (_) => PersonalMailboxPage());
 
+      case personalMailDetail:
+        final mailId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => PersonalMailDetailPage(mailId: mailId),
+        );
+
       //charity_screens
       case charityEventList:
         return MaterialPageRoute(builder: (_) => CharityEventListPage());
@@ -171,6 +181,12 @@ class AppRoutes {
 
       case charityMailbox:
         return MaterialPageRoute(builder: (_) => CharityMailboxPage());
+
+      case charityMailDetail:
+        final mailId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => CharityMailDetailPage(mailId: mailId),
+        );
 
       //login-out
       case personalSignin:
