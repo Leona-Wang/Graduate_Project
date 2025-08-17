@@ -137,9 +137,6 @@ class LetterType(models.Model):
 
 
 class Letter(models.Model):
-    sender = models.ForeignKey(
-        CharityInfo, null=True, blank=True, on_delete=models.SET_NULL, related_name="sentLetters"
-    ) # 寄件人
     receiver = models.ForeignKey(
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name="receivedLetters"
     ) # 收件人
@@ -148,6 +145,18 @@ class Letter(models.Model):
     title = models.CharField(max_length=255, null=False, blank=False) # 標題
     content = models.TextField(null=False, blank=False) # 內容
     isRead = models.BooleanField(default=False) # 是否已讀
+    charityEvent = models.ForeignKey(
+        'CharityEvent', null=True, blank=True, on_delete=models.CASCADE, related_name="letters"
+    )
+    officialEvent = models.ForeignKey(
+        'OfficialEvent', null=True, blank=True, on_delete=models.CASCADE, related_name="letters"
+    )
+    
+class LetterExample(models.Model):
+    templateName = models.TextField(null=False, blank=False)
+    type = models.ForeignKey(LetterType, null=True, blank=True, on_delete=models.SET_NULL) # 信件類型
+    title = models.CharField(max_length=255, null=False, blank=False) # 標題
+    content = models.TextField(null=False, blank=False) # 內容  
     
 class Prize(models.Model):
     name = models.CharField(max_length=20, null=False, blank=False)  # 獎品名稱
@@ -157,4 +166,5 @@ class Reward(models.Model):
     prize = models.ForeignKey(Prize, null=True, blank=False, on_delete=models.SET_NULL)  # 對應獎品
     receiver = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)# 得獎者
     quantity = models.IntegerField()  # 個數
+    isReceived = models.BooleanField(default=False)
 
