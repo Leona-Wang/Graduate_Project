@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
 
 class PersonalSettingPage extends StatefulWidget {
@@ -12,12 +11,6 @@ class PersonalSettingPage extends StatefulWidget {
 class PersonalSettingPageState extends State<PersonalSettingPage> {
   void backToHome() {
     PersonalHomeTab.of(context)?.switchTab(0);
-  }
-
-  void qrCode() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const PersonalQRCodePage()));
   }
 
   @override
@@ -38,24 +31,7 @@ class PersonalSettingPageState extends State<PersonalSettingPage> {
         ),
         title: const Text('設定'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            SizedBox(
-              width: 200,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: qrCode,
-                child: const Text(
-                  '活動報到',
-                  style: TextStyle(fontSize: 20, color: Colors.amber),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: Center(child: const Text('絕命測試中...')),
     );
   }
 }

@@ -135,7 +135,10 @@ class AppRoutes {
         );
 
       case personalQRCode:
-        return MaterialPageRoute(builder: (_) => PersonalQRCodePage());
+        final eventName = settings.arguments as String?;
+        return MaterialPageRoute(
+          builder: (_) => PersonalQRCodePage(eventName: eventName ?? ''),
+        );
 
       case personalMailbox:
         return MaterialPageRoute(builder: (_) => PersonalMailboxPage());
@@ -152,7 +155,7 @@ class AppRoutes {
       case personalEventJournal:
         return MaterialPageRoute(builder: (_) => PersonalEventJournalPage());
 
-      case personalEventDetail:
+      case personalJournalDetail:
         return MaterialPageRoute(builder: (_) => PersonalJournalDetailPage());
 
       //charity_screens

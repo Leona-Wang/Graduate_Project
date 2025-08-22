@@ -6,7 +6,8 @@ import 'package:flutter_frontend/qr_code_generator.dart';
 import '../../api_client.dart';
 
 class PersonalQRCodePage extends StatefulWidget {
-  const PersonalQRCodePage({super.key});
+  final String eventName;
+  const PersonalQRCodePage({super.key, required this.eventName});
 
   @override
   State<PersonalQRCodePage> createState() => PersonalQRCodePageState();
@@ -14,7 +15,8 @@ class PersonalQRCodePage extends StatefulWidget {
 
 class PersonalQRCodePageState extends State<PersonalQRCodePage> {
   String token = '';
-  int secondsLeft = 300;
+  String fakeToken = '123456';
+  int secondsLeft = 300; //5mins
   Timer? countdownTimer;
 
   @override
@@ -68,6 +70,15 @@ class PersonalQRCodePageState extends State<PersonalQRCodePage> {
     });
   }
 
+  String get qrData {
+    final Map<String, dynamic> data = {
+      'token': fakeToken, //測試
+      'eventName': widget.eventName,
+    };
+    print(data);
+    return jsonEncode(data);
+  }
+
   @override
   Widget build(BuildContext context) {
     final minutes = (secondsLeft ~/ 60).toString().padLeft(2, '0');
@@ -77,12 +88,13 @@ class PersonalQRCodePageState extends State<PersonalQRCodePage> {
       appBar: AppBar(title: const Text('報到QRCode')),
       body: Center(
         child:
-            token.isEmpty
+            fakeToken
+                    .isEmpty //測試
                 ? const CircularProgressIndicator()
                 : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    QRCodeGenerator(token: token),
+                    QRCodeGenerator(data: qrData),
                     const SizedBox(height: 20),
                     Text(
                       "剩餘時間：$minutes:$seconds",

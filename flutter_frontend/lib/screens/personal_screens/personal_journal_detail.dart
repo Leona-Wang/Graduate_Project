@@ -10,10 +10,13 @@ class PersonalJournalDetailPage extends StatefulWidget {
 }
 
 class PersonalJournalDetailPageState extends State<PersonalJournalDetailPage> {
+  final String eventName = '台北西門町的捐血車'; //測試用假資料
   void toQRCode() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => PersonalQRCodePage()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PersonalQRCodePage(eventName: eventName),
+      ),
+    );
   }
 
   @override
