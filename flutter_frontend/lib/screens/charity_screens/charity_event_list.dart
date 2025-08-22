@@ -9,6 +9,7 @@ import '../../api_client.dart';
 class CharityEventListPage extends StatefulWidget {
   const CharityEventListPage({super.key});
 
+  @override
   State<CharityEventListPage> createState() => CharityEventListState();
 }
 
@@ -58,6 +59,7 @@ class CharityEventListState extends State<CharityEventListPage> {
   bool sortAscending = true;
   bool? filterOnline; // ← 新增：null=全部, true=線上, false=線下
 
+  @override
   void initState() {
     super.initState();
     fetchEvents();

@@ -6,6 +6,7 @@ import '../../api_client.dart';
 class PersonalMapPage extends StatefulWidget {
   const PersonalMapPage({super.key});
 
+  @override
   State<PersonalMapPage> createState() => PersonalMapState();
 }
 

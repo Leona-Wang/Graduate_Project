@@ -7,6 +7,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.da
 class CharityHomePage extends StatefulWidget {
   const CharityHomePage({super.key});
 
+  @override
   State<CharityHomePage> createState() => CharityHomePageState();
 }
 
@@ -24,9 +25,9 @@ class CharityHomePageState extends State<CharityHomePage> {
   }
 
   void _coEventPage() {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const CharityCoorganizerPage()),
-      );
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const CharityCoorganizerPage()),
+    );
     //或是可以做成彈出式框框，直接在這裡接API
   }
 

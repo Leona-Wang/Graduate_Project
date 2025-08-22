@@ -7,6 +7,7 @@ import '../../api_client.dart';
 class PersonalEventListPage extends StatefulWidget {
   const PersonalEventListPage({super.key});
 
+  @override
   State<PersonalEventListPage> createState() => PersonalEventListState();
 }
 
@@ -51,6 +52,7 @@ class PersonalEventListState extends State<PersonalEventListPage> {
   //篩選器
   bool sortAscending = true;
 
+  @override
   void initState() {
     super.initState();
     fetchEvents();

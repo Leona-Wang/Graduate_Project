@@ -8,6 +8,7 @@ import 'package:flutter_frontend/routes.dart';
 class PersonalMailboxPage extends StatefulWidget {
   const PersonalMailboxPage({super.key});
 
+  @override
   State<PersonalMailboxPage> createState() => PersonalMailboxPageState();
 }
 

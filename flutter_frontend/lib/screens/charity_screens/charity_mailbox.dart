@@ -8,6 +8,7 @@ import 'package:flutter_frontend/routes.dart';
 class CharityMailboxPage extends StatefulWidget {
   const CharityMailboxPage({super.key});
 
+  @override
   State<CharityMailboxPage> createState() => CharityMailboxPageState();
 }
 

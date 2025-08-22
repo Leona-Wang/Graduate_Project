@@ -9,12 +9,22 @@ import 'package:flutter_frontend/screens/personal_screens/personal_setting.dart'
 class PersonalHomeTab extends StatefulWidget {
   const PersonalHomeTab({super.key});
 
+  static _HomePageState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_HomePageState>();
+  }
+
   @override
   State<PersonalHomeTab> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<PersonalHomeTab> {
   int _currentTabIndex = 0;
+
+  void switchTab(int indext) {
+    setState(() {
+      _currentTabIndex = indext;
+    });
+  }
 
   final List<Widget> _pages = const [
     PersonalHomePage(), //0
@@ -49,7 +59,7 @@ class _HomePageState extends State<PersonalHomeTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      /**appBar: AppBar(
         automaticallyImplyLeading: false,
         leading:
             _currentTabIndex != 0
@@ -61,7 +71,7 @@ class _HomePageState extends State<PersonalHomeTab> {
                 )
                 : null,
         title: Text(_getTitleForIndex(_currentTabIndex)),
-      ),
+      ),**/
       body: Stack(
         children: List.generate(_pages.length, (index) {
           return Offstage(
@@ -152,7 +162,7 @@ class _HomePageState extends State<PersonalHomeTab> {
   }
 
   //最上層返回鍵標題
-  String _getTitleForIndex(int index) {
+  /**String _getTitleForIndex(int index) {
     switch (index) {
       case 1:
         return '寵物';
@@ -165,5 +175,5 @@ class _HomePageState extends State<PersonalHomeTab> {
       default:
         return "";
     }
-  }
+  }**/
 }

@@ -4,6 +4,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_qr_code.dart';
 class CharitySettingPage extends StatefulWidget {
   const CharitySettingPage({super.key});
 
+  @override
   State<CharitySettingPage> createState() => CharitySettingPageState();
 }
 
