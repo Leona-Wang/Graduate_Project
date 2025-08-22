@@ -19,11 +19,20 @@ class PersonalHomeTab extends StatefulWidget {
 
 class _HomePageState extends State<PersonalHomeTab> {
   int _currentTabIndex = 0;
+  bool _showBottomBar = true;
 
   void switchTab(int indext) {
     setState(() {
       _currentTabIndex = indext;
     });
+  }
+
+  void hideBottomBar() {
+    setState(() => _showBottomBar = false);
+  }
+
+  void showBottomBar() {
+    setState(() => _showBottomBar = true);
   }
 
   final List<Widget> _pages = const [
@@ -40,14 +49,9 @@ class _HomePageState extends State<PersonalHomeTab> {
   );
 
   void _selectTab(int index) {
-    if (_currentTabIndex == index) {
-      // 重複點擊 pop 回該頁的根
-      _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
-    } else {
-      setState(() {
-        _currentTabIndex = index;
-      });
-    }
+    setState(() {
+      _currentTabIndex = index;
+    });
   }
 
   void _openMapPage() {
@@ -84,46 +88,66 @@ class _HomePageState extends State<PersonalHomeTab> {
             ),
           );
         }),
-      ), //切換頁面
-      //地圖按鈕，大圓圓
-      floatingActionButton: SizedBox(
-        height: 64,
-        width: 64,
-        child: FloatingActionButton(
-          backgroundColor: Colors.amber,
-          shape: const CircleBorder(),
-          onPressed: _openMapPage,
-          child: const Icon(Icons.map, size: 32, color: Colors.brown),
-        ),
       ),
+      //切換頁面
+      //地圖按鈕，大圓圓
+      floatingActionButton: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        //height: _showBottomBar ?  : 0,
+        child:
+            _showBottomBar
+                ? SizedBox(
+                  height: 64,
+                  width: 64,
+                  child: FloatingActionButton(
+                    backgroundColor: Colors.amber,
+                    shape: const CircleBorder(),
+                    onPressed: _openMapPage,
+                    child: const Icon(Icons.map, size: 32, color: Colors.brown),
+                  ),
+                )
+                : null,
+      ),
+
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        child: SizedBox(
-          height: 72,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navButton(
-                icon: Icons.cruelty_free_outlined,
-                label: '寵物',
-                pageIndex: 1,
+      bottomNavigationBar: Offstage(
+        offstage: !_showBottomBar,
+        child: AnimatedOpacity(
+          opacity: _showBottomBar ? 1 : 0,
+          duration: const Duration(milliseconds: 300),
+          child: BottomAppBar(
+            shape: const CircularNotchedRectangle(),
+            notchMargin: 8.0,
+            child: SizedBox(
+              height: 72,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _navButton(
+                    icon: Icons.cruelty_free_outlined,
+                    label: '寵物',
+                    pageIndex: 1,
+                  ),
+                  _navButton(
+                    icon: Icons.add_shopping_cart,
+                    label: '商城',
+                    pageIndex: 2,
+                  ),
+                  const SizedBox(width: 48), //中間主按鈕位置
+                  _navButton(
+                    icon: Icons.announcement_rounded,
+                    label: '活動',
+                    pageIndex: 3,
+                  ),
+                  _navButton(
+                    icon: Icons.construction,
+                    label: '設定',
+                    pageIndex: 4,
+                  ),
+                ],
               ),
-              _navButton(
-                icon: Icons.add_shopping_cart,
-                label: '商城',
-                pageIndex: 2,
-              ),
-              const SizedBox(width: 48), //中間主按鈕位置
-              _navButton(
-                icon: Icons.announcement_rounded,
-                label: '活動',
-                pageIndex: 3,
-              ),
-              _navButton(icon: Icons.construction, label: '設定', pageIndex: 4),
-            ],
+            ),
           ),
         ),
       ),

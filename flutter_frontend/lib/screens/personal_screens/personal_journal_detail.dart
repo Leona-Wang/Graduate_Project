@@ -1,27 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
 
-class PersonalProfilePage extends StatefulWidget {
-  const PersonalProfilePage({super.key});
+class PersonalJournalDetailPage extends StatefulWidget {
+  const PersonalJournalDetailPage({super.key});
 
   @override
-  State<PersonalProfilePage> createState() => PersonalProfilePageState();
+  State<PersonalJournalDetailPage> createState() =>
+      PersonalJournalDetailPageState();
 }
 
-class PersonalProfilePageState extends State<PersonalProfilePage> {
-  void backToHome() {
-    Navigator.pushAndRemoveUntil(
+class PersonalJournalDetailPageState extends State<PersonalJournalDetailPage> {
+  void toQRCode() {
+    Navigator.of(
       context,
-      MaterialPageRoute(builder: (context) => const PersonalHomePage()),
-      (route) => false,
-    );
-  }
-
-  void toEventHistory() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const PersonalEventJournalPage()),
-    );
+    ).push(MaterialPageRoute(builder: (_) => PersonalQRCodePage()));
   }
 
   @override
@@ -34,13 +26,13 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
           child: CircleAvatar(
             backgroundColor: Colors.amberAccent,
             child: IconButton(
-              onPressed: backToHome,
+              onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
-              tooltip: '返回主頁',
+              tooltip: '返回',
             ),
           ),
         ),
-        title: const Text('個人資訊'),
+        title: const Text('活動詳情'),
       ),
       body: Center(
         child: Column(
@@ -50,9 +42,9 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
               width: 200,
               height: 60,
               child: ElevatedButton(
-                onPressed: toEventHistory,
+                onPressed: toQRCode,
                 child: const Text(
-                  '個人活動履歷',
+                  '報到!',
                   style: TextStyle(fontSize: 20, color: Colors.brown),
                 ),
               ),

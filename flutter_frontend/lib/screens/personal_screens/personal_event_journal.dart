@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_journal_detail.dart';
 
-class PersonalProfilePage extends StatefulWidget {
-  const PersonalProfilePage({super.key});
+class PersonalEventJournalPage extends StatefulWidget {
+  const PersonalEventJournalPage({super.key});
 
   @override
-  State<PersonalProfilePage> createState() => PersonalProfilePageState();
+  State<PersonalEventJournalPage> createState() =>
+      PersonalEventJournalPageState();
 }
 
-class PersonalProfilePageState extends State<PersonalProfilePage> {
-  void backToHome() {
-    Navigator.pushAndRemoveUntil(
+class PersonalEventJournalPageState extends State<PersonalEventJournalPage> {
+  void toEventDetail() {
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PersonalHomePage()),
-      (route) => false,
-    );
-  }
-
-  void toEventHistory() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const PersonalEventJournalPage()),
+      MaterialPageRoute(
+        builder: (context) => const PersonalJournalDetailPage(),
+      ),
     );
   }
 
@@ -34,13 +29,13 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
           child: CircleAvatar(
             backgroundColor: Colors.amberAccent,
             child: IconButton(
-              onPressed: backToHome,
+              onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
               tooltip: '返回主頁',
             ),
           ),
         ),
-        title: const Text('個人資訊'),
+        title: const Text('個人活動履歷'),
       ),
       body: Center(
         child: Column(
@@ -50,9 +45,9 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
               width: 200,
               height: 60,
               child: ElevatedButton(
-                onPressed: toEventHistory,
+                onPressed: toEventDetail,
                 child: const Text(
-                  '個人活動履歷',
+                  '已報名活動', //等這裡的API做好後改為動態更新的列表
                   style: TextStyle(fontSize: 20, color: Colors.brown),
                 ),
               ),

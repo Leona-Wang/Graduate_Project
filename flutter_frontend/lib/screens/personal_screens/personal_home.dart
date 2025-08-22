@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_mailbox.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_profile.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
 
 class PersonalHomePage extends StatefulWidget {
   const PersonalHomePage({super.key});
@@ -11,15 +12,23 @@ class PersonalHomePage extends StatefulWidget {
 
 class PersonalHomePageState extends State<PersonalHomePage> {
   void toMail() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const PersonalMailboxPage()),
-    );
+    PersonalHomeTab.of(context)?.hideBottomBar();
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(builder: (context) => const PersonalMailboxPage()),
+        )
+        .then((_) {
+          PersonalHomeTab.of(context)?.showBottomBar();
+        });
   }
 
   void toProfile() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const PersonalProfilePage()),
-    );
+    PersonalHomeTab.of(context)?.hideBottomBar();
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const PersonalProfilePage()))
+        .then((_) {
+          PersonalHomeTab.of(context)?.showBottomBar();
+        });
   }
 
   @override

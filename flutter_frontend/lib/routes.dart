@@ -11,6 +11,8 @@ import 'package:flutter_frontend/screens/charity_screens/charity_edit_event.dart
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organize_number.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_journal_detail.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_profile.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event.dart';
@@ -56,6 +58,9 @@ class AppRoutes {
   static const String personalMailbox = '/personal_mailbox'; //個人用戶信箱
   static const String personalMailDetail = '/personal_maildetail'; //個人信箱詳情
   static const String personalProfile = '/personal_profile'; //個人用戶資訊
+  static const String personalEventJournal =
+      '/personal_event_journal'; //個人用戶活動履歷
+  static const String personalJournalDetail = '/personal_journal_detail';
 
   //charity_screens
 
@@ -143,6 +148,12 @@ class AppRoutes {
 
       case personalProfile:
         return MaterialPageRoute(builder: (_) => PersonalProfilePage());
+
+      case personalEventJournal:
+        return MaterialPageRoute(builder: (_) => PersonalEventJournalPage());
+
+      case personalEventDetail:
+        return MaterialPageRoute(builder: (_) => PersonalJournalDetailPage());
 
       //charity_screens
       case charityEventList:
