@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from .models import Letter
+from .models import Letter, LetterType
 
 def getMailDetail(request, mailId):
     try:
@@ -17,7 +17,6 @@ def getMailDetail(request, mailId):
 
         result = {
             'id': mail.id,
-            'sender': mail.sender.name if mail.sender else None,
             'receiver': mail.receiver.first_name if mail.receiver else None,
             'date': date_str,
             'type': mail.type.type if mail.type else None,
@@ -26,5 +25,34 @@ def getMailDetail(request, mailId):
             'isRead': mail.isRead,
         }
         return JsonResponse({'success': True, 'mail': result}, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+def getMailListByType(request, mailType):
+    try:
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        if not mailType:
+            return JsonResponse({'success': False, 'message': '缺少信件類型'}, status=400)
+
+        # 查詢信件類型
+        letter_type = LetterType.objects.filter(type=mailType).first()
+        if not letter_type:
+            return JsonResponse({'success': False, 'message': '查無此信件類型'}, status=404)
+
+        # 查詢該用戶該類型所有信件
+        mails = Letter.objects.filter(receiver=user, type=letter_type).order_by('-date')
+        mail_list = [
+            {
+                'id': mail.id,
+                'title': mail.title,
+                'isRead': mail.isRead
+            }
+            for mail in mails
+        ]
+
+        return JsonResponse({'success': True, 'mails': mail_list}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)

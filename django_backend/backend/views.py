@@ -21,7 +21,7 @@ from .charityEvent import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
-from .mails import getMailDetail
+from .mails import getMailDetail, getMailListByType
 
 
 # Create your views here.
@@ -394,3 +394,11 @@ class GetMailDetail(APIView):
     def get(self, request, *args, **kwargs):
         mailId = kwargs.get('mailId')
         return getMailDetail(request, mailId)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GetMailListByType(APIView):
+    """查詢user的某種type的mail list"""
+    def get(self, request, *args, **kwargs):
+        mailType = request.GET.get('type', '').strip()
+        return getMailListByType(request, mailType)

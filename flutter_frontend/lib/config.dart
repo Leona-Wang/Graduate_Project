@@ -93,7 +93,6 @@ class ApiPath {
   // {
   //   "success": true,
   //   "mail": {
-  //     "sender": "慈善團體A",
   //     "receiver": "使用者暱稱A",
   //     "date": "2025-08-16T12:34:56",
   //     "type": "活動",
@@ -104,4 +103,23 @@ class ApiPath {
   // }
   static String getMailDetail(int mailId) =>
     '${BaseConfig.baseUrl}/mail/$mailId/';
+  
+  //查詢user的某種type的mail list，用GET，後端回傳範例:
+  // {
+  //   "success": true,
+  //   "mails": [
+  //     {
+  //       "id": 1,
+  //       "title": "活動提醒",
+  //       "isRead": true
+  //     },
+  //     {
+  //       "id": 2,
+  //       "title": "系統通知",
+  //       "isRead": false
+  //     }
+  //   ]
+  // }
+  static String mailListByType(String mailType) =>
+    '${BaseConfig.baseUrl}/mail/list/?type=$mailType';
 }
