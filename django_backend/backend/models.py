@@ -80,6 +80,7 @@ class CharityEvent(models.Model):
     inviteCode = models.TextField(null=True, blank=True)
     recommendedBy = models.ManyToManyField(User, blank=True, related_name="eventRecommendedBy")
     online = models.BooleanField(null=True, blank=True)
+    isCanvass = models.BooleanField(default=False)
 
 
 class EventParticipant(models.Model):
@@ -159,13 +160,13 @@ class LetterExample(models.Model):
     title = models.CharField(max_length=255, null=False, blank=False) # 標題
     content = models.TextField(null=False, blank=False) # 內容  
     
-class Prize(models.Model):
+class PrizeType(models.Model):
     name = models.CharField(max_length=20, null=False, blank=False)  # 獎品名稱
     usage = models.CharField(max_length=20, null=False, blank=False)   # 用途（例如 強化 / 進化）
     
 class Reward(models.Model):
-    prize = models.ForeignKey(Prize, null=True, blank=False, on_delete=models.SET_NULL)  # 對應獎品
+    prize = models.ForeignKey(PrizeType, null=True, blank=False, on_delete=models.SET_NULL)  # 對應獎品
     receiver = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)# 得獎者
     quantity = models.IntegerField()  # 個數
-    isReceived = models.BooleanField(default=False)
+   
 
