@@ -9,6 +9,7 @@ import uuid
 
 # user 的設定: first_name 是暱稱，username 是 email (unique)，last_name 沒有東西，email 還是 email
 
+
 class Location(models.Model):
     locationName = models.TextField(null=False)
 
@@ -98,6 +99,9 @@ class CharityEventCoOrganizer(models.Model):
     coOrganizer = models.ForeignKey(CharityInfo, on_delete=models.CASCADE)
     verified = models.BooleanField(null=True, blank=True)
 
+    class Meta:
+        db_table = "backend_charityevent_coOrganizer"
+
 
 class OfficialEvent(models.Model):
     type = models.CharField(
@@ -153,20 +157,21 @@ class Letter(models.Model):
     officialEvent = models.ForeignKey(
         'OfficialEvent', null=True, blank=True, on_delete=models.CASCADE, related_name="letters"
     )
-    
+
+
 class LetterExample(models.Model):
     templateName = models.TextField(null=False, blank=False)
     type = models.ForeignKey(LetterType, null=True, blank=True, on_delete=models.SET_NULL) # 信件類型
     title = models.CharField(max_length=255, null=False, blank=False) # 標題
-    content = models.TextField(null=False, blank=False) # 內容  
-    
-class PrizeType(models.Model):
-    name = models.CharField(max_length=20, null=False, blank=False)  # 獎品名稱
-    usage = models.CharField(max_length=20, null=False, blank=False)   # 用途（例如 強化 / 進化）
-    
-class Reward(models.Model):
-    prize = models.ForeignKey(PrizeType, null=True, blank=False, on_delete=models.SET_NULL)  # 對應獎品
-    receiver = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)# 得獎者
-    quantity = models.IntegerField()  # 個數
-   
+    content = models.TextField(null=False, blank=False) # 內容
 
+
+class PrizeType(models.Model):
+    name = models.CharField(max_length=20, null=False, blank=False) # 獎品名稱
+    usage = models.CharField(max_length=20, null=False, blank=False) # 用途（例如 強化 / 進化）
+
+
+class Reward(models.Model):
+    prize = models.ForeignKey(PrizeType, null=True, blank=False, on_delete=models.SET_NULL) # 對應獎品
+    receiver = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL) # 得獎者
+    quantity = models.IntegerField() # 個數

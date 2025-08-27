@@ -4,8 +4,8 @@ from django.conf import settings
 
 
 class CharityEventSerializer(serializers.ModelSerializer):
-    saveAmount = serializers.SerializerMethodField()
-    joinAmount = serializers.SerializerMethodField()
+    saveAmount = serializers.SerializerMethodField(method_name='getSaveAmount')
+    joinAmount = serializers.SerializerMethodField(method_name='getJoinAmount')
 
     class Meta:
         model = CharityEvent

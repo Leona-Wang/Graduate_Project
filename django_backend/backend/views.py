@@ -391,6 +391,7 @@ class ProcessUserQRCode(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class GetMailDetail(APIView):
     """查看單一郵件詳細資訊與內容"""
+
     def get(self, request, *args, **kwargs):
         mailId = kwargs.get('mailId')
         return getMailDetail(request, mailId)
@@ -399,6 +400,7 @@ class GetMailDetail(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class GetMailListByType(APIView):
     """查詢user的某種type的mail list"""
+
     def get(self, request, *args, **kwargs):
         mailType = request.GET.get('type', '').strip()
         return getMailListByType(request, mailType)
