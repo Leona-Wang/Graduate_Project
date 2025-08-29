@@ -29,10 +29,10 @@ class Event {
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       id: json['id'],
-      title: json['title'],
-      type: json['type'],
-      location: json['location'],
-      date: DateTime.parse(json['date']),
+      title: json['name'],
+      type: json['eventType'].toString(),
+      location: json['address'] ?? '',
+      date: DateTime.parse(json['startTime']),
     );
   }
 }
@@ -71,7 +71,6 @@ class PersonalEventListState extends State<PersonalEventListPage> {
         if (selectedTime != null && selectedTime!.isNotEmpty)
           'time': selectedTime,
         if (_searchController.text.isNotEmpty) 'search': _searchController.text,
-        'ordering': sortAscending ? 'date' : '-date',
       },
     );
 
@@ -84,13 +83,19 @@ class PersonalEventListState extends State<PersonalEventListPage> {
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         print(json);
-        final List results = json['results'];
+
+        final List results = json['events'];
+        final loadedEvents = results.map((e) => Event.fromJson(e)).toList();
 
         setState(() {
-          events = results.map((e) => Event.fromJson(e)).toList();
-          totalPage = (json['count'] / pageSize).ceil();
+          events = loadedEvents;
+          totalPage = events.length < pageSize ? currentPage : currentPage + 1;
           isLoading = false;
         });
+
+        final eventTypes = List<String>.from(json['eventTypes']);
+        final locations = List<String>.from(json['locations']);
+        print('可用篩選器: $eventTypes, $locations');
       } else {
         throw Exception('載入活動失敗');
       }
