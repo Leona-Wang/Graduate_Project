@@ -34,10 +34,10 @@ class CharityEvent {
   factory CharityEvent.fromJson(Map<String, dynamic> json) {
     return CharityEvent(
       id: json['id'],
-      title: json['title'],
-      type: json['type'],
-      location: json['location'],
-      date: DateTime.parse(json['date']),
+      title: json['name'],
+      type: json['eventType'].toString(),
+      location: json['address'] ?? '',
+      date: DateTime.parse(json['startTime']),
       online: (json['online'] ?? false) == true, // ← 新增
     );
   }
@@ -54,7 +54,7 @@ class CharityEventListState extends State<CharityEventListPage> {
   bool isLoading = false;
   int currentPage = 1;
   int totalPage = 1;
-  final int pageSize = 0;
+  final int pageSize = 10;
   //篩選器
   bool sortAscending = true;
   bool? filterOnline; // ← 新增：null=全部, true=線上, false=線下
@@ -78,8 +78,7 @@ class CharityEventListState extends State<CharityEventListPage> {
         if (selectedTime != null && selectedTime!.isNotEmpty)
           'time': selectedTime,
         if (_searchController.text.isNotEmpty) 'search': _searchController.text,
-        if (filterOnline != null) 'online': filterOnline!.toString(), // ← 新增
-        'ordering': sortAscending ? 'date' : '-date',
+        //if (filterOnline != null) 'online': filterOnline!.toString(), // ← 新增
       },
     );
 
@@ -88,17 +87,22 @@ class CharityEventListState extends State<CharityEventListPage> {
       await apiClient.init();
 
       final response = await apiClient.get(uriData.toString());
-
       print(response.statusCode);
+
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        final List results = json['results'];
+        final List results = json['events'];
+        final loadedEvents =
+            results.map((e) => CharityEvent.fromJson(e)).toList();
 
         setState(() {
-          events = results.map((e) => CharityEvent.fromJson(e)).toList();
-          totalPage = (json['count'] / pageSize).ceil();
+          events = loadedEvents;
+          totalPage = events.length < pageSize ? currentPage : currentPage + 1;
           isLoading = false;
         });
+        final eventTypes = List<String>.from(json['eventTypes']);
+        final locations = List<String>.from(json['locations']);
+        print('可用篩選器: $eventTypes, $locations');
       } else {
         throw Exception('載入活動失敗');
       }
@@ -348,7 +352,14 @@ class CharityEventListState extends State<CharityEventListPage> {
           return e.online == filterOnline;
         }).toList();
 
-    if (visible.isEmpty) return Center(child: Text('找不到該活動'));
+    if (visible.isEmpty) {
+      return Center(
+        child: Text(
+          _searchController.text.isNotEmpty ? '找不到符合的活動' : '目前沒有活動',
+          style: const TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
 
     return ListView.builder(
       itemCount: visible.length,
