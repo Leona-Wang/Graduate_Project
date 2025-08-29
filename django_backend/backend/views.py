@@ -183,14 +183,18 @@ class CreateCharityInfo(APIView):
             groupType = request.data.get('groupType', "")
             groupAddress = request.data.get('groupAddress', "")
             groupPhone = request.data.get('groupPhone', "")
-            groupId = int(request.data.get('groupId', 0))
+            groupId = request.data.get('groupId', 0)
+
+            organization = None
+            if groupId != "":
+                groupId = int(groupId)
+                organization = Organization.objects.filter(code=groupId).first()
 
             user = User.objects.filter(email=email).first()
             user.first_name = groupName
             user.save()
 
             type = EventType.objects.filter(typeName=groupType).first()
-            organization = Organization.objects.filter(code=groupId).first()
 
             if organization:
                 charity = CharityInfo.objects.create(user=user, organization=organization)
@@ -204,6 +208,7 @@ class CreateCharityInfo(APIView):
             return JsonResponse({'success': True}, status=200)
 
         except Exception as e:
+            print(str(e))
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 
@@ -252,7 +257,6 @@ class CharityEventList(APIView):
             filters &= Q(mainOrganizer=charityInfo)
 
         events = CharityEvent.objects.filter(filters).order_by('-startTime')[startIndex:endIndex]
-
         eventList = CharityEventSerializer(events, many=True)
         eventTypeList = list(EventType.objects.values_list('typeName', flat=True))
         locationList = list(Location.objects.values_list('locationName', flat=True))
