@@ -150,6 +150,240 @@ class PersonalSignupState extends State<PersonalSignupPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  //地區單選清單
+  Widget buildLocationField() {
+    final options = [
+      '台北市',
+      '新北市',
+      '基隆市',
+      '桃園市',
+      '新竹市',
+      '新竹縣',
+      '苗栗縣',
+      '南投縣',
+      '台中市',
+      '彰化縣',
+      '雲林縣',
+      '嘉義市',
+      '嘉義縣',
+      '台南市',
+      '高雄市',
+      '屏東縣',
+      '宜蘭縣',
+      '花蓮縣',
+      '台東縣',
+      '澎湖縣',
+      '金門縣',
+      '連江縣',
+      '其他地區',
+    ];
+
+    return InkWell(
+      onTap: () {
+        String? tempSelected = _selectLocation;
+
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (context) {
+            return StatefulBuilder(
+              builder: (context, setSheetState) {
+                return SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          '請選擇經常活動的地區',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView(
+                          children:
+                              options.map((e) {
+                                return RadioListTile<String>(
+                                  value: e,
+                                  groupValue: tempSelected,
+                                  title: Text(e),
+                                  onChanged: (val) {
+                                    setSheetState(() {
+                                      tempSelected = val;
+                                    });
+                                    setState(() {
+                                      _selectLocation = val;
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: '經常活動的地區',
+        ),
+        child: Text(
+          _selectLocation ?? '請選擇您經常活動的地區',
+          style: TextStyle(
+            color: _selectLocation == null ? Colors.grey : Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  //偏好活動複選清單
+  Widget buildPreferType() {
+    final options = [
+      '綜合性服務',
+      '兒童青少年福利',
+      '婦女福利',
+      '老人福利',
+      '身心障礙福利',
+      '家庭福利',
+      '健康醫療',
+      '心理衛生',
+      '社區規劃(營造)',
+      '環境保護',
+      '國際合作交流',
+      '教育與科學',
+      '文化藝術',
+      '人權和平',
+      '消費者保護',
+      '性別平等',
+      '政府單位',
+      '動物保護',
+    ];
+
+    return InkWell(
+      onTap: () {
+        final tempSelected = Set<String>.from(_selectPrefer);
+
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (context) {
+            return StatefulBuilder(
+              builder: (context, setSheetState) {
+                List<String> sortedOptions = [
+                  ...options.where((e) => tempSelected.contains(e)),
+                  ...options.where((e) => !tempSelected.contains(e)),
+                ];
+
+                return SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          '選擇偏好活動類型',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView(
+                          children:
+                              sortedOptions.map((e) {
+                                return CheckboxListTile(
+                                  value: tempSelected.contains(e),
+                                  title: Text(e),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  onChanged: (_) {
+                                    setSheetState(() {
+                                      if (tempSelected.contains(e)) {
+                                        tempSelected.remove(e);
+                                      } else {
+                                        tempSelected.add(e);
+                                      }
+                                      sortedOptions = [
+                                        ...options.where(
+                                          (x) => tempSelected.contains(x),
+                                        ),
+                                        ...options.where(
+                                          (x) => !tempSelected.contains(x),
+                                        ),
+                                      ];
+                                    });
+                                    setState(() {
+                                      _selectPrefer = tempSelected;
+                                    }); //及時寫回外層
+                                  },
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('關閉'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: '偏好活動類型',
+        ),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children:
+              _selectPrefer.isEmpty
+                  ? [const Text('請選擇您偏好的活動類型')]
+                  : _selectPrefer.map((e) {
+                    return Chip(
+                      label: Text(e),
+                      onDeleted: () {
+                        setState(() {
+                          _selectPrefer.remove(e);
+                        });
+                      },
+                    );
+                  }).toList(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,107 +450,11 @@ class PersonalSignupState extends State<PersonalSignupPage> {
                     const SizedBox(height: 16),
 
                     // 地區
-                    DropdownButtonFormField<String>(
-                      value: _selectLocation,
-                      hint: const Text('請選擇您經常活動的地區'),
-                      items:
-                          [
-                            '台北市',
-                            '新北市',
-                            '基隆市',
-                            '桃園市',
-                            '新竹市',
-                            '新竹縣',
-                            '苗栗縣',
-                            '南投縣',
-                            '台中市',
-                            '彰化縣',
-                            '雲林縣',
-                            '嘉義市',
-                            '嘉義縣',
-                            '台南市',
-                            '高雄市',
-                            '屏東縣',
-                            '宜蘭縣',
-                            '花蓮縣',
-                            '台東縣',
-                            '澎湖縣',
-                            '金門縣',
-                            '連江縣',
-                            '其他地區',
-                          ].map((e) {
-                            return DropdownMenuItem(value: e, child: Text(e));
-                          }).toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectLocation = val;
-                          if (_errorMessage.isNotEmpty) {
-                            _errorMessage = '';
-                          }
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: '經常活動的地區',
-                      ),
-                    ),
+                    buildLocationField(),
                     const SizedBox(height: 16),
 
                     // 偏好活動
-                    DropdownButtonFormField(
-                      hint: const Text('請選擇您偏好的慈善活動'),
-                      items:
-                          [
-                            '綜合性服務',
-                            '兒童青少年福利',
-                            '婦女福利',
-                            '老人福利',
-                            '身心障礙福利',
-                            '家庭福利',
-                            '健康醫療',
-                            '心理衛生',
-                            '社區規劃(營造)',
-                            '環境保護',
-                            '國際合作交流',
-                            '教育與科學',
-                            '文化藝術',
-                            '人權和平',
-                            '消費者保護',
-                            '性別平等',
-                            '政府單位',
-                            '動物保護',
-                          ].map((e) {
-                            return DropdownMenuItem(
-                              value: e,
-                              child: StatefulBuilder(
-                                builder: (context, _setState) {
-                                  return Row(
-                                    children: [
-                                      Checkbox(
-                                        value: _selectPrefer.contains(e),
-                                        onChanged: (isSelected) {
-                                          if (isSelected == true) {
-                                            _selectPrefer.add(e);
-                                          } else {
-                                            _selectPrefer.remove(e);
-                                          }
-                                          _setState(() {});
-                                          setState(() {});
-                                        },
-                                      ),
-                                      Text(e),
-                                    ],
-                                  );
-                                },
-                              ),
-                            );
-                          }).toList(),
-                      onChanged: (x) {},
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: '偏好慈善活動',
-                      ),
-                    ),
+                    buildPreferType(),
                     const SizedBox(height: 24),
 
                     ElevatedButton(

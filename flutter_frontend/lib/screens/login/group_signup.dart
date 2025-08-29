@@ -24,7 +24,7 @@ class GroupSignupState extends State<GroupSignupPage> {
   final TextEditingController _confirmController = TextEditingController();
 
   late String email;
-  Set<String> _selectType = Set.from([]);
+  Set<String> _selectType = {};
 
   bool _isPasswordState = false;
   bool _isLoading = false;
@@ -41,7 +41,7 @@ class GroupSignupState extends State<GroupSignupPage> {
   void _nextStep() {
     final email = _emailController.text.trim();
     final name = _nameController.text.trim();
-    final id = _idController.text.trim();
+    //final id = _idController.text.trim();
     final address = _addressController.text.trim();
     final phone = _phoneController.text.trim();
 
@@ -146,6 +146,140 @@ class GroupSignupState extends State<GroupSignupPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  //複選選單
+  Widget buildGroupTypeField() {
+    final options = [
+      '綜合性服務',
+      '兒童青少年福利',
+      '婦女福利',
+      '老人福利',
+      '身心障礙福利',
+      '家庭福利',
+      '健康醫療',
+      '心理衛生',
+      '社區規劃(營造)',
+      '環境保護',
+      '國際合作交流',
+      '教育與科學',
+      '文化藝術',
+      '人權和平',
+      '消費者保護',
+      '性別平等',
+      '政府單位',
+      '動物保護',
+    ];
+
+    return InkWell(
+      onTap: () {
+        final tempSelected = Set<String>.from(_selectType);
+
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (context) {
+            return StatefulBuilder(
+              builder: (context, setSheetState) {
+                List<String> sortedOptions = [
+                  ...options.where((e) => tempSelected.contains(e)),
+                  ...options.where((e) => !tempSelected.contains(e)),
+                ];
+
+                return SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          '選擇機構類型',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView(
+                          children:
+                              sortedOptions.map((e) {
+                                return CheckboxListTile(
+                                  value: tempSelected.contains(e),
+                                  title: Text(e),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  onChanged: (_) {
+                                    setSheetState(() {
+                                      if (tempSelected.contains(e)) {
+                                        tempSelected.remove(e);
+                                      } else {
+                                        tempSelected.add(e);
+                                      }
+                                      sortedOptions = [
+                                        ...options.where(
+                                          (x) => tempSelected.contains(x),
+                                        ),
+                                        ...options.where(
+                                          (x) => !tempSelected.contains(x),
+                                        ),
+                                      ];
+                                    });
+                                    setState(() {
+                                      _selectType = tempSelected;
+                                    }); //及時寫回外層
+                                  },
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('關閉'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: '機構類型',
+        ),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children:
+              _selectType.isEmpty
+                  ? [const Text('請選擇您的機構類型')]
+                  : _selectType.map((e) {
+                    return Chip(
+                      label: Text(e),
+                      onDeleted: () {
+                        setState(() {
+                          _selectType.remove(e);
+                        });
+                      },
+                    );
+                  }).toList(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,62 +331,7 @@ class GroupSignupState extends State<GroupSignupPage> {
                     const SizedBox(height: 16),
 
                     //機構類型
-                    DropdownButtonFormField<String>(
-                      //value: _selectType,
-                      hint: const Text('請選擇您的機構類型'),
-                      items:
-                          [
-                            '綜合性服務',
-                            '兒童青少年福利',
-                            '婦女福利',
-                            '老人福利',
-                            '身心障礙福利',
-                            '家庭福利',
-                            '健康醫療',
-                            '心理衛生',
-                            '社區規劃(營造)',
-                            '環境保護',
-                            '國際合作交流',
-                            '教育與科學',
-                            '文化藝術',
-                            '人權和平',
-                            '消費者保護',
-                            '性別平等',
-                            '政府單位',
-                            '動物保護',
-                          ].map((e) {
-                            return DropdownMenuItem(
-                              value: e,
-                              child: StatefulBuilder(
-                                builder: (context, _setState) {
-                                  return Row(
-                                    children: [
-                                      //選取
-                                      Checkbox(
-                                        value: _selectType.contains(e),
-                                        onChanged: (isSelected) {
-                                          if (isSelected == true) {
-                                            _selectType.add(e);
-                                          } else {
-                                            _selectType.remove(e);
-                                          }
-                                          _setState(() {});
-                                          setState(() {});
-                                        },
-                                      ),
-                                      Text(e),
-                                    ],
-                                  );
-                                },
-                              ),
-                            );
-                          }).toList(),
-                      onChanged: (x) {},
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: '機構類型',
-                      ),
-                    ),
+                    buildGroupTypeField(),
                     const SizedBox(height: 16),
 
                     //機構代碼

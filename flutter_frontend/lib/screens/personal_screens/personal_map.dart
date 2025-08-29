@@ -47,7 +47,7 @@ class PersonalMapState extends State<PersonalMapPage> {
   bool isLoading = false;
   int currentPage = 1;
   int totalPage = 1;
-  final int pageSize = 0;
+  final int pageSize = 10;
   //篩選器
   bool sortAscending = true;
 
@@ -288,7 +288,14 @@ class PersonalMapState extends State<PersonalMapPage> {
   //活動卡
   Widget buildEventList() {
     if (isLoading) return Center(child: CircularProgressIndicator());
-    if (events.isEmpty) return Center(child: Text('找不到該活動'));
+    if (events.isEmpty) {
+      return Center(
+        child: Text(
+          _searchController.text.isNotEmpty ? '找不到符合的活動' : '目前沒有活動',
+          style: const TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
 
     return ListView.builder(
       itemCount: events.length,

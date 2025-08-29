@@ -48,7 +48,7 @@ class PersonalEventListState extends State<PersonalEventListPage> {
   bool isLoading = false;
   int currentPage = 1;
   int totalPage = 1;
-  final int pageSize = 0;
+  final int pageSize = 10;
   //篩選器
   bool sortAscending = true;
 
@@ -83,6 +83,7 @@ class PersonalEventListState extends State<PersonalEventListPage> {
       print(response.statusCode);
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
+        print(json);
         final List results = json['results'];
 
         setState(() {
@@ -100,13 +101,14 @@ class PersonalEventListState extends State<PersonalEventListPage> {
   }
 
   //跳出活動詳情頁控制器
-  void _toDetail(Event event) {
-    Navigator.push(
+  Future<void> _toDetail(Event event) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PersonalEventDetailPage(event: event),
       ),
     );
+    fetchEvents();
   }
 
   //主架構，其他區域分開寫
@@ -290,7 +292,14 @@ class PersonalEventListState extends State<PersonalEventListPage> {
   //活動卡
   Widget buildEventList() {
     if (isLoading) return Center(child: CircularProgressIndicator());
-    if (events.isEmpty) return Center(child: Text('找不到該活動'));
+    if (events.isEmpty) {
+      return Center(
+        child: Text(
+          _searchController.text.isNotEmpty ? '找不到符合的活動' : '目前沒有活動',
+          style: const TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
 
     return ListView.builder(
       itemCount: events.length,
