@@ -122,4 +122,10 @@ class ApiPath {
   // }
   static String mailListByType(String mailType) =>
     '${BaseConfig.baseUrl}/mail/list/?type=$mailType';
+
+  // 活動主辦方發送個人催票信
+  // 用 POST，需回傳值：{"eventName":(必填,活動名稱),"isCanvass":true/false}
+  // 後端回傳：{"success": true, "message": "已發送個人催票信"} 或 {"success": true, "message": "已取消催票信狀態"}
+  static String get sendPersonalCanvassMail =>
+      '${BaseConfig.baseUrl}/mail/personal/canvass/send/';
 }

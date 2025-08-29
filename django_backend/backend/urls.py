@@ -44,4 +44,5 @@ urlpatterns = [
     path('events/user_QRCode/', views.ProcessUserQRCode.as_view(), name="ProcessUserQRCode"),
     path('mail/<int:mailId>/', views.GetMailDetail.as_view(), name="mailDetail"),
     path('mail/list/', views.GetMailListByType.as_view(), name="mailListByType"),
+    path('mail/personal/canvass/send/', views.SendPersonalCanvassMail.as_view(), name="sendPersonalCanvassMail"),
 ]
