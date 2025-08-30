@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:flutter_frontend/taiwan_address_helper.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../../api_client.dart';
 

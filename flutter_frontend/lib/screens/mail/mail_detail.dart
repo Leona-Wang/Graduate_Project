@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_frontend/api_client.dart';
 import 'package:flutter_frontend/config.dart'; // ApiPath.getMailDetail
 
 ///獎勵派發要等API
@@ -35,8 +35,13 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
     });
 
     try {
+      final apiClient = ApiClient();
+      await apiClient.init();
+
       final url = ApiPath.getMailDetail(widget.mailId);
-      final resp = await http.get(Uri.parse(url));
+      final resp = await apiClient
+          .get(url)
+          .timeout(const Duration(seconds: 10));
 
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
         final data =
@@ -222,10 +227,7 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
     setState(() => _actionBusy = true);
 
     try {
-      // TODO: 等後端提供 claim API，例如：POST /mail/{id}/claim/
-      // final url = ApiPath.claimMailReward(widget.mailId);
-      // final resp = await http.post(Uri.parse(url));
-      // if (resp.statusCode == 200) { ... }
+      // TODO: 等後端提供 claim API
 
       await Future.delayed(const Duration(milliseconds: 400)); // 模擬等待
 
@@ -304,16 +306,18 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
     setState(() => _actionBusy = true);
 
     try {
-      final url =
-          ApiPath.sendPersonalCanvassMail;
-      final resp = await http.post(
-        Uri.parse(url),
-        headers: const {'Content-Type': 'application/json'},
-        body: json.encode({
-          'mailId': widget.mailId,
-          'response': choice,
-        }),
-      );
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final url = ApiPath.sendPersonalCanvassMail;
+      final body = {
+        'mailId': widget.mailId,
+        'response': choice, // 若後端要 boolean，改成 'attend': choice == 'yes'
+      };
+
+      final resp = await apiClient
+          .post(url, body)
+          .timeout(const Duration(seconds: 10));
 
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
         if (!mounted) return;
@@ -322,7 +326,6 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
         ).showSnackBar(SnackBar(content: Text('已回覆：$choice')));
         await _fetchDetail();
       } else {
-        // 失敗：把伺服器訊息秀出來方便除錯
         final msg = utf8.decode(resp.bodyBytes);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

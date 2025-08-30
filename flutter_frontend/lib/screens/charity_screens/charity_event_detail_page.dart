@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_frontend/config.dart';
+import 'package:flutter_frontend/api_client.dart';
 
 import 'charity_event_list.dart';
 
@@ -75,11 +75,15 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
   }
 
   Future<FullEvent> fetchDetail(int id) async {
+    final apiClient = ApiClient();
+    await apiClient.init();
+
     final url = ApiPath.charityEventDetail(id);
-    final resp = await http.get(Uri.parse(url));
+    final resp = await apiClient.get(url);
 
     if (resp.statusCode == 200) {
-      final map = json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+      final map =
+          json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
       return FullEvent.fromJson(map);
     } else {
       throw Exception('載入詳情失敗 (${resp.statusCode})');
