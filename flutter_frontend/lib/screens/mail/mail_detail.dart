@@ -4,18 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_frontend/config.dart'; // ApiPath.getMailDetail
 
-
 ///獎勵派發要等API
 ///催票詢問要等API
 class MessageDetailPage extends StatefulWidget {
   final int mailId;
   final String? typeHint;
 
-  const MessageDetailPage({
-    super.key,
-    required this.mailId,
-    this.typeHint,
-  });
+  const MessageDetailPage({super.key, required this.mailId, this.typeHint});
 
   @override
   State<MessageDetailPage> createState() => _MessageDetailPageState();
@@ -44,7 +39,8 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
       final resp = await http.get(Uri.parse(url));
 
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
-        final data = json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+        final data =
+            json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
         if (data['success'] == true && data['mail'] is Map<String, dynamic>) {
           setState(() {
             _mail = MailDetail.fromJson(data['mail'] as Map<String, dynamic>);
@@ -92,9 +88,7 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('信件詳情')),
-      body: SafeArea(
-        child: _buildBody(),
-      ),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
@@ -109,10 +103,7 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
           children: [
             Text(_error!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _fetchDetail,
-              child: const Text('重試'),
-            ),
+            FilledButton(onPressed: _fetchDetail, child: const Text('重試')),
           ],
         ),
       );
@@ -129,7 +120,10 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
         padding: const EdgeInsets.all(16),
         children: [
           // 信件主體
-          Text(mail.title ?? '(無標題)', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            mail.title ?? '(無標題)',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 12,
@@ -139,7 +133,10 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
               _MetaChip(icon: Icons.person, label: mail.receiver ?? '—'),
               _MetaChip(icon: Icons.access_time, label: mail.date ?? '—'),
               _MetaChip(icon: Icons.sell_outlined, label: mail.type ?? '—'),
-              _MetaChip(icon: Icons.mark_email_read_outlined, label: mail.isRead == true ? '已讀' : '未讀'),
+              _MetaChip(
+                icon: Icons.mark_email_read_outlined,
+                label: mail.isRead == true ? '已讀' : '未讀',
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -157,7 +154,12 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
           const SizedBox(height: 12),
 
           // 下半部：依類型顯示互動區
-          if (_isRewardType) _buildRewardAction(mail) else if (_isGroupReminderType) _buildGroupReminderAction(mail) else _buildUnknownTypeHint(),
+          if (_isRewardType)
+            _buildRewardAction(mail)
+          else if (_isGroupReminderType)
+            _buildGroupReminderAction(mail)
+          else
+            _buildUnknownTypeHint(),
         ],
       ),
     );
@@ -167,7 +169,10 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('（這封信件的類型未定義，暫無互動動作）', style: TextStyle(color: Colors.grey.shade600)),
+        Text(
+          '（這封信件的類型未定義，暫無互動動作）',
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
       ],
     );
   }
@@ -184,8 +189,18 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
           children: [
             Expanded(
               child: FilledButton.icon(
-                onPressed: (_actionBusy || claimed) ? null : () => _onClaimReward(mail),
-                icon: _actionBusy ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.card_giftcard),
+                onPressed:
+                    (_actionBusy || claimed)
+                        ? null
+                        : () => _onClaimReward(mail),
+                icon:
+                    _actionBusy
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.card_giftcard),
                 label: Text(claimed ? '已領取' : '領取獎勵'),
               ),
             ),
@@ -194,7 +209,10 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
         if (claimed)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: Text('領取時間：${mail.claimedAt}', style: TextStyle(color: Colors.grey.shade700)),
+            child: Text(
+              '領取時間：${mail.claimedAt}',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
           ),
       ],
     );
@@ -214,22 +232,26 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
       if (!mounted) return;
       await showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('領取成功'),
-          content: const Text('你的獎勵已成功領取。'),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('好')), 
-          ],
-        ),
+        builder:
+            (context) => AlertDialog(
+              title: const Text('領取成功'),
+              content: const Text('你的獎勵已成功領取。'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('好'),
+                ),
+              ],
+            ),
       );
 
       // 取得最新狀態（若後端之後會回傳 claimedAt 等欄位）
       await _fetchDetail();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('領取失敗：$e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('領取失敗：$e')));
     } finally {
       if (mounted) setState(() => _actionBusy = false);
     }
@@ -247,14 +269,20 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: (_actionBusy || responded) ? null : () => _onRespondYesNo('yes'),
+                onPressed:
+                    (_actionBusy || responded)
+                        ? null
+                        : () => _onRespondYesNo('yes'),
                 child: const Text('是'),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: OutlinedButton(
-                onPressed: (_actionBusy || responded) ? null : () => _onRespondYesNo('no'),
+                onPressed:
+                    (_actionBusy || responded)
+                        ? null
+                        : () => _onRespondYesNo('no'),
                 child: const Text('否'),
               ),
             ),
@@ -263,7 +291,10 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
         if (responded)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: Text('已回覆：${mail.response ?? '-'}', style: TextStyle(color: Colors.grey.shade700)),
+            child: Text(
+              '已回覆：${mail.response ?? '-'}',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
           ),
       ],
     );
@@ -273,24 +304,36 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
     setState(() => _actionBusy = true);
 
     try {
-      // TODO: 等後端提供 respond API，例如：POST /mail/{id}/respond/，body: { response: yes | no }
-      // final url = ApiPath.respondMail(widget.mailId);
-      // final resp = await http.post(Uri.parse(url), body: json.encode({ 'response': choice }), headers: { 'Content-Type': 'application/json' });
-      // if (resp.statusCode == 200) { ... }
-
-      await Future.delayed(const Duration(milliseconds: 300)); // 模擬等待
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已回覆：$choice')),
+      final url =
+          ApiPath.sendPersonalCanvassMail;
+      final resp = await http.post(
+        Uri.parse(url),
+        headers: const {'Content-Type': 'application/json'},
+        body: json.encode({
+          'mailId': widget.mailId,
+          'response': choice,
+        }),
       );
 
-      await _fetchDetail();
+      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('已回覆：$choice')));
+        await _fetchDetail();
+      } else {
+        // 失敗：把伺服器訊息秀出來方便除錯
+        final msg = utf8.decode(resp.bodyBytes);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('回覆失敗（${resp.statusCode}）：$msg')),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('回覆失敗：$e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('回覆失敗：$e')));
     } finally {
       if (mounted) setState(() => _actionBusy = false);
     }

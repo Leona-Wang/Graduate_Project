@@ -203,38 +203,50 @@ class PersonalSigninState extends State<PersonalSigninPage> {
                       ),
                       onPressed: () async {
                         try {
-                          final googleUser =
-                              await GoogleSignIn(
-                                clientId:
-                                    '51601454665-9n15a5gkudl21va57aeeoneg85lomibt.apps.googleusercontent.com',
-                              ).signIn();
+                          // 1) 用 Firebase 的 popup 走完 Google 登入（Web 最穩，避免整頁跳轉）
+                          final userCred = await FirebaseAuth.instance
+                              .signInWithPopup(GoogleAuthProvider());
 
-                          if (googleUser == null) return; // 使用者取消
-
-                          final googleAuth = await googleUser.authentication;
-
-                          final credential = GoogleAuthProvider.credential(
-                            accessToken: googleAuth.accessToken,
-                            idToken: googleAuth.idToken,
-                          );
-
-                          await FirebaseAuth.instance.signInWithCredential(
-                            credential,
-                          );
-
-                          if (context.mounted) {
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/home_tab',
-                              (route) => false,
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
+                          // 2) 取得要丟給後端的 id_token（只是先拿著；先別導航）
+                          final idToken =
+                              await userCred.user?.getIdToken(); // 這串給後端用
+                          if (idToken == null) {
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Google 登入失敗：$e')),
+                              const SnackBar(
+                                content: Text('登入失敗：拿不到 id_token'),
+                              ),
                             );
+                            return;
                           }
+
+                          // TODO: 3) 等後端好了，這裡 POST 給 Django 換你們自己的 app_token
+                          // 成功拿到 app_token 再導航到 /home_tab
+                          // 目前先停在這頁，避免未知路由
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Google 登入成功（已取得 id_token），等待後端串接'),
+                            ),
+                          );
+
+                          // 【等後端完成後再解開】
+                          // final res = await http.post(Uri.parse('$baseUrl/api/auth/google'),
+                          //   headers: {'Content-Type': 'application/json'},
+                          //   body: jsonEncode({'id_token': idToken}),
+                          // );
+                          // if (res.statusCode == 200) {
+                          //   Navigator.pushNamedAndRemoveUntil(context, '/home_tab', (_) => false);
+                          // } else {
+                          //   ScaffoldMessenger.of(context).showSnackBar(
+                          //     const SnackBar(content: Text('後端驗證失敗')),
+                          //   );
+                          // }
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Google 登入失敗：$e')),
+                          );
                         }
                       },
                     ),
