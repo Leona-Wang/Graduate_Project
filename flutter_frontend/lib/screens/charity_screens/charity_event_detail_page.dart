@@ -38,6 +38,14 @@ class FullEvent {
     required this.description,
   });
 
+  static int _toIntCount(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? 0;
+    if (v is List) return v.length; // 後端給名單陣列時，取長度
+    return 0;
+  }
+
   static DateTime? _tryParse(dynamic v) {
     if (v == null) return null;
     final s = v.toString();
@@ -60,7 +68,7 @@ class FullEvent {
       endTime: _tryParse(json['endTime']),
       signupDeadline: _tryParse(json['signupDeadline']),
       status: (json['status'] ?? '').toString(),
-      participants: (json['participants'] as num?)?.toInt() ?? 0,
+      participants: _toIntCount(json['participants']),
       description: (json['description'] ?? '（無活動介紹）').toString(),
     );
   }
@@ -105,9 +113,12 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
     }
   }
 
-  String formatDateTime(DateTime dt) {
-    return "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
-  }
+  String formatDateTime(DateTime? dt) {
+  if (dt == null) return "未定義";
+  return "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} "
+         "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+}
+
 
   @override
   Widget build(BuildContext context) {
