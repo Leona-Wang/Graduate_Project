@@ -9,15 +9,15 @@ import 'charity_event_list.dart';
 
 class FullEvent {
   final int id;
-  final String title;
-  final String type;
-  final String location;
+  final String title;           
+  final String type;            
+  final String location;        
   final String address;
   final String mainOrganizer;
   final List<String> coOrganizers;
-  final DateTime startTime;
-  final DateTime endTime;
-  final DateTime signupDeadline;
+  final DateTime? startTime;
+  final DateTime? endTime;
+  final DateTime? signupDeadline;
   final String status;
   final int participants;
   final String description;
@@ -38,24 +38,34 @@ class FullEvent {
     required this.description,
   });
 
+  static DateTime? _tryParse(dynamic v) {
+    if (v == null) return null;
+    final s = v.toString();
+    if (s.isEmpty) return null;
+    try { return DateTime.parse(s); } catch (_) { return null; }
+  }
+
   factory FullEvent.fromJson(Map<String, dynamic> json) {
     return FullEvent(
-      id: json['id'],
-      title: json['title'],
-      type: json['type'],
-      location: json['location'],
-      address: json['address'],
-      mainOrganizer: json['main_organizer'],
-      coOrganizers: List<String>.from(json['co_organizers'] ?? []),
-      startTime: DateTime.parse(json['start_time']),
-      endTime: DateTime.parse(json['end_time']),
-      signupDeadline: DateTime.parse(json['signup_deadline']),
-      status: json['status'],
-      participants: json['participants'],
-      description: json['description'] ?? '（無活動介紹）',
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      title: (json['name'] ?? json['title'] ?? '').toString(),
+      type: (json['eventType'] ?? json['type'] ?? '').toString(),
+      location: (json['location'] ?? json['city'] ?? '').toString(),
+      address: (json['address'] ?? '').toString(),
+      mainOrganizer: (json['mainOrganizer'] ?? '').toString(),
+      coOrganizers: (json['coOrganizers'] is List)
+          ? List<String>.from((json['coOrganizers'] as List).map((e) => e.toString()))
+          : <String>[],
+      startTime: _tryParse(json['startTime']),
+      endTime: _tryParse(json['endTime']),
+      signupDeadline: _tryParse(json['signupDeadline']),
+      status: (json['status'] ?? '').toString(),
+      participants: (json['participants'] as num?)?.toInt() ?? 0,
+      description: (json['description'] ?? '（無活動介紹）').toString(),
     );
   }
 }
+
 
 class CharityEventDetailPage extends StatefulWidget {
   final CharityEvent event; // 傳入簡略資料（包含 id）
@@ -84,8 +94,11 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
     final resp = await apiClient.get(url);
 
     if (resp.statusCode == 200) {
-      final map =
-          json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+      final root = json.decode(resp.body) as Map<String, dynamic>;
+      final map = (root['event'] is Map<String, dynamic>)
+        ? root['event'] as Map<String, dynamic>
+        : root;
+
       return FullEvent.fromJson(map);
     } else {
       throw Exception('載入詳情失敗 (${resp.statusCode})');
