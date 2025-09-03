@@ -1,0 +1,5 @@
+敬愛的好忙國勇者 {{ username }} 您好!
+
+我是來自 {{ charityName }} 委託所的小精靈，我們即將在 {{ eventStartTime }} 進行 {{ charityEventName }} 任務，千萬別忘記帶上您的寵物，到場替我們助力!
+
+委託所 {{ charityName }} 的小精靈 敬上
