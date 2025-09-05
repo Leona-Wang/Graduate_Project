@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_list.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
+
 import 'dart:convert';
 import '../../api_client.dart';
 
@@ -14,11 +15,9 @@ class PersonalMapPage extends StatefulWidget {
 
 class PersonalMapPageState extends State<PersonalMapPage> {
   void backToHome() {
-    Navigator.pushAndRemoveUntil(
+    Navigator.of(
       context,
-      MaterialPageRoute(builder: (context) => const PersonalHomePage()),
-      (route) => false,
-    );
+    ).push(MaterialPageRoute(builder: (context) => const PersonalHomeTab()));
   }
 
   void toEventList() {
