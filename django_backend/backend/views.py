@@ -17,7 +17,7 @@ import random
 import string
 from .charityEvent import (
     createCharityEvent, coOrganizeEvent, verifyCoOrganize, getCoOrganizeApplications, removeCoOrganizer,
-    editCharityEvent
+    editCharityEvent, deleteCharityEvent
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
@@ -326,7 +326,13 @@ class EditCharityEvent(APIView):
 
     def post(self, request, *args, **kwargs):
         return editCharityEvent(request)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class DeleteCharityEvent(APIView):
+    """活動主辦方刪除活動"""
 
+    def post(self, request, *args, **kwargs):
+        return deleteCharityEvent(request)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CoOrganizeEvent(APIView):

@@ -177,6 +177,32 @@ def editCharityEvent(request):
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 
+def deleteCharityEvent(request):
+    try:
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        data = request.data if hasattr(request, 'data') else json.loads(request.body)
+        eventName = data.get('eventName', '').strip()
+        if not eventName:
+            return JsonResponse({'success': False, 'message': '缺少活動名稱'}, status=400)
+
+        event = CharityEvent.objects.filter(name=eventName).first()
+        if not event:
+            return JsonResponse({'success': False, 'message': '查無此活動'}, status=404)
+
+        # 驗證主辦方身分
+        if not CharityInfo.objects.filter(user=user, id=event.mainOrganizer_id).exists():
+            return JsonResponse({'success': False, 'message': '只有主辦方可以刪除活動'}, status=403)
+
+        event.delete()
+
+        return JsonResponse({'success': True, 'message': '活動已刪除'}, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
 def coOrganizeEvent(request):
     try:
         user = request.user
@@ -335,3 +361,6 @@ def removeCoOrganizer(request):
 
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+

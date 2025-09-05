@@ -45,6 +45,10 @@ class ApiPath {
   static String get editCharityEvent =>
       '${BaseConfig.baseUrl}/charity/event/edit/';
 
+  //活動主辦方刪除活動，需回傳值：{'eventName':(必填,活動名稱)}
+  static String get deleteCharityEvent =>
+      '${BaseConfig.baseUrl}/charity/event/delete/';
+
   //透過邀請碼申請協辦活動，需回傳值：{'inviteCode':(必填)}
   static String get coOrganizeEvent =>
       '${BaseConfig.baseUrl}/charity/event/coorganize/';
