@@ -285,13 +285,18 @@ class CharityEventListState extends State<CharityEventListPage> {
   ) {
     return SizedBox(
       width: 140,
-      child: DropdownButtonFormField<String>(
+      child: DropdownButtonFormField<String?>(
         decoration: InputDecoration(labelText: label),
         value: value,
-        items:
-            items
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
+        items: [
+          DropdownMenuItem<String?>(
+            child: Text('所有${label.replaceAll('選擇', '')}'),
+            value: null,
+          ),
+          ...items.map(
+            (e) => DropdownMenuItem<String?>(value: e, child: Text(e)),
+          ),
+        ],
         onChanged: onChanged,
       ),
     );
