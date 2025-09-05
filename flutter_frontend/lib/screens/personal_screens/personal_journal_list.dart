@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
 
-class PersonalJournalDetailPage extends StatefulWidget {
-  const PersonalJournalDetailPage({super.key});
+class PersonalJournalListPage extends StatefulWidget {
+  const PersonalJournalListPage({super.key});
 
   @override
-  State<PersonalJournalDetailPage> createState() =>
-      PersonalJournalDetailPageState();
+  State<PersonalJournalListPage> createState() =>
+      PersonalJournalListPageState();
 }
 
-class PersonalJournalDetailPageState extends State<PersonalJournalDetailPage> {
+class PersonalJournalListPageState extends State<PersonalJournalListPage> {
   final String eventName = '台北西門町的捐血車'; //測試用假資料
   void toQRCode() {
     Navigator.of(context).push(
@@ -40,19 +40,7 @@ class PersonalJournalDetailPageState extends State<PersonalJournalDetailPage> {
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            SizedBox(
-              width: 200,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: toQRCode,
-                child: const Text(
-                  '報到!',
-                  style: TextStyle(fontSize: 20, color: Colors.brown),
-                ),
-              ),
-            ),
-          ],
+          children: <Widget>[SizedBox(width: 200, height: 60)],
         ),
       ),
     );

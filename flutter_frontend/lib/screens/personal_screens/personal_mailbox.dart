@@ -151,6 +151,8 @@ class PersonalMailboxPageState extends State<PersonalMailboxPage>
         title: const Text('信箱'),
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.brown,
+          indicatorColor: Colors.amberAccent,
           tabs: const [
             Tab(text: '個人信件'),
             Tab(text: '活動通知'),
