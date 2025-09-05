@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_map_tab.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_pet.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_shop.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_event.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_setting.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_event_list.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_map.dart';
 
-class PersonalHomeTab extends StatefulWidget {
-  const PersonalHomeTab({super.key});
+class PersonalMapTab extends StatefulWidget {
+  const PersonalMapTab({super.key});
 
-  static _HomePageState? of(BuildContext context) {
-    return context.findAncestorStateOfType<_HomePageState>();
+  static MapTabState? of(BuildContext context) {
+    return context.findAncestorStateOfType<MapTabState>();
   }
 
   @override
-  State<PersonalHomeTab> createState() => _HomePageState();
+  State<PersonalMapTab> createState() => MapTabState();
 }
 
-class _HomePageState extends State<PersonalHomeTab> {
+class MapTabState extends State<PersonalMapTab> {
   int _currentTabIndex = 0;
   bool _showBottomBar = true;
 
@@ -36,11 +33,11 @@ class _HomePageState extends State<PersonalHomeTab> {
   }
 
   final List<Widget> _pages = const [
-    PersonalHomePage(), //0
-    PersonalPetPage(), //1
-    PersonalShopPage(), //2
-    PersonalEventPage(), //3
-    PersonalSettingPage(), //4
+    PersonalMapPage(), //0
+    PersonalEventListPage(), //1
+    PersonalEventListPage(), //2，再更改為其他頁面
+    PersonalEventListPage(), //3，再更改為其他頁面
+    PersonalEventListPage(), //4，再更改為其他頁面
   ];
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
@@ -54,10 +51,10 @@ class _HomePageState extends State<PersonalHomeTab> {
     });
   }
 
-  void _openMapPage() {
+  void _openHomePage() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => const PersonalMapTab()));
+    ).push(MaterialPageRoute(builder: (_) => const PersonalHomeTab()));
   }
 
   @override
@@ -102,8 +99,12 @@ class _HomePageState extends State<PersonalHomeTab> {
                   child: FloatingActionButton(
                     backgroundColor: Colors.amber,
                     shape: const CircleBorder(),
-                    onPressed: _openMapPage,
-                    child: const Icon(Icons.map, size: 32, color: Colors.brown),
+                    onPressed: _openHomePage,
+                    child: const Icon(
+                      Icons.home_filled,
+                      size: 32,
+                      color: Colors.brown,
+                    ),
                   ),
                 )
                 : null,
@@ -125,24 +126,24 @@ class _HomePageState extends State<PersonalHomeTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _navButton(
-                    icon: Icons.cruelty_free_outlined,
-                    label: '寵物',
+                    icon: Icons.event_note_sharp,
+                    label: '任務一覽',
                     pageIndex: 1,
                   ),
                   _navButton(
-                    icon: Icons.add_shopping_cart,
-                    label: '商城',
+                    icon: Icons.star_outline_rounded,
+                    label: '任務推薦',
                     pageIndex: 2,
                   ),
                   const SizedBox(width: 48), //中間主按鈕位置
                   _navButton(
-                    icon: Icons.announcement_rounded,
-                    label: '活動',
+                    icon: Icons.emergency_share_rounded,
+                    label: '宣傳任務',
                     pageIndex: 3,
                   ),
                   _navButton(
                     icon: Icons.construction,
-                    label: '設定',
+                    label: '系統設定',
                     pageIndex: 4,
                   ),
                 ],

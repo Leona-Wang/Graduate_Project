@@ -13,6 +13,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.da
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organize_number.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_map_tab.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_profile.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event.dart';
@@ -46,6 +47,7 @@ class AppRoutes {
   //personal_screens
   static const String personalHomeTab = '/personal_home_tab'; //主頁面按鈕與功能
   static const String personalHome = '/personal_home'; //主頁面內容
+  static const String personalMapTab = '/personal_map_tab'; //地圖頁按鈕與功能
   static const String personalMap = '/personal_map'; //地圖頁面
   static const String personalPet = '/personal_pet'; //寵物系統
   static const String personalShop = '/personal_shop'; //商城系統
@@ -111,6 +113,9 @@ class AppRoutes {
 
       case personalMap:
         return MaterialPageRoute(builder: (_) => PersonalMapPage());
+
+      case personalMapTab:
+        return MaterialPageRoute(builder: (_) => PersonalMapTab());
 
       case personalPet:
         return MaterialPageRoute(builder: (_) => PersonalPetPage());

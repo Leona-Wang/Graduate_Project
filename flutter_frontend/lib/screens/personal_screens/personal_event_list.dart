@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_map_tab.dart';
 import 'dart:convert';
 import 'personal_event_detail_page.dart';
 import '../../api_client.dart';
@@ -116,11 +117,29 @@ class PersonalEventListState extends State<PersonalEventListPage> {
     fetchEvents();
   }
 
+  void backToMap() {
+    PersonalMapTab.of(context)?.switchTab(0);
+  }
+
   //主架構，其他區域分開寫
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('活動清單')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.amberAccent,
+            child: IconButton(
+              onPressed: backToMap,
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
+              tooltip: '返回地圖',
+            ),
+          ),
+        ),
+        title: const Text('設定'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
