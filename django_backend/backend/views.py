@@ -269,6 +269,51 @@ class CharityEventList(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class PersonalJoinedEventList(APIView):
+    """回傳個人用戶參加過的活動清單（已結束），支援 eventType/location/time 篩選"""
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        page = int(request.GET.get('page', 1))
+        eventType = request.GET.get('eventType', None)
+        location = request.GET.get('location', None)
+        time = request.GET.get('time', 'permanent')
+        timeDelta = settings.ACTIVITY_LIST_TIME_CHOICES.get(time, None)
+
+        perPage = 10
+        startIndex = (page - 1) * perPage
+        endIndex = page * perPage
+
+        nowTime = now()
+        filters = Q(eventparticipant__personalUser=user) & Q(eventparticipant__joinType=settings.CHARITY_EVENT_JOIN)
+
+        # 已結束活動
+        filters &= Q(endTime__lt=nowTime)
+
+        if eventType:
+            filters &= Q(eventType__typeName=eventType)
+        if location:
+            filters &= Q(location__locationName=location)
+        if timeDelta:
+            futureTime = nowTime + timeDelta
+            filters &= Q(startTime__gte=nowTime, startTime__lte=futureTime)
+
+        events = CharityEvent.objects.filter(filters).distinct().order_by('-startTime')[startIndex:endIndex]
+        eventList = CharityEventSerializer(events, many=True)
+        eventTypeList = list(EventType.objects.values_list('typeName', flat=True))
+        locationList = list(Location.objects.values_list('locationName', flat=True))
+
+        return Response({
+            'events': eventList.data,
+            'eventTypes': eventTypeList,
+            'locations': locationList,
+        })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class CharityEventDetail(APIView):
     """根據選擇回傳對應的 event """
 
@@ -421,3 +466,4 @@ class SendPersonalCanvassMail(APIView):
     """活動主辦方發送個人催票信"""
     def post(self, request, *args, **kwargs):
         return sendPersonalCanvassMail(request)
+

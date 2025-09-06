@@ -36,6 +36,7 @@ urlpatterns = [
     path('charity/event/coorganize/verify/', views.VerifyCoOrganize.as_view(), name="verifyCoOrganize"),
     path('charity/event/coorganize/remove/', views.RemoveCoOrganizer.as_view(), name="removeCoOrganizer"),
     path('events/', views.CharityEventList.as_view(), name="charityEventList"),
+    path('events/personal_joined/', views.PersonalJoinedEventList.as_view(), name="personalJoinedEventList"),
     path('events/<int:eventId>/', views.CharityEventDetail.as_view(), name="charityEventDetail"),
     path(
         'events/<int:eventId>/participant_record/',
