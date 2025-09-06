@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_frontend/config.dart';
+import 'package:flutter_frontend/api_client.dart';
 
 class CharityCoorganizerPage extends StatefulWidget {
   final int? eventId; // 可不帶；不帶就先選活動
@@ -17,6 +17,7 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage> {
   bool _loading = false;
   bool _busy = false;
 
+  final ApiClient _api = ApiClient();
   List<Map<String, dynamic>> _applications = [];
 
   @override
@@ -24,6 +25,7 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage> {
     super.initState();
     _eventId = widget.eventId;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _api.init();
       if (_eventId == null) {
         await _pickEvent(); // 先選活動
       } else {
@@ -36,10 +38,9 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage> {
   Future<void> _ensureEventName() async {
     if (_eventName != null || _eventId == null) return;
     final url = ApiPath.charityEventDetail(_eventId!); // GET /events/{id}/
-    final resp = await http.get(Uri.parse(url));
+    final resp = await _api.get(url).timeout(const Duration(seconds: 10));
     if (resp.statusCode == 200) {
       final map = json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
-      // 依你們後端欄位命名取活動名稱（假設叫 name）
       _eventName = (map['name'] ?? map['eventName'] ?? '').toString();
     } else {
       throw Exception('取得活動名稱失敗 (${resp.statusCode})');
@@ -51,11 +52,9 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage> {
     setState(() => _loading = true);
     try {
       final url = ApiPath.getCoOrganizeApplications; // POST /charity/event/coorganize/applications/
-      final resp = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'charityEventName': _eventName}),
-      );
+      final resp = await _api
+          .post(url, {'charityEventName': _eventName})
+          .timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         final list = json.decode(utf8.decode(resp.bodyBytes)) as List;
         _applications = list.cast<Map<String, dynamic>>();
@@ -72,15 +71,13 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage> {
     setState(() => _busy = true);
     try {
       final url = ApiPath.verifyCoOrganize; // POST /charity/event/coorganize/verify/
-      final resp = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'charityEventName': _eventName,
-          'coOrganizerName': coOrganizerName,
-          'approve': approve,
-        }),
-      );
+      final resp = await _api
+          .post(url, {
+            'charityEventName': _eventName,
+            'coOrganizerName': coOrganizerName,
+            'approve': approve,
+          })
+          .timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         // 本地同步狀態
         final idx = _applications.indexWhere((a) => a['coOrganizerName'] == coOrganizerName);
@@ -228,6 +225,8 @@ class _EventPickerSheetState extends State<_EventPickerSheet> {
   bool _loading = true;
   List<_PickResult> _items = [];
 
+  final ApiClient _api = ApiClient(); // ← 新增
+
   @override
   void initState() {
     super.initState();
@@ -236,11 +235,11 @@ class _EventPickerSheetState extends State<_EventPickerSheet> {
 
   Future<void> _load() async {
     try {
+      await _api.init(); // ← 新增
       final url = ApiPath.charityEventList; // GET /events/
-      final resp = await http.get(Uri.parse(url));
+      final resp = await _api.get(url).timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
         final list = json.decode(utf8.decode(resp.bodyBytes)) as List;
-        // 依後端欄位命名抓 id/名稱（假設 name）
         _items = list
             .map((e) => e as Map<String, dynamic>)
             .map((m) => _PickResult(m['id'] as int, (m['name'] ?? '').toString()))

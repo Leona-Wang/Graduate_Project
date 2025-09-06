@@ -28,9 +28,8 @@ class CharityNewEventState extends State<CharityNewEventPage> {
   String _errorMessage = '';
 
   bool _isLoading = false;
-
-  // 新增：線上活動開關
   bool _isOnline = false;
+  // bool _isPermanent = false; //常駐活動
 
   LatLng? selectedLocationData;
   DateTime? _startDateTime;
@@ -106,6 +105,7 @@ class CharityNewEventState extends State<CharityNewEventPage> {
         'description': description,
         'eventType': type,
         'online': _isOnline,
+        // 'permanent': _isPermanent, //常駐活動
         if (!_isOnline) 'location': cityLocation,
         if (!_isOnline) 'address': address,
       };
@@ -287,6 +287,19 @@ class CharityNewEventState extends State<CharityNewEventPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  // const SizedBox(width: 12),
+                  // Column(
+                  //   children: [
+                  //     const Text('常駐'),
+                  //     Switch(
+                  //       value: _isPermanent,
+                  //       onChanged: (v) {
+                  //         setState(() => _isPermanent = v);
+                  //       },
+                  //     ),
+                  //   ],
+                  // ),
 
                   //活動類型下拉式選單
                   DropdownButtonFormField<String>(

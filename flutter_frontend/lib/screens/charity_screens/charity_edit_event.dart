@@ -6,6 +6,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:flutter_frontend/taiwan_address_helper.dart';
 import 'package:latlong2/latlong.dart';
 import '../../api_client.dart';
+import 'charity_event_detail_page.dart';
 
 class CharityEditEventPage extends StatefulWidget {
   final int eventId;
@@ -181,7 +182,7 @@ class _CharityEditEventPageState extends State<CharityEditEventPage> {
       final apiClient = ApiClient();
       await apiClient.init();
 
-      final uriData = ApiPath.createCharityEvent;
+      final uriData = ApiPath.editCharityEvent;
 
       // 只需傳要修改的欄位；未傳欄位不會被修改
       final body = <String, dynamic>{
