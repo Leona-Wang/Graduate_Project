@@ -71,17 +71,15 @@ class CharityEvent(models.Model):
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL) # 活動地點
     address = models.TextField(blank=True, null=True) #地址
     startTime = models.DateTimeField(null=False, blank=False) # 活動開始時間
-    endTime = models.DateTimeField(null=False, blank=False) # 活動結束時間
+    endTime = models.DateTimeField(null=True, blank=True) # 活動結束時間
     signupDeadline = models.DateTimeField(null=True, blank=True) # 報名截止時間
-    #image = models.ImageField(upload_to='eventImages/', null=True, blank=True)  # 活動圖片
     description = models.TextField(blank=True, null=True) # 活動說明
     participants = models.ManyToManyField(User, blank=True, related_name="EventParticipant") # 參與者（報名者）
     createTime = models.DateTimeField(null=True, blank=True) # 活動上傳時間
     status = models.TextField(null=True, blank=True) #活動狀態
     inviteCode = models.TextField(null=True, blank=True)
-    recommendedBy = models.ManyToManyField(User, blank=True, related_name="eventRecommendedBy")
     online = models.BooleanField(null=True, blank=True)
-    isCanvass = models.BooleanField(default=False)
+    #isCanvass = models.BooleanField(default=False)
 
 
 class EventParticipant(models.Model):
