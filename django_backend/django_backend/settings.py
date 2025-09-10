@@ -151,8 +151,17 @@ ACTIVITY_LIST_TIME_CHOICES = {
 
 CHARITY_EVENT_SAVE = "Save"
 CHARITY_EVENT_JOIN = "Join"
+CHARITY_EVENT_FINISHED = "Finished"
 
 CHARITY_EVENT_USER_RECORD_CHOICES = {
-    (CHARITY_EVENT_SAVE, 'Save'),
-    (CHARITY_EVENT_JOIN, 'Join'),
+    (CHARITY_EVENT_SAVE, 'Save'), #收藏活動
+    (CHARITY_EVENT_JOIN, 'Join'), #報名活動
+    (CHARITY_EVENT_FINISHED, 'Finished'), #已完成活動
+}
+
+CHARITY_EVENT_STATUS_DISPLAY = {
+    "upcoming": "即將開始",
+    "ongoing": "進行中",
+    "finished": "已結束",
+    "unknown": "未知"
 }

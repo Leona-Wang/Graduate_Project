@@ -258,6 +258,12 @@ class CharityEventList(APIView):
 
         events = CharityEvent.objects.filter(filters).order_by('-startTime')[startIndex:endIndex]
         eventList = CharityEventSerializer(events, many=True)
+
+        # 加入statusDisplay 中文欄位
+        for event in eventList.data:
+            status = event.get('status', 'unknown')
+            event['statusDisplay'] = settings.CHARITY_EVENT_STATUS_DISPLAY.get(status, status)
+
         eventTypeList = list(EventType.objects.values_list('typeName', flat=True))
         locationList = list(Location.objects.values_list('locationName', flat=True))
 
@@ -270,7 +276,7 @@ class CharityEventList(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class PersonalJoinedEventList(APIView):
-    """回傳個人用戶參加過的活動清單（已結束），支援 eventType/location/time 篩選"""
+    """回傳個人用戶已完成的活動清單，支援 eventType/location/time 篩選"""
 
     def get(self, request, *args, **kwargs):
         user = request.user
@@ -287,22 +293,25 @@ class PersonalJoinedEventList(APIView):
         startIndex = (page - 1) * perPage
         endIndex = page * perPage
 
-        nowTime = now()
-        filters = Q(eventparticipant__personalUser=user) & Q(eventparticipant__joinType=settings.CHARITY_EVENT_JOIN)
-
-        # 已結束活動
-        filters &= Q(endTime__lt=nowTime)
+        filters = Q(eventparticipant__personalUser=user) & Q(eventparticipant__joinType=settings.CHARITY_EVENT_FINISHED)
 
         if eventType:
             filters &= Q(eventType__typeName=eventType)
         if location:
             filters &= Q(location__locationName=location)
         if timeDelta:
+            nowTime = now()
             futureTime = nowTime + timeDelta
             filters &= Q(startTime__gte=nowTime, startTime__lte=futureTime)
 
         events = CharityEvent.objects.filter(filters).distinct().order_by('-startTime')[startIndex:endIndex]
         eventList = CharityEventSerializer(events, many=True)
+
+        # 加入statusDisplay 中文欄位
+        for event in eventList.data:
+            status = event.get('status', 'unknown')
+            event['statusDisplay'] = settings.CHARITY_EVENT_STATUS_DISPLAY.get(status, status)
+
         eventTypeList = list(EventType.objects.values_list('typeName', flat=True))
         locationList = list(Location.objects.values_list('locationName', flat=True))
 

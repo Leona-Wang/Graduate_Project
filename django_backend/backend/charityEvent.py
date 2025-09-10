@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.decorators import api_view, permission_classes
 from django.utils import timezone
+from django.conf import settings
 
 
 def createCharityEvent(request):
@@ -109,7 +110,8 @@ def createCharityEvent(request):
         )
 
         event.save()
-        return JsonResponse({'success': True, 'eventId': event.id, 'status': status}, status=200)
+        status_display = settings.CHARITY_EVENT_STATUS_DISPLAY.get(status, status)
+        return JsonResponse({'success': True, 'eventId': event.id, 'status': status_display}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
