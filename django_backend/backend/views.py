@@ -21,7 +21,7 @@ from .charityEvent import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
-from .mails import getMailDetail, getMailListByType, sendPersonalCanvassMail
+from .mails import getMailDetail, getMailListByType
 
 
 # Create your views here.
@@ -460,10 +460,4 @@ class GetMailListByType(APIView):
         mailType = request.GET.get('type', '').strip()
         return getMailListByType(request, mailType)
 
-
-@method_decorator(csrf_exempt, name='dispatch')
-class SendPersonalCanvassMail(APIView):
-    """活動主辦方發送個人催票信"""
-    def post(self, request, *args, **kwargs):
-        return sendPersonalCanvassMail(request)
 

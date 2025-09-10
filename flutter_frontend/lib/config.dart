@@ -35,12 +35,12 @@ class ApiPath {
   static String get createCharityInfo =>
       '${BaseConfig.baseUrl}/charity/create/';
 
-  //創建慈善活動，需回傳值：{'name':(必填，活動名稱),'startTime':(必填),'endTime':(必填),'signupDeadline':報名截止時間, 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址, 'online':true/false(是否為線上活動)}
+  //創建慈善活動，需回傳值：{'name':(必填，活動名稱),'startTime':(必填),'endTime':,'signupDeadline':報名截止時間, 'description':,'eventType':(typeName、單選),'location':中文縣市, 'address':中文詳細地址, 'online':true/false(是否為線上活動), permanent:true/false(是否為常駐活動))}
   static String get createCharityEvent =>
       '${BaseConfig.baseUrl}/charity/event/create/';
 
   //活動主辦方編輯活動，需回傳值：{'name':(必填,活動名稱),'eventType':,'location':,'address':,'startTime':,'endTime':,'signupDeadline':,'description':,'online':true/false}
-  //只需傳要修改的欄位即可，未傳欄位不會被修改
+  //只需傳要修改的欄位即可，未傳欄位不會被修改，如果endTime或signupDeadline要改成沒有時間(刪掉原本的值就傳空字串
   //現在是做不能改name的，因為name作為唯一識別，如果想改成可以改name的再跟我說
   static String get editCharityEvent =>
       '${BaseConfig.baseUrl}/charity/event/edit/';
@@ -138,10 +138,4 @@ class ApiPath {
   // }
   static String mailListByType(String mailType) =>
     '${BaseConfig.baseUrl}/mail/list/?type=$mailType';
-
-  // 活動主辦方發送個人催票信
-  // 用 POST，需回傳值：{"eventName":(必填,活動名稱),"isCanvass":true/false}
-  // 後端回傳：{"success": true, "message": "已發送個人催票信"} 或 {"success": true, "message": "已取消催票信狀態"}
-  static String get sendPersonalCanvassMail =>
-      '${BaseConfig.baseUrl}/mail/personal/canvass/send/';
 }

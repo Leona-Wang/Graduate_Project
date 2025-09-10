@@ -28,13 +28,14 @@ def createCharityEvent(request):
         locationName = data.get('location', '').strip()
         address = data.get('address', '').strip()
         startTime = data.get('startTime')
-        endTime = data.get('endTime')
-        signupDeadline = data.get('signupDeadline')
+        endTime = data.get('endTime', None)
+        signupDeadline = data.get('signupDeadline', None)
         description = data.get('description', '').strip()
         online = data.get('online', False)
+        permanent = data.get('permanent', False)
 
-        if not all([name, startTime, endTime]):
-            return JsonResponse({'success': False, 'message': '缺少必填欄位(name, startTime, endTime)'}, status=400)
+        if not all([name, startTime]):
+            return JsonResponse({'success': False, 'message': '缺少必填欄位(name, startTime)'}, status=400)
 
         mainOrganizer = charityInfo
 
@@ -52,6 +53,8 @@ def createCharityEvent(request):
             location = Location.objects.filter(locationName=locationName).first() if locationName else None
 
         def parseDt(dtStr):
+            if not dtStr:
+                return None
             try:
                 naiveDt = datetime.strptime(dtStr, "%Y-%m-%d %H:%M")
                 return timezone.make_aware(naiveDt)
@@ -59,9 +62,9 @@ def createCharityEvent(request):
                 return None
 
         startTimeObj = parseDt(startTime)
-        endTimeObj = parseDt(endTime)
+        endTimeObj = parseDt(endTime) if endTime else None
 
-        if not startTimeObj or not endTimeObj:
+        if not startTimeObj:
             return JsonResponse({'success': False, 'message': '時間格式錯誤，請用 YYYY-MM-DD HH:MM'}, status=400)
 
         nowTime = now()
@@ -72,6 +75,11 @@ def createCharityEvent(request):
                 status = "ongoing"
             else:
                 status = "finished"
+        elif startTimeObj:
+            if nowTime < startTimeObj:
+                status = "upcoming"
+            else:
+                status = "ongoing"
         else:
             status = "unknown"
 
@@ -91,12 +99,13 @@ def createCharityEvent(request):
             address=address,
             startTime=startTimeObj,
             endTime=endTimeObj,
-            signupDeadline=parseDt(signupDeadline) if signupDeadline else None,
+            signupDeadline=parseDt(signupDeadline),
             description=description,
             createTime=nowTime,
             status=status,
             inviteCode=inviteCode,
-            online=online
+            online=online,
+            permanent=permanent
         )
 
         event.save()
@@ -134,6 +143,7 @@ def editCharityEvent(request):
         signupDeadline = data.get('signupDeadline', None)
         description = data.get('description', None)
         online = data.get('online', None)
+        permanent = data.get('permanent', None)
 
         # eventType
         if eventTypeName is not None:
@@ -165,11 +175,19 @@ def editCharityEvent(request):
         if startTime is not None:
             event.startTime = datetime.strptime(startTime, "%Y-%m-%d %H:%M")
         if endTime is not None:
-            event.endTime = datetime.strptime(endTime, "%Y-%m-%d %H:%M")
+            if endTime == "" or endTime is None:
+                event.endTime = None
+            else:
+                event.endTime = datetime.strptime(endTime, "%Y-%m-%d %H:%M")
         if signupDeadline is not None:
-            event.signupDeadline = datetime.strptime(signupDeadline, "%Y-%m-%d %H:%M")
+            if signupDeadline == "" or signupDeadline is None:
+                event.signupDeadline = None
+            else:
+                event.signupDeadline = datetime.strptime(signupDeadline, "%Y-%m-%d %H:%M")
         if description is not None:
             event.description = description
+        if permanent is not None:
+            event.permanent = permanent
 
         event.save()
         return JsonResponse({'success': True, 'message': '活動已更新'}, status=200)

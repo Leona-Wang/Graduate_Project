@@ -79,6 +79,7 @@ class CharityEvent(models.Model):
     status = models.TextField(null=True, blank=True) #活動狀態
     inviteCode = models.TextField(null=True, blank=True)
     online = models.BooleanField(null=True, blank=True)
+    permanent = models.BooleanField(default=False)  # 是否為常駐活動
     #isCanvass = models.BooleanField(default=False)
 
 
