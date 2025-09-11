@@ -76,7 +76,13 @@ class CharityEvent(models.Model):
     description = models.TextField(blank=True, null=True) # 活動說明
     participants = models.ManyToManyField(User, blank=True, related_name="EventParticipant") # 參與者（報名者）
     createTime = models.DateTimeField(null=True, blank=True) # 活動上傳時間
-    status = models.TextField(null=True, blank=True) #活動狀態
+    status = models.CharField(
+        max_length=20,
+        choices=settings.CHARITY_EVENT_STATUS_CHOICES,
+        default=settings.CHARITY_EVENT_STATUS_UNKNOWN,
+        null=True,
+        blank=True
+    ) # 活動狀態
     inviteCode = models.TextField(null=True, blank=True)
     online = models.BooleanField(null=True, blank=True)
     permanent = models.BooleanField(default=False) # 是否為常駐活動

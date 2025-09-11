@@ -72,18 +72,18 @@ def createCharityEvent(request):
         nowTime = now()
         if startTimeObj and endTimeObj:
             if nowTime < startTimeObj:
-                status = "upcoming"
+                status = settings.CHARITY_EVENT_STATUS_UPCOMING
             elif startTimeObj <= nowTime <= endTimeObj:
-                status = "ongoing"
+                status = settings.CHARITY_EVENT_STATUS_ONGOING
             else:
-                status = "finished"
+                status = settings.CHARITY_EVENT_STATUS_FINISHED
         elif startTimeObj:
             if nowTime < startTimeObj:
-                status = "upcoming"
+                status = settings.CHARITY_EVENT_STATUS_UPCOMING
             else:
-                status = "ongoing"
+                status = settings.CHARITY_EVENT_STATUS_ONGOING
         else:
-            status = "unknown"
+            status = settings.CHARITY_EVENT_STATUS_UNKNOWN
 
         def generateInviteCode():
             while True:
