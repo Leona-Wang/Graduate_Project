@@ -170,7 +170,7 @@ class Prize(models.Model):
 
 class ItemBox(models.Model):
     personalInfo = models.ForeignKey(PersonalInfo, null=True, on_delete=models.SET_NULL)
-    prizeType = models.ForeignKey(Prize, null=True, on_delete=models.SET_NULL)
+    prize = models.ForeignKey(Prize, null=True, on_delete=models.SET_NULL)
     quantity = models.IntegerField()
 
 

@@ -4,7 +4,7 @@ from .serializers import CharityEventSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord
+from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord, OfficialEvent
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login
 from datetime import datetime
 from django.utils.timezone import now
-from .Casino import createCasino, createBet, updateBet, removeBet, getSumOfBet, getUserWinProbability, getWinner, saveWinner
+from .Casino import createOrUpdateBet, getUserBetAmount, getTotalBetAmount
 import random
 import string
 from .charityEvent import (
@@ -212,9 +212,10 @@ class CreateCharityInfo(APIView):
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 
+"""
 @method_decorator(csrf_exempt, name='dispatch')
 class CreateCasino(APIView):
-    """給我們內部建立 5050 活動用"""
+    給我們內部建立 5050 活動用
 
     def post(self, request, *args, **kwargs):
         startTime = request.data.get('startTime', None)
@@ -223,6 +224,7 @@ class CreateCasino(APIView):
         if casinoResult:
             return JsonResponse({'success': True}, status=200)
         return JsonResponse({'success': False, 'message': casinoResult}, status=400)
+"""
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -472,3 +474,51 @@ class GetMailListByType(APIView):
     def get(self, request, *args, **kwargs):
         mailType = request.GET.get('type', '').strip()
         return getMailListByType(request, mailType)
+
+
+class GetBetDetail(APIView):
+    """拿到 betEvent 的下注金額"""
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        userBetAmount = getUserBetAmount(user)
+        totalBetAmount = getTotalBetAmount()
+
+        return JsonResponse({
+            'success': True,
+            'totalBetAmount': totalBetAmount,
+            'userBetAmount': userBetAmount
+        },
+                            status=200)
+
+
+class CreateOrUpdateBet(APIView):
+    """新增 bet 紀錄"""
+
+    def post(self, request, *args, **kwargs):
+
+        user = request.user
+        betAmount = request.data.get('betAmount', None)
+        if betAmount:
+            betAmount = int(betAmount)
+
+        betEvent = OfficialEvent.objects.filter(type=settings.OFFICIAL_EVENT_TYPE_CASINO).last()
+
+        result = createOrUpdateBet(user, betEvent)
+
+        if result is False:
+            return JsonResponse({'success': False, 'message': '金額不夠'}, status=400)
+
+        return JsonResponse({'success': True}, status=200)
+
+
+class IsBetWinner(APIView):
+
+    def get(self, request, *args, **kwargs):
+
+        user = request.user
+        lastEventWithWinner = OfficialEvent.objects.filter(~Q(winner=None)).order_by('-id').first()
+
+        if lastEventWithWinner.winner == user:
+            return JsonResponse({'success': True, 'isWinner': True}, status=200)
+        return JsonResponse({'success': True, 'isWinner': False}, status=200)

@@ -1,5 +1,5 @@
 from jinja2 import Template
-from .models import Letter, LetterType, LetterExample, CharityEvent
+from .models import Letter, LetterType, CharityEvent
 from django.http import JsonResponse
 import json
 
@@ -31,6 +31,7 @@ def getMailDetail(request, mailId):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
+
 def getMailListByType(request, mailType):
     try:
         user = request.user
@@ -47,16 +48,8 @@ def getMailListByType(request, mailType):
 
         # 查詢該用戶該類型所有信件
         mails = Letter.objects.filter(receiver=user, type=letter_type).order_by('-date')
-        mail_list = [
-            {
-                'id': mail.id,
-                'title': mail.title,
-                'isRead': mail.isRead
-            }
-            for mail in mails
-        ]
+        mail_list = [{'id': mail.id, 'title': mail.title, 'isRead': mail.isRead} for mail in mails]
 
         return JsonResponse({'success': True, 'mails': mail_list}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
-    

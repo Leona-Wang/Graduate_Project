@@ -17,7 +17,8 @@ class Command(BaseCommand):
         joinLetters = []
 
         for charityEvent in charityEvents:
-            promoteDay = charityEvent.promoteDay
+            #預設3天前宣傳
+            promoteDay = 3
             daysDiff = (charityEvent.startTime.date() - now).days
 
             if daysDiff <= promoteDay:

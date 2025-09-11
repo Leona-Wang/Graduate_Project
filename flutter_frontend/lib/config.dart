@@ -120,8 +120,8 @@ class ApiPath {
   //   }
   // }
   static String getMailDetail(int mailId) =>
-    '${BaseConfig.baseUrl}/mail/$mailId/';
-  
+      '${BaseConfig.baseUrl}/mail/$mailId/';
+
   //查詢user的某種type的mail list，用GET，後端回傳範例:
   // {
   //   "success": true,
@@ -139,5 +139,16 @@ class ApiPath {
   //   ]
   // }
   static String mailListByType(String mailType) =>
-    '${BaseConfig.baseUrl}/mail/list/?type=$mailType';
+      '${BaseConfig.baseUrl}/mail/list/?type=$mailType';
+
+  //後端傳{'success': True,'totalBetAmount': totalBetAmount,'userBetAmount': userBetAmount}機率前端動態算，不然要用 ajax ，小麻煩
+  static String get getBetDetail => '${BaseConfig.baseUrl}/events/casino/';
+
+  //前端傳{'betAmount':}前端可以檢查輸入是不是非負整數(0也可以)
+  static String get createOrUpdateBet =>
+      '${BaseConfig.baseUrl}/events/casino/bet_amount/edit/';
+
+  //後端傳{'success': True, 'isWinner': True/False} isWinner 為 True 就是中獎人
+  static String get isBetWinner =>
+      '${BaseConfig.baseUrl}/events/casino/winner/';
 }
