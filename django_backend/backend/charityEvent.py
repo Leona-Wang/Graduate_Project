@@ -4,12 +4,13 @@ from django.utils.timezone import now
 from datetime import datetime
 import random
 import string
-from .models import CharityInfo, CharityEvent, CharityEventCoOrganizer, EventType, Location
+from .models import CharityInfo, CharityEvent, CharityEventCoOrganizer, EventType, Location, EventParticipant, Letter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.decorators import api_view, permission_classes
 from django.utils import timezone
 from django.conf import settings
+from django.template import loader
 
 
 def createCharityEvent(request):
@@ -216,9 +217,78 @@ def deleteCharityEvent(request):
         if not CharityInfo.objects.filter(user=user, id=event.mainOrganizer_id).exists():
             return JsonResponse({'success': False, 'message': '只有主辦方可以刪除活動'}, status=403)
 
+        # 查詢收藏者、報名者、協辦者
+        saves = EventParticipant.objects.filter(charityEvent=event, joinType=settings.CHARITY_EVENT_SAVE)
+        joins = EventParticipant.objects.filter(charityEvent=event, joinType=settings.CHARITY_EVENT_JOIN)
+        co_orgs = CharityEventCoOrganizer.objects.filter(charityEvent=event, verified=True)
+
+        charityName = event.mainOrganizer.name
+        eventName = event.name
+
+        # 載入信件模板
+        titleTemplate = loader.get_template('EventDeletedLetterTitle.txt')
+        savedContentTemplate = loader.get_template('SavedEventDeletedLetterContent.txt')
+        joinedContentTemplate = loader.get_template('JoinedEventDeletedLetterContent.txt')
+        coOrgContentTemplate = loader.get_template('CoOrganizeEventDeletedLetterContent.txt')
+
+        letters = []
+
+        # 寄給收藏者
+        for save in saves:
+            title = titleTemplate.render({}).strip()
+            content = savedContentTemplate.render({
+                'username': save.personalUser.first_name,
+                'charityName': charityName,
+                'eventName': eventName,
+            }).strip()
+            letter = Letter(
+                receiver=save.personalUser,
+                title=title,
+                content=content,
+                charityEvent=event
+            )
+            letters.append(letter)
+
+        # 寄給報名者
+        for join in joins:
+            title = titleTemplate.render({}).strip()
+            content = joinedContentTemplate.render({
+                'username': join.personalUser.first_name,
+                'charityName': charityName,
+                'eventName': eventName,
+            }).strip()
+            letter = Letter(
+                receiver=join.personalUser,
+                title=title,
+                content=content,
+                charityEvent=event
+            )
+            letters.append(letter)
+
+        # 寄給協辦者
+        for co_org in co_orgs:
+            co_organizer = co_org.coOrganizer
+            title = titleTemplate.render({}).strip()
+            content = coOrgContentTemplate.render({
+                'username': co_organizer.name,
+                'charityName': charityName,
+                'eventName': eventName,
+            }).strip()
+            letter = Letter(
+                receiver=co_organizer.user,
+                title=title,
+                content=content,
+                charityEvent=event
+            )
+            letters.append(letter)
+
+        # 批次建立信件
+        if letters:
+            Letter.objects.bulk_create(letters)
+
         event.delete()
 
-        return JsonResponse({'success': True, 'message': '活動已刪除'}, status=200)
+        return JsonResponse({'success': True, 'message': '活動已刪除，已通知收藏者、報名者與協辦者'}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
