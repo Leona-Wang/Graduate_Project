@@ -79,7 +79,7 @@ class CharityEvent(models.Model):
     status = models.TextField(null=True, blank=True) #活動狀態
     inviteCode = models.TextField(null=True, blank=True)
     online = models.BooleanField(null=True, blank=True)
-    permanent = models.BooleanField(default=False)  # 是否為常駐活動
+    permanent = models.BooleanField(default=False) # 是否為常駐活動
     #isCanvass = models.BooleanField(default=False)
 
 
@@ -158,19 +158,17 @@ class Letter(models.Model):
     )
 
 
-class LetterExample(models.Model):
-    templateName = models.TextField(null=False, blank=False)
-    type = models.ForeignKey(LetterType, null=True, blank=True, on_delete=models.SET_NULL) # 信件類型
-    title = models.CharField(max_length=255, null=False, blank=False) # 標題
-    content = models.TextField(null=False, blank=False) # 內容
-
-
-class PrizeType(models.Model):
+class Prize(models.Model):
     name = models.CharField(max_length=20, null=False, blank=False) # 獎品名稱
-    usage = models.CharField(max_length=20, null=False, blank=False) # 用途（例如 強化 / 進化）
+
+
+class ItemBox(models.Model):
+    personalInfo = models.ForeignKey(PersonalInfo, null=True, on_delete=models.SET_NULL)
+    prizeType = models.ForeignKey(Prize, null=True, on_delete=models.SET_NULL)
+    quantity = models.IntegerField()
 
 
 class Reward(models.Model):
-    prize = models.ForeignKey(PrizeType, null=True, blank=False, on_delete=models.SET_NULL) # 對應獎品
+    prize = models.ForeignKey(Prize, null=True, blank=False, on_delete=models.SET_NULL) # 對應獎品
     receiver = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL) # 得獎者
     quantity = models.IntegerField() # 個數
