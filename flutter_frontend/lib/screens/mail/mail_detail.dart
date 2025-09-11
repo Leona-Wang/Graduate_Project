@@ -309,7 +309,8 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
       final apiClient = ApiClient();
       await apiClient.init();
 
-      final url = ApiPath.sendPersonalCanvassMail;
+      final url = '';
+      //final url = ApiPath.sendPersonalCanvassMail;
       final body = {
         'mailId': widget.mailId,
         'response': choice, // 若後端要 boolean，改成 'attend': choice == 'yes'
