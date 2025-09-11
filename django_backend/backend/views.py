@@ -326,6 +326,8 @@ class PersonalJoinedEventList(APIView):
 class CharityEventDetail(APIView):
     """根據選擇回傳對應的 event """
 
+    permission_classes = [AllowAny]
+
     def get(self, request, *args, **kwargs):
         charityEventID = kwargs.get('eventId')
 
@@ -380,13 +382,15 @@ class EditCharityEvent(APIView):
 
     def post(self, request, *args, **kwargs):
         return editCharityEvent(request)
-    
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class DeleteCharityEvent(APIView):
     """活動主辦方刪除活動"""
 
     def post(self, request, *args, **kwargs):
         return deleteCharityEvent(request)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CoOrganizeEvent(APIView):
@@ -468,5 +472,3 @@ class GetMailListByType(APIView):
     def get(self, request, *args, **kwargs):
         mailType = request.GET.get('type', '').strip()
         return getMailListByType(request, mailType)
-
-
