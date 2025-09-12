@@ -504,7 +504,7 @@ class CreateOrUpdateBet(APIView):
 
         betEvent = OfficialEvent.objects.filter(type=settings.OFFICIAL_EVENT_TYPE_CASINO).last()
 
-        result = createOrUpdateBet(user, betEvent)
+        result = createOrUpdateBet(user=user, betEvent=betEvent, betAmount=betAmount)
 
         if result is False:
             return JsonResponse({'success': False, 'message': '金額不夠'}, status=400)
