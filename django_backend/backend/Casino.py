@@ -65,8 +65,7 @@ def deductCoin(user, betAmount):
     prize = Prize.objects.filter(name=settings.PRIZE_COIN).first()
 
     item = ItemBox.objects.filter(personalInfo=personalInfo, prize=prize).first()
-    coinAmount = item.quantity
-    coinAmount = coinAmount - betAmount
+    item.quantity = item.quantity - betAmount
     item.save()
 
 
