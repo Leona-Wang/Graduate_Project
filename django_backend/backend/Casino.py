@@ -19,15 +19,18 @@ def createCasino(startTime, endTime):
 def getUserBetAmount(user):
 
     betEvent = OfficialEvent.objects.filter(type=settings.OFFICIAL_EVENT_TYPE_CASINO).last()
-    betAmount = OfficialEventParticipant.objects.filter(user=user, officialEvent=betEvent).first().betAmount
+    participant = OfficialEventParticipant.objects.filter(user=user, officialEvent=betEvent).first()
+    if participant:
+        betAmount = participant.betAmount
+    else:
+        betAmount = 0
     return betAmount
 
 
 def getTotalBetAmount():
     betEvent = OfficialEvent.objects.filter(type=settings.OFFICIAL_EVENT_TYPE_CASINO).last()
-    totalBetAmount = totalBetAmount = OfficialEventParticipant.objects.filter(officialEvent=betEvent
-                                                                             ).aggregate(total=Sum('betAmount')
-                                                                                        )['total'] or 0
+    totalBetAmount = OfficialEventParticipant.objects.filter(officialEvent=betEvent).aggregate(total=Sum('betAmount')
+                                                                                              )['total'] or 0
     return totalBetAmount
 
 
