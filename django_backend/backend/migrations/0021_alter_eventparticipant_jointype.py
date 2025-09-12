@@ -13,6 +13,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='eventparticipant',
             name='joinType',
-            field=models.CharField(choices=[('Finished', 'Finished'), ('Save', 'Save'), ('Join', 'Join')], default='Join', max_length=20),
+            field=models.CharField(
+                choices=[('Finished', 'Finished'), ('Save', 'Save'), ('Join', 'Join')], default='Join', max_length=20
+            ),
         ),
     ]
