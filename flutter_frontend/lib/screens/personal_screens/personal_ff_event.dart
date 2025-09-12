@@ -26,10 +26,21 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
   bool showGuide = false; //遊戲指引
   bool showCharacterDialog = false; //對話框
 
+  late TextEditingController _numberController;
+
   @override
   void initState() {
     super.initState();
+    _numberController = TextEditingController(
+      text: playerNumber?.toString() ?? '0',
+    );
     fetchNumber();
+  }
+
+  @override
+  void dispose() {
+    _numberController.dispose();
+    super.dispose();
   }
 
   //取得玩家投注金額
@@ -44,25 +55,23 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
       final uriNum = Uri.parse(url);
 
       final response = await apiClient.get(uriNum.toString());
+      print('fetchNumber response body: ${response.body}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          playerNumber = data["userBetAmount"] ?? 0;
-          total = data['totalBetAmount'] ?? 0;
+          playerNumber = int.tryParse(data['userBetAmount'].toString()) ?? 0;
+          total = int.tryParse(data['totalBetAmount'].toString()) ?? 0;
+          _numberController.text = playerNumber.toString();
         });
+        print(playerNumber);
+        print(total);
       } else {
         debugPrint("取得金幣數量失敗: ${response.statusCode}");
-        setState(() {
-          playerNumber = 0;
-          total = 0;
-        });
       }
     } catch (e) {
       debugPrint("錯誤: $e");
     } finally {
       setState(() {
-        playerNumber = 0;
-        total = 0;
         isLoading = false;
       });
     }
@@ -81,10 +90,12 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
       final response = await apiClient.post(uriNum.toString(), body);
 
       if (response.statusCode == 200) {
-        await fetchNumber();
         /*setState(() {
           playerNumber = newNumber;
+          _numberController.text = playerNumber.toString();
         });*/
+        //await Future.delayed(Duration(milliseconds: 500));
+        await fetchNumber();
       } else {
         throw Exception("下注失敗: ${response.statusCode}");
       }
@@ -94,21 +105,21 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
   }
 
   void openNumberInputDialog() {
-    final controller = TextEditingController(
+    /*final controller = TextEditingController(
       text: playerNumber?.toString() ?? "0",
-    );
+    );*/
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("輸入數字"),
+          title: const Text("輸入金額"),
           content: TextField(
-            controller: controller,
+            controller: _numberController,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              hintText: "請輸入數字",
+              hintText: "請輸入金額",
             ),
           ),
           actions: [
@@ -118,7 +129,7 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                final value = int.tryParse(controller.text);
+                final value = int.tryParse(_numberController.text.trim());
                 if (value != null) {
                   updateNumber(value);
                 }
@@ -136,7 +147,7 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
   Widget build(BuildContext context) {
     double progress = 0.0;
     if (playerNumber != null && total != null && total! > 0) {
-      progress = playerNumber! / total!;
+      progress = 2 / total!;
     } else {
       progress = 0;
     }
