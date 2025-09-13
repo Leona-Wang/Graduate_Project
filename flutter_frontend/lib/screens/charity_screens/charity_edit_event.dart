@@ -6,11 +6,18 @@ import 'package:flutter_frontend/screens/charity_screens/charity_map.dart';
 import 'package:flutter_frontend/taiwan_address_helper.dart';
 import 'package:latlong2/latlong.dart';
 import '../../api_client.dart';
-import 'charity_event_detail_page.dart';
 
 class CharityEditEventPage extends StatefulWidget {
   final int eventId;
-  const CharityEditEventPage({super.key, required this.eventId});
+
+  /// 從「詳情頁」可傳入舊資料，讓本頁在 API 回來前就能先顯示
+  final Map<String, dynamic>? initialEventJson;
+
+  const CharityEditEventPage({
+    super.key,
+    required this.eventId,
+    this.initialEventJson,
+  });
 
   @override
   State<CharityEditEventPage> createState() => _CharityEditEventPageState();
@@ -37,10 +44,94 @@ class _CharityEditEventPageState extends State<CharityEditEventPage> {
   DateTime? _endDateTime;
   DateTime? _ddlDateTime;
 
+  static const List<String> _allowedTypes = [
+    '綜合性服務',
+    '兒童青少年福利',
+    '婦女福利',
+    '老人福利',
+    '身心障礙福利',
+    '家庭福利',
+    '健康醫療',
+    '心理衛生',
+    '社區規劃(營造)',
+    '環境保護',
+    '國際合作交流',
+    '教育與科學',
+    '文化藝術',
+    '人權和平',
+    '消費者保護',
+    '性別平等',
+    '政府單位',
+    '動物保護',
+  ];
+
   @override
   void initState() {
     super.initState();
+
+    // 先用詳情頁帶來的資料立即預填（若有）
+    if (widget.initialEventJson != null) {
+      _applyFromJson(widget.initialEventJson!);
+    }
+
+    // 再向後端取最新資料覆寫
     _fetchDetail();
+  }
+
+  /// 把後端（或外部傳入）的 JSON 資料套用到畫面與狀態
+  void _applyFromJson(Map<String, dynamic> data) {
+    String asString(dynamic v) => (v ?? '').toString();
+
+    _originalName = asString(data['name']);
+    _nameController.text = _originalName ?? '';
+
+    final String eventTypeStr = asString(data['eventType']);
+    _selectEventType = eventTypeStr.isEmpty ? null : eventTypeStr;
+
+    _descriptionController.text = asString(data['description']);
+    _isOnline = (data['online'] ?? false) == true;
+
+    DateTime? tryParse(String s) {
+      if (s.isEmpty) return null;
+      try {
+        return DateTime.parse(s);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final String startStr = asString(data['startTime']);
+    final String endStr = asString(data['endTime']);
+    final String ddlStr = asString(data['signupDeadline']);
+
+    _startDateTime = tryParse(startStr);
+    _endDateTime = tryParse(endStr);
+    _ddlDateTime = tryParse(ddlStr);
+
+    _startController.text =
+        _startDateTime != null ? _formatDateTime(_startDateTime!) : startStr;
+    _endController.text =
+        _endDateTime != null ? _formatDateTime(_endDateTime!) : endStr;
+    _ddlController.text =
+        _ddlDateTime != null ? _formatDateTime(_ddlDateTime!) : ddlStr;
+
+    if (!_isOnline) {
+      _locationController.text = asString(data['address']);
+      final lat = (data['lat'] as num?)?.toDouble();
+      final lng = (data['lng'] as num?)?.toDouble();
+      selectedLocationData =
+          (lat != null && lng != null) ? LatLng(lat, lng) : null;
+    } else {
+      _locationController.clear();
+      selectedLocationData = null;
+    }
+
+    // Dropdown 初始值需要落在 items 清單範圍內
+    if (_selectEventType != null && !_allowedTypes.contains(_selectEventType)) {
+      _selectEventType = null;
+    }
+
+    if (mounted) setState(() {});
   }
 
   Future<void> _fetchDetail() async {
@@ -54,7 +145,6 @@ class _CharityEditEventPageState extends State<CharityEditEventPage> {
       await apiClient.init();
 
       final uriData = ApiPath.charityEventDetail(widget.eventId);
-
       final resp = await apiClient
           .get(uriData)
           .timeout(const Duration(seconds: 10));
@@ -64,73 +154,28 @@ class _CharityEditEventPageState extends State<CharityEditEventPage> {
         return;
       }
 
-      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      final raw = jsonDecode(resp.body);
 
-      // 後端欄位對應
-      _originalName = (data['name'] ?? '').toString();
-      _nameController.text = _originalName ?? '';
+      // 容錯：有些後端會包一層 data 或 result
+      final Map<String, dynamic> data = switch (raw) {
+        Map<String, dynamic> m when m['data'] is Map<String, dynamic> =>
+          m['data'] as Map<String, dynamic>,
+        Map<String, dynamic> m when m['result'] is Map<String, dynamic> =>
+          m['result'] as Map<String, dynamic>,
+        Map<String, dynamic> m => m,
+        _ => <String, dynamic>{},
+      };
 
-      _selectEventType =
-          (data['eventType'] ?? '') == '' ? null : data['eventType'];
-      _descriptionController.text = (data['description'] ?? '').toString();
-      _isOnline = (data['online'] ?? false) == true;
-
-      String startStr = (data['startTime'] ?? '').toString();
-      String endStr = (data['endTime'] ?? '').toString();
-      String ddlStr = (data['signupDeadline'] ?? '').toString();
-
-      DateTime? tryParse(String s) {
-        if (s.isEmpty) return null;
-        try {
-          return DateTime.parse(s);
-        } catch (_) {
-          return null;
-        }
-      }
-
-      _startDateTime = tryParse(startStr);
-      _endDateTime = tryParse(endStr);
-      _ddlDateTime = tryParse(ddlStr);
-
-      if (_startDateTime != null) {
-        _startController.text = _formatDateTime(_startDateTime!);
-      } else if (startStr.isNotEmpty) {
-        _startController.text = startStr;
-      }
-
-      if (_endDateTime != null) {
-        _endController.text = _formatDateTime(_endDateTime!);
-      } else if (endStr.isNotEmpty) {
-        _endController.text = endStr;
-      }
-
-      if (_ddlDateTime != null) {
-        _ddlController.text = _formatDateTime(_ddlDateTime!);
-      } else if (ddlStr.isNotEmpty) {
-        _ddlController.text = ddlStr;
-      }
-
-      if (!_isOnline) {
-        _locationController.text = (data['address'] ?? '').toString();
-        final lat = (data['lat'] as num?)?.toDouble();
-        final lng = (data['lng'] as num?)?.toDouble();
-        if (lat != null && lng != null) {
-          selectedLocationData = LatLng(lat, lng);
-        }
-      } else {
-        _locationController.clear();
-        selectedLocationData = null;
-      }
+      _applyFromJson(data);
     } catch (e) {
       setState(() => _errorMessage = '錯誤：$e');
     } finally {
-      setState(() => _isFetching = false);
+      if (mounted) setState(() => _isFetching = false);
     }
   }
 
   Future<void> _submit() async {
-    final name =
-        _nameController.text.trim(); // 後端目前用 name 做唯一識別，實際送出以 _originalName 為準
+    final name = _nameController.text.trim();
     final start = _startController.text;
     final end = _endController.text;
     final ddl = _ddlController.text;
@@ -184,9 +229,9 @@ class _CharityEditEventPageState extends State<CharityEditEventPage> {
 
       final uriData = ApiPath.editCharityEvent;
 
-      // 只需傳要修改的欄位；未傳欄位不會被修改
+      // 只傳需要修改的欄位；未傳不會被後端覆寫
       final body = <String, dynamic>{
-        'name': _originalName, // 後端用它來定位活動，暫不允許修改 name
+        'name': _originalName, // 後端用它定位活動，不允許修改 name
         'eventType': type,
         'online': _isOnline,
         'startTime': start,
@@ -247,6 +292,17 @@ class _CharityEditEventPageState extends State<CharityEditEventPage> {
 
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _startController.dispose();
+    _endController.dispose();
+    _ddlController.dispose();
+    _locationController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   @override
@@ -387,26 +443,7 @@ class _CharityEditEventPageState extends State<CharityEditEventPage> {
                             value: _selectEventType,
                             hint: const Text('請選擇您的活動類型'),
                             items:
-                                const [
-                                      '綜合性服務',
-                                      '兒童青少年福利',
-                                      '婦女福利',
-                                      '老人福利',
-                                      '身心障礙福利',
-                                      '家庭福利',
-                                      '健康醫療',
-                                      '心理衛生',
-                                      '社區規劃(營造)',
-                                      '環境保護',
-                                      '國際合作交流',
-                                      '教育與科學',
-                                      '文化藝術',
-                                      '人權和平',
-                                      '消費者保護',
-                                      '性別平等',
-                                      '政府單位',
-                                      '動物保護',
-                                    ]
+                                _allowedTypes
                                     .map(
                                       (e) => DropdownMenuItem(
                                         value: e,
