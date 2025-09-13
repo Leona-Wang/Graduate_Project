@@ -447,10 +447,12 @@ class ProcessUserQRCode(APIView):
             user = codeRecord.personalUser
 
         if user:
-            isJoined = EventParticipant.objects.filter(
+            joined = EventParticipant.objects.filter(
                 personalUser=user, charityEvent=charityEvent, joinType=settings.CHARITY_EVENT_JOIN
-            ).exists()
-            if isJoined:
+            ).first()
+            if joined:
+                joined.joinType = settings.CHARITY_EVENT_FINISHED
+                joined.save()
                 return JsonResponse({'success': True}, status=200)
             else:
                 return JsonResponse({'success': False, 'message': '無參加資訊'}, status=404)
@@ -504,7 +506,7 @@ class CreateOrUpdateBet(APIView):
 
         betEvent = OfficialEvent.objects.filter(type=settings.OFFICIAL_EVENT_TYPE_CASINO).last()
 
-        result = createOrUpdateBet(user, betEvent)
+        result = createOrUpdateBet(user=user, betEvent=betEvent, betAmount=betAmount)
 
         if result is False:
             return JsonResponse({'success': False, 'message': '金額不夠'}, status=400)

@@ -153,7 +153,6 @@ class CharityEventListState extends State<CharityEventListPage> {
             '選擇活動類型',
             selectedType,
             [
-              '所有類型',
               '綜合性服務',
               '兒童青少年福利',
               '婦女福利',
@@ -186,7 +185,6 @@ class CharityEventListState extends State<CharityEventListPage> {
             '選擇地點',
             selectedLocation,
             [
-              '所有地點',
               '台北市',
               '新北市',
               '基隆市',

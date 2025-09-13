@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
         now = timezone.make_aware(datetime.combine(timezone.now().date(), time.min), timezone.get_current_timezone())
 
-        betEvent = OfficialEvent.objects.filter(type=settings.OFFICIAL_EVENT_TYPE_CASINO, endTime__lt=now)
+        betEvent = OfficialEvent.objects.filter(type=settings.OFFICIAL_EVENT_TYPE_CASINO, endTime__lt=now).last()
 
         winner = Casino.getWinner(betEvent)
         result = Casino.saveWinner(winner, betEvent)

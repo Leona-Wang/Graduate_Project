@@ -76,6 +76,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/welcomeSlides/
+    - assets/background/
 
 
   # The following line ensures that the Material Icons font is

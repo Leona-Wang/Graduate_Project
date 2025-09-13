@@ -12,6 +12,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organize_number.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_ff_event.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_map_tab.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_profile.dart';
@@ -63,6 +64,7 @@ class AppRoutes {
   static const String personalEventJournal =
       '/personal_event_journal'; //個人用戶活動履歷
   static const String personalJournalList = '/personal_journal_list';
+  static const String personalFFEvent = '/personal_ff_event'; //5050活動頁面
 
   //charity_screens
 
@@ -162,6 +164,9 @@ class AppRoutes {
 
       case personalJournalList:
         return MaterialPageRoute(builder: (_) => PersonalJournalListPage());
+
+      case personalFFEvent:
+        return MaterialPageRoute(builder: (_) => PersonalFFEventPage());
 
       //charity_screens
       case charityEventList:

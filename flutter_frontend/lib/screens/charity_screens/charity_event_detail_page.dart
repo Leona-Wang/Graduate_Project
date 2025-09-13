@@ -7,6 +7,7 @@ import 'package:flutter_frontend/api_client.dart';
 
 import 'charity_event_list.dart';
 import 'charity_edit_event.dart';
+import 'charity_co-organizer.dart';
 
 class FullEvent {
   final int id;
@@ -248,6 +249,36 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                         : const Icon(Icons.delete_outline),
+              );
+            },
+          ),
+
+          // 協辦管理按鈕
+          FutureBuilder<FullEvent>(
+            future: _eventFuture,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
+              final event = snapshot.data!;
+              return IconButton(
+                tooltip: '協辦管理',
+                icon: const Icon(Icons.groups_2_outlined),
+                onPressed: () async {
+                  final changed = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => CharityCoorganizerPage(
+                            eventId: event.id,
+                          ),
+                    ),
+                  );
+                  // 如果返回時有變動，就刷新詳情
+                  if (changed == true && mounted) {
+                    setState(() {
+                      _eventFuture = fetchDetail(event.id);
+                    });
+                  }
+                },
               );
             },
           ),
