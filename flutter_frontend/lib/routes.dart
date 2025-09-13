@@ -10,7 +10,6 @@ import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart'
 import 'package:flutter_frontend/screens/charity_screens/charity_edit_event.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
-import 'package:flutter_frontend/screens/charity_screens/charity_co-organize_number.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_ff_event.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
@@ -191,13 +190,7 @@ class AppRoutes {
         );
 
       case charityCoorganizer:
-        final eventId = settings.arguments as int;
-        return MaterialPageRoute(
-          builder: (_) => CharityCoorganizerPage(eventId: eventId),
-        );
-
-      case charityCoorganizeNumber:
-        return MaterialPageRoute(builder: (_) => CharityCoorganizeNumberPage());
+        return MaterialPageRoute(builder: (_) => CharityCoorganizerPage());
 
       case AppRoutes.charityEventDetail:
         final charityEvent = settings.arguments as CharityEvent;
