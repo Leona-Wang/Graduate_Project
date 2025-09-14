@@ -5,7 +5,6 @@ import 'package:flutter_frontend/api_client.dart';
 
 import 'charity_event_list.dart';
 import 'charity_edit_event.dart';
-import 'charity_co-organizer.dart';
 
 class FullEvent {
   final int id;
@@ -62,8 +61,8 @@ class FullEvent {
       id: (json['id'] as num?)?.toInt() ?? 0,
       title: (json['name'] ?? json['title'] ?? '').toString(),
       type: (json['eventType'] ?? json['type'] ?? '').toString(),
-      location: (json['location'] ?? json['city'] ?? '').toString(),
-      address: (json['address'] ?? '').toString(),
+      location: (json['location'] ?? json['city'] ?? '此為線上活動').toString(),
+      address: (json['address'] ?? '線上').toString(),
       mainOrganizer: (json['mainOrganizer'] ?? '').toString(),
       coOrganizers:
           (json['coOrganizers'] is List)
