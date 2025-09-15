@@ -53,10 +53,13 @@ class ApiPath {
   static String get coOrganizeEvent =>
       '${BaseConfig.baseUrl}/charity/event/coorganize/';
 
-  //活動主辦方查詢協辦申請列表，前端需回傳值：{'charityEventName':(必填)}，後端傳回範例:{"coOrganizerName": "協辦單位A","coOrganizerEmail": "a@example.com","verified": null(null=待審核, true=通過, false=不通過)}(一次回傳全部申請)
+  //活動主辦方查詢協辦申請列表(Verified=None的)，前端需回傳值：{'charityEventName':(必填)}，後端傳回範例:{"coOrganizerName": "協辦單位A","coOrganizerEmail": "a@example.com"}(一次回傳全部申請)
   static String get getCoOrganizeApplications =>
       '${BaseConfig.baseUrl}/charity/event/coorganize/applications/';
 
+  //活動主辦方查詢已認證過的協辦者列表(Verified=True的)，前端需回傳值：{'charityEventName':(必填)}，後端傳回範例:{"coOrganizerName": "協辦單位A","coOrganizerEmail": "a@example.com"}(一次回傳全部已認證過的協辦者)
+  static String get getCoOrganizers =>
+      '${BaseConfig.baseUrl}/charity/event/coorganizers/';
   //活動主辦方審核協辦者申請，需回傳值：{'charityEventName':(必填),'coOrganizerName':(必填),'approve':true/false(必填，同意/不同意該協辦者申請)}
   static String get verifyCoOrganize =>
       '${BaseConfig.baseUrl}/charity/event/coorganize/verify/';

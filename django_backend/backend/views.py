@@ -17,7 +17,7 @@ import random
 import string
 from .charityEvent import (
     createCharityEvent, coOrganizeEvent, verifyCoOrganize, getCoOrganizeApplications, removeCoOrganizer,
-    editCharityEvent, deleteCharityEvent
+    editCharityEvent, deleteCharityEvent, getCoOrganizers
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
@@ -394,11 +394,18 @@ class CoOrganizeEvent(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GetCoOrganizeApplications(APIView):
-    """活動主辦方查詢協辦申請列表"""
+    """活動主辦方查詢協辦申請列表""" #只回傳 verified=None 的協辦申請者
 
     def post(self, request, *args, **kwargs):
         return getCoOrganizeApplications(request)
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GetCoOrganizers(APIView):
+    """活動主辦方查詢已認證過的協辦者列表""" #只回傳 verified=True 的協辦者
+
+    def post(self, request, *args, **kwargs):
+        return getCoOrganizers(request)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class VerifyCoOrganize(APIView):

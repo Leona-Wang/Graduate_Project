@@ -33,6 +33,7 @@ urlpatterns = [
         views.GetCoOrganizeApplications.as_view(),
         name="getCoOrganizeApplications"
     ),
+    path('charity/event/coorganizers/', views.GetCoOrganizers.as_view(), name="getCoOrganizers"),
     path('charity/event/coorganize/verify/', views.VerifyCoOrganize.as_view(), name="verifyCoOrganize"),
     path('charity/event/coorganize/remove/', views.RemoveCoOrganizer.as_view(), name="removeCoOrganizer"),
     path('events/', views.CharityEventList.as_view(), name="charityEventList"),

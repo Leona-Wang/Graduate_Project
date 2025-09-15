@@ -397,17 +397,45 @@ def getCoOrganizeApplications(request):
         if not CharityInfo.objects.filter(user=user, id=event.mainOrganizer_id).exists():
             return JsonResponse({'success': False, 'message': '只有主辦方可以查詢協辦申請'}, status=403)
 
-        # 查詢所有協辦申請
-        applications = CharityEventCoOrganizer.objects.filter(charityEvent=event)
+        # 只查詢 verified=None 的協辦申請（尚未審核）
+        applications = CharityEventCoOrganizer.objects.filter(charityEvent=event, verified=None)
         result = []
         for app in applications:
             result.append({
                 'coOrganizerName': app.coOrganizer.name,
                 'coOrganizerEmail': app.coOrganizer.user.email if app.coOrganizer.user else '',
-                'verified': app.verified, # None=待審核, True=通過, False=不通過
             })
 
         return JsonResponse({'success': True, 'applications': result}, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+def getCoOrganizers(request):
+    try:
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        eventName = request.data.get('eventName', '').strip()
+        if not eventName:
+            return JsonResponse({'success': False, 'message': '缺少活動名稱'}, status=400)
+
+        # 查詢 CharityEvent
+        event = CharityEvent.objects.filter(name=eventName).first()
+        if not event:
+            return JsonResponse({'success': False, 'message': '查無此活動'}, status=404)
+
+        # 查詢 verified=True 的協辦者
+        co_orgs = CharityEventCoOrganizer.objects.filter(charityEvent=event, verified=True)
+        result = []
+        for co_org in co_orgs:
+            result.append({
+                'coOrganizerName': co_org.coOrganizer.name,
+                'coOrganizerEmail': co_org.coOrganizer.user.email if co_org.coOrganizer.user else '',
+            })
+
+        return JsonResponse({'success': True, 'coOrganizers': result}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
