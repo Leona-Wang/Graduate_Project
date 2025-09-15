@@ -318,8 +318,6 @@ class PersonalJoinedEventList(APIView):
 class CharityEventDetail(APIView):
     """根據選擇回傳對應的 event """
 
-    permission_classes = [AllowAny]
-
     def get(self, request, *args, **kwargs):
         charityEventID = kwargs.get('eventId')
 
@@ -333,10 +331,12 @@ class CharityEventDetail(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class AddCharityEventUserRecord(APIView):
     """選擇收藏/參與活動"""
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         try:
             recordChoice = request.query_params.get('user_record_choice', "")
+            print(recordChoice)
 
             user = request.user
 
@@ -406,6 +406,7 @@ class GetCoOrganizers(APIView):
 
     def post(self, request, *args, **kwargs):
         return getCoOrganizers(request)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class VerifyCoOrganize(APIView):

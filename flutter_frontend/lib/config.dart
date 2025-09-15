@@ -95,11 +95,11 @@ class ApiPath {
 
   //讓用戶加入收藏清單
   static String addCharityEventUserSave(int eventId) =>
-      '${BaseConfig.baseUrl}/events/$eventId/?user_record_choice=Save';
+      '${BaseConfig.baseUrl}/events/$eventId/participant_record/?user_record_choice=Save';
 
   //讓用戶加入參加清單
   static String addCharityEventUserJoin(int eventId) =>
-      '${BaseConfig.baseUrl}/events/$eventId/?user_record_choice=Join';
+      '${BaseConfig.baseUrl}/events/$eventId/participant_record/?user_record_choice=Join';
 
   //用 GET ，後端回傳：{'success': True, 'code': code} 拿 code 產 QRcode
   static String get createUserQRCode =>
