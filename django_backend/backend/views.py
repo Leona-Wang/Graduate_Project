@@ -257,6 +257,7 @@ class CharityEventList(APIView):
             filters &= Q(startTime__gte=nowTime, startTime__lte=futureTime)
         if charityInfo:
             filters &= Q(mainOrganizer=charityInfo)
+        filters &= ~Q(status=settings.CHARITY_EVENT_STATUS_DELETED)
 
         events = CharityEvent.objects.filter(filters).order_by('-startTime')[startIndex:endIndex]
         eventList = CharityEventSerializer(events, many=True)
@@ -273,7 +274,7 @@ class CharityEventList(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class PersonalJoinedEventList(APIView):
-    """回傳個人用戶已完成的活動清單，支援 eventType/location/time 篩選"""
+    """回傳個人用戶已完成的活動清單，支援 eventType/location/time 篩選""" #CharityEvent.status=deleted 的活動也會包含
 
     def get(self, request, *args, **kwargs):
         user = request.user
