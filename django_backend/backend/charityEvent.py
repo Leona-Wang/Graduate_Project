@@ -286,9 +286,11 @@ def deleteCharityEvent(request):
         if letters:
             Letter.objects.bulk_create(letters)
 
-        event.delete()
+        # 將活動狀態標記為已刪除
+        event.status = settings.CHARITY_EVENT_STATUS_DELETED
+        event.save()
 
-        return JsonResponse({'success': True, 'message': '活動已刪除，已通知收藏者、報名者與協辦者'}, status=200)
+        return JsonResponse({'success': True, 'message': '活動已標記為刪除，已通知收藏者、報名者與協辦者'}, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
 

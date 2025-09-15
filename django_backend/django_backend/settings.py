@@ -162,17 +162,18 @@ CHARITY_EVENT_USER_RECORD_CHOICES = {
 PRIZE_COIN = "Coin"
 PRIZE_STICKER = "Sticker"
 
-CHARITY_EVENT_STATUS_DISPLAY = {"upcoming": "即將開始", "ongoing": "進行中", "finished": "已結束", "unknown": "未知"}
-CHARITY_EVENT_STATUS_DISPLAY = {"upcoming": "即將開始", "ongoing": "進行中", "finished": "已結束", "unknown": "未知"}
+CHARITY_EVENT_STATUS_DISPLAY = {"upcoming": "即將開始", "ongoing": "進行中", "finished": "已結束", "deleted": "已刪除", "unknown": "未知"}
 
 CHARITY_EVENT_STATUS_UPCOMING = "upcoming"
 CHARITY_EVENT_STATUS_ONGOING = "ongoing"
 CHARITY_EVENT_STATUS_FINISHED = "finished"
 CHARITY_EVENT_STATUS_UNKNOWN = "unknown"
+CHARITY_EVENT_STATUS_DELETED = "deleted"
 
 CHARITY_EVENT_STATUS_CHOICES = [
     (CHARITY_EVENT_STATUS_UPCOMING, "upcoming"), #即將開始的活動
     (CHARITY_EVENT_STATUS_ONGOING, "ongoing"), #進行中的活動
     (CHARITY_EVENT_STATUS_FINISHED, "finished"), #已結束的活動
+    (CHARITY_EVENT_STATUS_DELETED, "deleted"), #已刪除的活動
     (CHARITY_EVENT_STATUS_UNKNOWN, "unknown"), #狀態未知的活動
 ]

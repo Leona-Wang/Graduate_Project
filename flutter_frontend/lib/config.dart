@@ -77,7 +77,7 @@ class ApiPath {
 
   // 取得個人用戶已完成的活動清單(已經完成活動，並非報名) (支援 eventType/location/time 篩選)，需回傳值(有預設值，第一次拿不用給值)(用 GET ，不是 POST )：
   // {'page':(分頁，預設為1),'eventType':(typeName，若需要當成filter再填),'location':(若需要當成filter再填),'time':(到 settings.py 看 ACTIVITY_LIST_TIME_CHOICES ，回傳''裡面的值 )}
-  // 幾乎與拿事件清單相同(上面那個)，只是拿到的活動是該用戶參加過且已結束的活動，拿到的值怎麼填可以參考 https://chatgpt.com/share/68824fd7-1740-8001-a131-6c1385e4510b
+  // 幾乎與拿事件清單相同(上面那個)，只是拿到的活動是該用戶參加過且已結束的活動(註:但這個function CharityEvent.status=deleted(已被刪除) 的活動也會包含)，拿到的值怎麼填可以參考 https://chatgpt.com/share/68824fd7-1740-8001-a131-6c1385e4510b
   // 回傳：
   // {
   //   "events": [ {第一個event的所有值}, {第二個event的所有值}, ... ],
