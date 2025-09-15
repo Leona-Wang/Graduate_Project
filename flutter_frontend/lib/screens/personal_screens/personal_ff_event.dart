@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:marquee/marquee.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
 import '../../api_client.dart';
@@ -96,6 +97,8 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
         });*/
         //await Future.delayed(Duration(milliseconds: 500));
         await fetchNumber();
+      } else if (response.statusCode == 400) {
+        coinExecption();
       } else {
         throw Exception("下注失敗: ${response.statusCode}");
       }
@@ -143,11 +146,28 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
     );
   }
 
+  void coinExecption() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("金幣數量不足 QQ"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("確認"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    double progress = 0.0;
+    double progress = 0;
     if (playerNumber != null && total != null && total! > 0) {
-      progress = 2 / total!;
+      progress = (playerNumber! / total!) * 100;
     } else {
       progress = 0;
     }
@@ -161,6 +181,7 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
             "assets/background/casinoBackground.png",
             fit: BoxFit.cover,
           ),
+          Container(color: Colors.brown.withOpacity(0.5)),
 
           //返回鍵
           Positioned(
@@ -177,302 +198,317 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
             ),
           ),
 
-          // 主要內容置中
-          Center(
-            child:
-                isLoading
-                    ? const CircularProgressIndicator()
-                    : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            // 愛文
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  showCharacterDialog = !showCharacterDialog;
-                                });
-                              },
-                              child: Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade300,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black26,
-                                      blurRadius: 4,
-                                      offset: Offset(2, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            ),
-
-                            // 對話框
-                            if (showCharacterDialog)
-                              Positioned(
-                                bottom: 60, // 在人物上方
-                                left: 0,
-                                right: 0,
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.9),
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                            color: Colors.black26,
-                                            blurRadius: 4,
-                                            offset: Offset(2, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Text(
-                                        "您現在的中獎機率是: !",
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                    ClipPath(
-                                      clipper: _TriangleClipper(),
-                                      child: Container(
-                                        width: 20,
-                                        height: 10,
-                                        color: Colors.white.withOpacity(0.9),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // 目前投入數字
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal: 40,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 8,
-                                offset: Offset(2, 4),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            playerNumber?.toString() ?? '0',
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.amber,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(2, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        //下注按鈕
-                        ElevatedButton(
-                          onPressed: openNumberInputDialog,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 16,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.black26,
-                          ).copyWith(elevation: MaterialStateProperty.all(6)),
-                          child: Ink(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Colors.amber, Colors.orangeAccent],
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Container(
-                              alignment: Alignment.center,
-                              constraints: const BoxConstraints(
-                                minWidth: 120,
-                                minHeight: 40,
-                              ),
-                              child: const Text(
-                                '請輸入下注金額',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // 進度條
-                        if (total != null)
-                          TweenAnimationBuilder<double>(
-                            tween: Tween<double>(
-                              begin: 0,
-                              end:
-                                  (playerNumber != null &&
-                                          total != null &&
-                                          total! > 0)
-                                      ? playerNumber! / total!
-                                      : 0,
-                            ),
-                            duration: const Duration(seconds: 1),
-                            builder: (context, value, child) {
-                              return Column(
-                                children: [
-                                  const Text(
-                                    '可獲得金額',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Container(
-                                        width: 250,
-                                        height: 16,
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey.shade300,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        width: 250 * value,
-                                        height: 16,
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Colors.amber,
-                                              Colors.orange,
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned.fill(
-                                        child: Center(
-                                          child: Text(
-                                            '${(value * 100).toStringAsFixed(0)}%',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '目前總量: $total',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-          ),
-
-          // 上方日期與機構名稱
+          //跑馬燈，上方日期與機構名稱
           Positioned(
             top: 40,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$startDate ~ $endDate',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+            left: 70,
+            right: 70,
+            child: Container(
+              color: Colors.white30,
+              height: 40,
+              child: Marquee(
+                text: '活動日期 : $startDate ~ $endDate | 本期合作機構 : $currentCharity',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-                Text(
-                  '本期合作機構: $currentCharity',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.help_outline_outlined,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      showGuide = !showGuide;
-                    });
-                  },
-                ),
-              ],
+                scrollAxis: Axis.horizontal,
+                blankSpace: 50.0,
+                velocity: 40.0,
+                pauseAfterRound: const Duration(seconds: 1),
+                startPadding: 10.0,
+                accelerationDuration: const Duration(seconds: 1),
+                accelerationCurve: Curves.linear,
+                decelerationDuration: const Duration(microseconds: 500),
+                decelerationCurve: Curves.easeOut,
+              ),
             ),
           ),
 
-          // 遊戲指引浮動
+          //遊戲指引
+          Positioned(
+            top: 35,
+            right: 16,
+            child: IconButton(
+              icon: const Icon(Icons.help_center, color: Colors.white),
+              iconSize: 40,
+              onPressed: () {
+                setState(() {
+                  showGuide = !showGuide;
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          //遊戲指引浮窗 (顯示在右上角按鈕下方)
           if (showGuide)
             Positioned(
-              top: 80,
+              top: 100,
               left: 16,
               right: 16,
               child: Container(
                 padding: const EdgeInsets.all(12),
+                width: 200,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
+                  color: Colors.white.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  "遊戲指引：幫我寫 ;)",
-                  style: TextStyle(color: Colors.white),
+                  "遊戲指引 \n歡迎來到5050的活動會場!\n在這裡，你可以使用金幣進行投注。\n當期數結束時，你將有機會獲得金幣總額的50%! \n而另外50%則會捐給本期合作機構~ \n註記:中獎機率為你的投注金額分之全體投注總額，換言之，投注越多，中獎機率越大，快來試試你的手氣吧!",
+                  style: TextStyle(
+                    color: Colors.brown,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
+
+          // 主要內容置中
+          Expanded(
+            child: Center(
+              child:
+                  isLoading
+                      ? const CircularProgressIndicator()
+                      : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              // 愛文
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    showCharacterDialog = !showCharacterDialog;
+                                  });
+                                },
+                                child: Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade300,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 4,
+                                        offset: Offset(2, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ),
+
+                              // 對話框
+                              if (showCharacterDialog)
+                                Positioned(
+                                  bottom: 60, // 在人物上方
+                                  left: 0,
+                                  right: 0,
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        width: 100,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.9),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          boxShadow: const [
+                                            BoxShadow(
+                                              color: Colors.brown,
+                                              blurRadius: 4,
+                                              offset: Offset(2, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text(
+                                          "您現在的中獎機率是 ${progress.toString()} %!",
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ),
+                                      //對話框的小三角
+                                      ClipPath(
+                                        clipper: _TriangleClipper(),
+                                        child: Container(
+                                          width: 20,
+                                          height: 10,
+                                          color: Colors.white.withOpacity(0.9),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // 目前投入數字
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 20,
+                              horizontal: 40,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 8,
+                                  offset: Offset(2, 4),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              playerNumber?.toString() ?? '0',
+                              style: const TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black26,
+                                    offset: Offset(2, 2),
+                                    blurRadius: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          //下注按鈕
+                          ElevatedButton(
+                            onPressed: openNumberInputDialog,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.black26,
+                            ).copyWith(elevation: MaterialStateProperty.all(6)),
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Colors.amber, Colors.orangeAccent],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Container(
+                                alignment: Alignment.center,
+                                constraints: const BoxConstraints(
+                                  minWidth: 120,
+                                  minHeight: 40,
+                                ),
+                                child: const Text(
+                                  '請輸入下注金額',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // 進度條
+                          if (total != null)
+                            TweenAnimationBuilder<double>(
+                              tween: Tween<double>(
+                                begin: 0,
+                                end:
+                                    (total != null && total! > 0)
+                                        ? total! / 2
+                                        : 0,
+                              ),
+                              duration: const Duration(seconds: 1),
+                              builder: (context, value, child) {
+                                return Column(
+                                  children: [
+                                    const Text(
+                                      '玩家可獲得金額',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        //進度條本條
+                                        Container(
+                                          width: 250,
+                                          height: 16,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade300,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                        ),
+                                        //跑動部分
+                                        Container(
+                                          width: 250 * (value / total!),
+                                          height: 16,
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Colors.amber,
+                                                Colors.orange,
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned.fill(
+                                          child: Center(
+                                            child: Text(
+                                              (value).toStringAsFixed(0),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '目前總量: $total',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+            ),
+          ),
         ],
       ),
     );

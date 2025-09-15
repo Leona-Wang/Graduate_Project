@@ -58,6 +58,9 @@ dependencies:
   #select image
   image_picker: ^1.1.2
 
+  #marquee
+  marquee: ^2.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
