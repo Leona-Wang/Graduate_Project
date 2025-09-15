@@ -73,7 +73,7 @@ class FullEvent {
       startTime: _tryParse(json['startTime']),
       endTime: _tryParse(json['endTime']),
       signupDeadline: _tryParse(json['signupDeadline']),
-      status: (json['status'] ?? '').toString(),
+      status: (json['statusDisplay'] ?? '').toString(),
       participants: _toIntCount(json['participants']),
       description: (json['description'] ?? '（無活動介紹）').toString(),
     );
