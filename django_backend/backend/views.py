@@ -261,11 +261,6 @@ class CharityEventList(APIView):
         events = CharityEvent.objects.filter(filters).order_by('-startTime')[startIndex:endIndex]
         eventList = CharityEventSerializer(events, many=True)
 
-        # 加入statusDisplay 中文欄位
-        for event in eventList.data:
-            status = event.get('status', 'unknown')
-            event['statusDisplay'] = settings.CHARITY_EVENT_STATUS_DISPLAY.get(status, status)
-
         eventTypeList = list(EventType.objects.values_list('typeName', flat=True))
         locationList = list(Location.objects.values_list('locationName', flat=True))
 
@@ -308,11 +303,6 @@ class PersonalJoinedEventList(APIView):
 
         events = CharityEvent.objects.filter(filters).distinct().order_by('-startTime')[startIndex:endIndex]
         eventList = CharityEventSerializer(events, many=True)
-
-        # 加入statusDisplay 中文欄位
-        for event in eventList.data:
-            status = event.get('status', 'unknown')
-            event['statusDisplay'] = settings.CHARITY_EVENT_STATUS_DISPLAY.get(status, status)
 
         eventTypeList = list(EventType.objects.values_list('typeName', flat=True))
         locationList = list(Location.objects.values_list('locationName', flat=True))
