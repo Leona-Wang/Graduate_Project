@@ -5,6 +5,9 @@ import 'dart:convert';
 import 'personal_event_detail_page.dart';
 import '../../api_client.dart';
 
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+
 class PersonalEventListPage extends StatefulWidget {
   const PersonalEventListPage({super.key});
 
@@ -19,6 +22,9 @@ class Event {
   final String type;
   final String location;
   final DateTime date;
+  final bool online; // 線上活動
+  double? lat; //緯度
+  double? lng; //經度
 
   Event({
     required this.id,
@@ -26,6 +32,9 @@ class Event {
     required this.type,
     required this.location,
     required this.date,
+    required this.online,
+    this.lat,
+    this.lng,
   });
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
@@ -34,6 +43,7 @@ class Event {
       type: json['eventType'].toString(),
       location: json['address'] ?? '',
       date: DateTime.parse(json['startTime']),
+      online: (json['online'] ?? false) == true,
     );
   }
 }
@@ -52,11 +62,28 @@ class PersonalEventListState extends State<PersonalEventListPage> {
   final int pageSize = 10;
   //篩選器
   bool sortAscending = true;
+  bool? filterOnline;
 
   @override
   void initState() {
     super.initState();
     fetchEvents();
+  }
+
+  // 取得使用者位置
+  Future<Position> getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) throw '請開啟定位服務';
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) throw '定位權限被拒絕';
+    }
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
   }
 
   Future<void> fetchEvents() async {
@@ -88,6 +115,8 @@ class PersonalEventListState extends State<PersonalEventListPage> {
         final List results = json['events'];
         final loadedEvents = results.map((e) => Event.fromJson(e)).toList();
 
+        await sortEventsByDistance(loadedEvents);
+
         setState(() {
           events = loadedEvents;
           totalPage = events.length < pageSize ? currentPage : currentPage + 1;
@@ -115,6 +144,56 @@ class PersonalEventListState extends State<PersonalEventListPage> {
       ),
     );
     fetchEvents();
+  }
+
+  // 將地址轉經緯度
+  Future<void> getEventCoordinates(Event event) async {
+    if (event.location.isEmpty) return;
+    try {
+      List<Location> locations = await locationFromAddress(event.location);
+      if (locations.isNotEmpty) {
+        event.lat = locations.first.latitude;
+        event.lng = locations.first.longitude;
+      }
+    } catch (e) {
+      print('地址轉換失敗: ${event.location}, $e');
+    }
+  }
+
+  // 計算距離
+  double distanceInKm(double lat1, double lon1, double lat2, double lon2) {
+    return Geolocator.distanceBetween(lat1, lon1, lat2, lon2) / 1000;
+  }
+
+  // 排序活動列表
+  Future<void> sortEventsByDistance(List<Event> events) async {
+    Position userPos = await getCurrentLocation();
+
+    for (var event in events) {
+      if (!event.online && (event.lat == null || event.lng == null)) {
+        await getEventCoordinates(event);
+      }
+    }
+
+    events.sort((a, b) {
+      if (a.online) return 1;
+      if (b.online) return -1;
+      if (a.lat == null || a.lng == null) return 1;
+      if (b.lat == null || b.lng == null) return -1;
+      final da = distanceInKm(
+        userPos.latitude,
+        userPos.longitude,
+        a.lat!,
+        a.lng!,
+      );
+      final db = distanceInKm(
+        userPos.latitude,
+        userPos.longitude,
+        b.lat!,
+        b.lng!,
+      );
+      return da.compareTo(db);
+    });
   }
 
   void backToMap() {
@@ -166,7 +245,6 @@ class PersonalEventListState extends State<PersonalEventListPage> {
             '選擇活動類型',
             selectedType,
             [
-              '所有類型',
               '綜合性服務',
               '兒童青少年福利',
               '婦女福利',
@@ -199,7 +277,6 @@ class PersonalEventListState extends State<PersonalEventListPage> {
             '選擇地點',
             selectedLocation,
             [
-              '所有地點',
               '台北市',
               '新北市',
               '基隆市',
@@ -242,6 +319,47 @@ class PersonalEventListState extends State<PersonalEventListPage> {
               currentPage = 1;
               fetchEvents();
             }),
+          ),
+          const SizedBox(width: 12),
+
+          //線上/線下篩選
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('全部'),
+                selected: filterOnline == null,
+                onSelected: (_) {
+                  setState(() {
+                    filterOnline = null;
+                    currentPage = 1;
+                    fetchEvents();
+                  });
+                },
+              ),
+              ChoiceChip(
+                label: const Text('線上'),
+                selected: filterOnline == true,
+                onSelected: (_) {
+                  setState(() {
+                    filterOnline = true;
+                    currentPage = 1;
+                    fetchEvents();
+                  });
+                },
+              ),
+              ChoiceChip(
+                label: const Text('線下'),
+                selected: filterOnline == false,
+                onSelected: (_) {
+                  setState(() {
+                    filterOnline = false;
+                    currentPage = 1;
+                    fetchEvents();
+                  });
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -321,7 +439,15 @@ class PersonalEventListState extends State<PersonalEventListPage> {
   //活動卡
   Widget buildEventList() {
     if (isLoading) return Center(child: CircularProgressIndicator());
-    if (events.isEmpty) {
+
+    // 前端保底過濾（就算後端沒處理 online query）
+    final visible =
+        events.where((e) {
+          if (filterOnline == null) return true;
+          return e.online == filterOnline;
+        }).toList();
+
+    if (visible.isEmpty) {
       return Center(
         child: Text(
           _searchController.text.isNotEmpty ? '找不到符合的活動' : '目前沒有活動',
@@ -330,21 +456,47 @@ class PersonalEventListState extends State<PersonalEventListPage> {
       );
     }
 
-    return ListView.builder(
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final event = events[index];
-        return Card(
-          child: ListTile(
-            title: Text(event.title),
-            subtitle: Text(
-              '${event.location} | ${event.date.toLocal().toString().split(" ")[0]}',
-            ),
-            trailing: TextButton(
-              onPressed: () => _toDetail(event),
-              child: Text('活動詳情'),
-            ),
-          ),
+    return FutureBuilder<Position>(
+      future: getCurrentLocation(),
+      builder: (context, snapshot) {
+        Position? userPos = snapshot.data;
+
+        return ListView.builder(
+          itemCount: visible.length,
+          itemBuilder: (context, index) {
+            final event = visible[index];
+            String subtitleText;
+
+            if (event.online) {
+              subtitleText =
+                  '線上活動 | ${event.date.toLocal().toString().split(" ")[0]}';
+            } else if (userPos != null &&
+                event.lat != null &&
+                event.lng != null) {
+              double dist = distanceInKm(
+                userPos.latitude,
+                userPos.longitude,
+                event.lat!,
+                event.lng!,
+              );
+              subtitleText =
+                  '${event.location} | ${event.date.toLocal().toString().split(" ")[0]} | 距離 ${dist.toStringAsFixed(1)} km';
+            } else {
+              subtitleText =
+                  '${event.location} | ${event.date.toLocal().toString().split(" ")[0]}';
+            }
+
+            return Card(
+              child: ListTile(
+                title: Text(event.title),
+                subtitle: Text(subtitleText),
+                trailing: TextButton(
+                  onPressed: () => _toDetail(event),
+                  child: Text('活動詳情'),
+                ),
+              ),
+            );
+          },
         );
       },
     );

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
-import 'package:http/http.dart';
 import '../../api_client.dart';
 import 'package:flutter_frontend/routes.dart';
 

@@ -6,6 +6,9 @@ import 'dart:convert';
 import 'charity_event_detail_page.dart';
 import '../../api_client.dart';
 
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+
 class CharityEventListPage extends StatefulWidget {
   const CharityEventListPage({super.key});
 
@@ -20,7 +23,9 @@ class CharityEvent {
   final String type;
   final String location;
   final DateTime date;
-  final bool online; // ← 新增：線上活動
+  final bool online; // 線上活動
+  double? lat; //緯度
+  double? lng; //經度
 
   CharityEvent({
     required this.id,
@@ -28,7 +33,9 @@ class CharityEvent {
     required this.type,
     required this.location,
     required this.date,
-    required this.online, // ← 新增
+    required this.online,
+    this.lat,
+    this.lng,
   });
 
   factory CharityEvent.fromJson(Map<String, dynamic> json) {
@@ -65,6 +72,22 @@ class CharityEventListState extends State<CharityEventListPage> {
     fetchEvents();
   }
 
+  // 取得使用者位置
+  Future<Position> getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) throw '請開啟定位服務';
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) throw '定位權限被拒絕';
+    }
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+
   Future<void> fetchEvents() async {
     setState(() => isLoading = true);
 
@@ -95,6 +118,8 @@ class CharityEventListState extends State<CharityEventListPage> {
         final loadedEvents =
             results.map((e) => CharityEvent.fromJson(e)).toList();
 
+        await sortEventsByDistance(loadedEvents);
+
         setState(() {
           events = loadedEvents;
           totalPage = events.length < pageSize ? currentPage : currentPage + 1;
@@ -120,6 +145,56 @@ class CharityEventListState extends State<CharityEventListPage> {
         builder: (context) => CharityEventDetailPage(event: event),
       ),
     );
+  }
+
+  // 將地址轉經緯度
+  Future<void> getEventCoordinates(CharityEvent event) async {
+    if (event.location.isEmpty) return;
+    try {
+      List<Location> locations = await locationFromAddress(event.location);
+      if (locations.isNotEmpty) {
+        event.lat = locations.first.latitude;
+        event.lng = locations.first.longitude;
+      }
+    } catch (e) {
+      print('地址轉換失敗: ${event.location}, $e');
+    }
+  }
+
+  // 計算距離
+  double distanceInKm(double lat1, double lon1, double lat2, double lon2) {
+    return Geolocator.distanceBetween(lat1, lon1, lat2, lon2) / 1000;
+  }
+
+  // 排序活動列表
+  Future<void> sortEventsByDistance(List<CharityEvent> events) async {
+    Position userPos = await getCurrentLocation();
+
+    for (var event in events) {
+      if (!event.online && (event.lat == null || event.lng == null)) {
+        await getEventCoordinates(event);
+      }
+    }
+
+    events.sort((a, b) {
+      if (a.online) return 1;
+      if (b.online) return -1;
+      if (a.lat == null || a.lng == null) return 1;
+      if (b.lat == null || b.lng == null) return -1;
+      final da = distanceInKm(
+        userPos.latitude,
+        userPos.longitude,
+        a.lat!,
+        a.lng!,
+      );
+      final db = distanceInKm(
+        userPos.latitude,
+        userPos.longitude,
+        b.lat!,
+        b.lng!,
+      );
+      return da.compareTo(db);
+    });
   }
 
   //主架構，其他區域分開寫
@@ -364,23 +439,47 @@ class CharityEventListState extends State<CharityEventListPage> {
       );
     }
 
-    return ListView.builder(
-      itemCount: visible.length,
-      itemBuilder: (context, index) {
-        final event = visible[index];
-        return Card(
-          child: ListTile(
-            title: Text(event.title),
-            subtitle: Text(
-              event.online
-                  ? '線上活動 | ${event.date.toLocal().toString().split(" ")[0]}'
-                  : '${event.location} | ${event.date.toLocal().toString().split(" ")[0]}',
-            ),
-            trailing: TextButton(
-              onPressed: () => _toDetail(event),
-              child: Text('活動詳情'),
-            ),
-          ),
+    return FutureBuilder<Position>(
+      future: getCurrentLocation(),
+      builder: (context, snapshot) {
+        Position? userPos = snapshot.data;
+
+        return ListView.builder(
+          itemCount: visible.length,
+          itemBuilder: (context, index) {
+            final event = visible[index];
+            String subtitleText;
+
+            if (event.online) {
+              subtitleText =
+                  '線上活動 | ${event.date.toLocal().toString().split(" ")[0]}';
+            } else if (userPos != null &&
+                event.lat != null &&
+                event.lng != null) {
+              double dist = distanceInKm(
+                userPos.latitude,
+                userPos.longitude,
+                event.lat!,
+                event.lng!,
+              );
+              subtitleText =
+                  '${event.location} | ${event.date.toLocal().toString().split(" ")[0]} | 距離 ${dist.toStringAsFixed(1)} km';
+            } else {
+              subtitleText =
+                  '${event.location} | ${event.date.toLocal().toString().split(" ")[0]}';
+            }
+
+            return Card(
+              child: ListTile(
+                title: Text(event.title),
+                subtitle: Text(subtitleText),
+                trailing: TextButton(
+                  onPressed: () => _toDetail(event),
+                  child: Text('活動詳情'),
+                ),
+              ),
+            );
+          },
         );
       },
     );
