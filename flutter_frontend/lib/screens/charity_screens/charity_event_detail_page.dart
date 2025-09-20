@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/api_client.dart';
-
+import 'charity_co-organizer_list.dart'; // NOTE: 我用底線命名，檔名請確認與實際一致
 import 'charity_event_list.dart';
 import 'charity_edit_event.dart';
 
@@ -201,6 +201,35 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
       appBar: AppBar(
         title: const Text("活動詳情"),
         actions: [
+          // 新增：協辦清單按鈕（AppBar 右上）
+          FutureBuilder<FullEvent>(
+            future: _eventFuture,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
+              final event = snapshot.data!;
+              return IconButton(
+                tooltip: '協辦人員清單',
+                icon: const Icon(Icons.group),
+                onPressed: () async {
+                  final updated = await Navigator.push<bool?>(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => CharityCoOrganizerListPage(
+                            charityEventName: event.title,
+                          ),
+                    ),
+                  );
+                  if (updated == true) {
+                    setState(() {
+                      _eventFuture = fetchDetail(event.id);
+                    });
+                  }
+                },
+              );
+            },
+          ),
+
           // 編輯按鈕
           FutureBuilder<FullEvent>(
             future: _eventFuture,
@@ -280,6 +309,8 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
                   if (event.coOrganizers.isNotEmpty)
                     Text("協辦單位：${event.coOrganizers.join(', ')}"),
                   const SizedBox(height: 16),
+
+                  // ----------------------------------------------------
                   Text("活動類型：${event.type}"),
                   Text("活動地區：${event.location}"),
                   Text("地址：${event.address}"),
