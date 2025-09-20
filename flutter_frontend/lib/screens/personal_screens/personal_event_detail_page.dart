@@ -77,7 +77,7 @@ class FullEvent {
       startTime: _parseDate(json['startTime'] ?? json['start_time']),
       endTime: _parseDate(json['endTime'] ?? json['end_time']),
       signupDeadline: _parseDate(json['signupDeadline'] ?? json['signup_deadline']),
-      status: _toString(json['status']),
+      status: _toString(json['statusDisplay']),
       participants: _toIntCount(json['participants']),
       description: _toString(json['description'], '（無活動介紹）'),
     );
