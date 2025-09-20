@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/api_client.dart';
-import 'charity_co-organizer_list.dart'; // NOTE: 我用底線命名，檔名請確認與實際一致
+import 'charity_co-organizer_list.dart';
 import 'charity_event_list.dart';
 import 'charity_edit_event.dart';
 
@@ -20,6 +20,7 @@ class FullEvent {
   final String status;
   final int participants;
   final String description;
+  final int inviteCode;
 
   FullEvent({
     required this.id,
@@ -35,13 +36,14 @@ class FullEvent {
     required this.status,
     required this.participants,
     required this.description,
+    required this.inviteCode,
   });
 
   static int _toIntCount(dynamic v) {
     if (v == null) return 0;
     if (v is num) return v.toInt();
     if (v is String) return int.tryParse(v) ?? 0;
-    if (v is List) return v.length; // 後端給名單陣列時，取長度
+    if (v is List) return v.length;
     return 0;
   }
 
@@ -57,6 +59,8 @@ class FullEvent {
   }
 
   factory FullEvent.fromJson(Map<String, dynamic> json) {
+    // 先把 inviteCode 轉成 String 再解析成 int
+    final inviteStr = json['inviteCode']?.toString() ?? '0';
     return FullEvent(
       id: (json['id'] as num?)?.toInt() ?? 0,
       title: (json['name'] ?? json['title'] ?? '').toString(),
@@ -64,24 +68,23 @@ class FullEvent {
       location: (json['location'] ?? json['city'] ?? '此為線上活動').toString(),
       address: (json['address'] ?? '線上').toString(),
       mainOrganizer: (json['mainOrganizer'] ?? '').toString(),
-      coOrganizers:
-          (json['coOrganizers'] is List)
-              ? List<String>.from(
-                (json['coOrganizers'] as List).map((e) => e.toString()),
-              )
-              : <String>[],
+      coOrganizers: (json['coOrganizers'] is List)
+          ? List<String>.from(
+              (json['coOrganizers'] as List).map((e) => e.toString()))
+          : <String>[],
       startTime: _tryParse(json['startTime']),
       endTime: _tryParse(json['endTime']),
       signupDeadline: _tryParse(json['signupDeadline']),
       status: (json['statusDisplay'] ?? '').toString(),
       participants: _toIntCount(json['participants']),
       description: (json['description'] ?? '（無活動介紹）').toString(),
+      inviteCode: int.tryParse(inviteStr) ?? 0,
     );
   }
 }
 
 class CharityEventDetailPage extends StatefulWidget {
-  final CharityEvent event; // 傳入簡略資料（包含 id）
+  final CharityEvent event;
 
   const CharityEventDetailPage({super.key, required this.event});
 
@@ -108,10 +111,9 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
 
     if (resp.statusCode == 200) {
       final root = json.decode(resp.body) as Map<String, dynamic>;
-      final map =
-          (root['event'] is Map<String, dynamic>)
-              ? root['event'] as Map<String, dynamic>
-              : root;
+      final map = (root['event'] is Map<String, dynamic>)
+          ? root['event'] as Map<String, dynamic>
+          : root;
 
       return FullEvent.fromJson(map);
     } else {
@@ -127,25 +129,21 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
       final apiClient = ApiClient();
       await apiClient.init();
 
-      final url = ApiPath.deleteCharityEvent; // /charity/event/delete/
+      final url = ApiPath.deleteCharityEvent;
       final body = {"eventName": eventName};
       final resp = await apiClient.post(url, body);
 
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         final data = json.decode(resp.body);
         final success = (data is Map && data['success'] == true);
-        final msg =
-            (data is Map && data['message'] is String)
-                ? data['message'] as String
-                : '刪除成功';
+        final msg = (data is Map && data['message'] is String)
+            ? data['message'] as String
+            : '刪除成功';
 
-        if (success) {
-          if (mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(msg)));
-            Navigator.of(context).pop(true); // 回到上一頁並回傳成功，方便列表刷新
-          }
+        if (success && mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(msg)));
+          Navigator.of(context).pop(true);
           return;
         } else {
           throw Exception(msg);
@@ -155,9 +153,8 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('刪除失敗：$e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('刪除失敗：$e')));
       }
     } finally {
       if (mounted) setState(() => _deleting = false);
@@ -167,21 +164,18 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
   Future<void> _confirmAndDelete(String eventName) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('確認刪除'),
-            content: Text('確定要刪除「$eventName」嗎？此操作無法復原。'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('取消'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('刪除'),
-              ),
-            ],
-          ),
+      builder: (_) => AlertDialog(
+        title: const Text('確認刪除'),
+        content: Text('確定要刪除「$eventName」嗎？此操作無法復原。'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('刪除')),
+        ],
+      ),
     );
 
     if (ok == true) {
@@ -201,7 +195,6 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
       appBar: AppBar(
         title: const Text("活動詳情"),
         actions: [
-          // 新增：協辦清單按鈕（AppBar 右上）
           FutureBuilder<FullEvent>(
             future: _eventFuture,
             builder: (context, snapshot) {
@@ -214,11 +207,8 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
                   final updated = await Navigator.push<bool?>(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (_) => CharityCoOrganizerListPage(
-                            charityEventName: event.title,
-                          ),
-                    ),
+                        builder: (_) => CharityCoOrganizerListPage(
+                            charityEventName: event.title)),
                   );
                   if (updated == true) {
                     setState(() {
@@ -229,8 +219,6 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
               );
             },
           ),
-
-          // 編輯按鈕
           FutureBuilder<FullEvent>(
             future: _eventFuture,
             builder: (context, snapshot) {
@@ -243,11 +231,10 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
                   final updated = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => CharityEditEventPage(eventId: event.id),
-                    ),
+                        builder: (_) =>
+                            CharityEditEventPage(eventId: event.id)),
                   );
                   if (updated == true) {
-                    // 編輯完成後回來刷新詳情
                     setState(() {
                       _eventFuture = fetchDetail(event.id);
                     });
@@ -256,8 +243,6 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
               );
             },
           ),
-
-          // 刪除按鈕
           FutureBuilder<FullEvent>(
             future: _eventFuture,
             builder: (context, snapshot) {
@@ -267,20 +252,18 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
                 tooltip: '刪除活動',
                 onPressed:
                     _deleting ? null : () => _confirmAndDelete(event.title),
-                icon:
-                    _deleting
-                        ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Icon(Icons.delete_outline),
+                icon: _deleting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.delete_outline),
               );
             },
           ),
         ],
       ),
-
       body: FutureBuilder<FullEvent>(
         future: _eventFuture,
         builder: (context, snapshot) {
@@ -297,37 +280,28 @@ class _EventDetailPageState extends State<CharityEventDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(event.title,
+                      style: const TextStyle(
+                          fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
                   Text("主辦單位：${event.mainOrganizer}"),
-                  if (event.coOrganizers.isNotEmpty)
-                    Text("協辦單位：${event.coOrganizers.join(', ')}"),
+                  Text("協辦邀請碼：${event.inviteCode}"),
                   const SizedBox(height: 16),
-
-                  // ----------------------------------------------------
                   Text("活動類型：${event.type}"),
                   Text("活動地區：${event.location}"),
                   Text("地址：${event.address}"),
                   const SizedBox(height: 16),
                   const Text("活動時間："),
                   Text(
-                    "${formatDateTime(event.startTime)} ～ ${formatDateTime(event.endTime)}",
-                  ),
+                      "${formatDateTime(event.startTime)} ～ ${formatDateTime(event.endTime)}"),
                   const SizedBox(height: 8),
                   Text("報名截止：${formatDateTime(event.signupDeadline)}"),
                   Text("狀態：${event.status}"),
                   Text("目前報名人數：${event.participants}"),
                   const SizedBox(height: 24),
-                  const Text(
-                    "活動介紹",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text("活動介紹",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Text(event.description),
                 ],
