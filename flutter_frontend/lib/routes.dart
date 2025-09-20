@@ -10,6 +10,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_new_event.dart'
 import 'package:flutter_frontend/screens/charity_screens/charity_edit_event.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer_list.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_ff_event.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
@@ -74,6 +75,7 @@ class AppRoutes {
   static const String charityNewEvent = '/charity_new_event'; //新增活動
   static const String charityEditEvent = '/charity_edit_event';
   static const String charityCoorganizer = '/charity_co-organizer';
+  static const String charityCoorganizerList = '/charity_co-organizer_list';
   static const String charityCoorganizeNumber = '/charity_co-organizer_number';
   static const String charityEventDetail = '/charity_event_detail_page';
   static const String charityQRCode = '/charity_qr_code'; //掃描QRCode
@@ -192,6 +194,15 @@ class AppRoutes {
       case charityCoorganizer:
         return MaterialPageRoute(builder: (_) => CharityCoorganizerPage());
 
+      case charityCoorganizerList:
+        return MaterialPageRoute(
+          builder:
+              (_) => CharityCoOrganizerListPage(
+                charityEventName: '活動名稱', // <-- 這裡必填
+                // initialCoOrganizers: [...], // 可選
+              ),
+        );
+      
       case AppRoutes.charityEventDetail:
         final charityEvent = settings.arguments as CharityEvent;
         return MaterialPageRoute(
