@@ -18,7 +18,6 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
   final codeFocusNode = FocusNode();
 
   late final TabController tabController;
-
   bool isSubmitting = false;
   String code = '';
 
@@ -46,16 +45,11 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
       await apiClient.init();
 
       final body = {'inviteCode': code};
-
       debugPrint('[POST] path=${ApiPath.coOrganizeEvent} body=$body');
 
       final response = await apiClient
           .post(ApiPath.coOrganizeEvent, body)
           .timeout(const Duration(seconds: 10));
-
-      debugPrint('[URL] ${response.request?.url}');
-      debugPrint('[RESP] ${response.statusCode} ${response.reasonPhrase}');
-      debugPrint('[BODY] ${response.body}');
 
       Map<String, dynamic>? data;
       try {
@@ -72,37 +66,58 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
             data?['ok'] == true ||
             data?['status'] == 'ok';
         if (ok) {
-          // 成功
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('邀請已經送出，請靜待主辦方審核！')));
-          // 可選：清空輸入
           codeController.clear();
           setState(() => code = '');
         } else {
-          // 200 但 success=false
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(msg ?? '處理失敗，請稍後再試。')));
         }
       } else if (response.statusCode >= 400 && response.statusCode < 500) {
-        // 業務錯誤（例如邀請碼錯、活動不存在），後端用 4xx 回
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg ?? '送出失敗（${response.statusCode}）')),
         );
       } else {
-        // 其他非預期錯誤
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('送出失敗（${response.statusCode}）')));
       }
-      
     } catch (e) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('送出失敗：$e')));
     } finally {
       if (mounted) setState(() => isSubmitting = false);
+    }
+  }
+
+  Future<void> _verifyApplication(int id, bool approve) async {
+    try {
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final body = {"applicationId": id, "approve": approve};
+      debugPrint('[POST] ${ApiPath.verifyCoOrganize} body=$body');
+
+      final resp = await apiClient.post(ApiPath.verifyCoOrganize, body);
+      debugPrint('[RESP] ${resp.statusCode} ${resp.body}');
+
+      if (resp.statusCode == 200) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(approve ? '已通過申請' : '已拒絕申請')));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('操作失敗（${resp.statusCode}）')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('操作失敗：$e')));
     }
   }
 
@@ -180,8 +195,74 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
             ),
           ),
 
-          // TAB 2：其他（先放空白占位）
-          const Center(child: Text('這裡放第二個標籤的內容')),
+          // TAB 2：協辦審核
+          FutureBuilder(
+            future: ApiClient().get(ApiPath.getCoOrganizeApplications),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('讀取失敗：${snapshot.error}'));
+              }
+              if (!snapshot.hasData) {
+                return const Center(child: Text('沒有資料'));
+              }
+
+              final resp = snapshot.data!;
+              final decoded = jsonDecode(resp.body);
+
+              // 處理可能是 List 或 Map
+              final List<dynamic> list =
+                  decoded is List
+                      ? decoded
+                      : (decoded['data'] is List ? decoded['data'] : []);
+
+              final pending = list.where((e) => e['verified'] == null).toList();
+
+              if (pending.isEmpty) {
+                return const Center(child: Text('目前沒有待審核的協辦申請'));
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: pending.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final app = pending[index];
+                  final id = app['id'];
+                  final name = app['name'] ?? '未知';
+                  final email = app['email'] ?? '';
+
+                  return ListTile(
+                    title: Text(name),
+                    subtitle: Text(email),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.check, color: Colors.green),
+                          tooltip: '通過',
+                          onPressed: () async {
+                            await _verifyApplication(id, true);
+                            setState(() {});
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          tooltip: '不通過',
+                          onPressed: () async {
+                            await _verifyApplication(id, false);
+                            setState(() {});
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
     );
