@@ -164,17 +164,49 @@ class Letter(models.Model):
     )
 
 
-class Prize(models.Model):
-    name = models.CharField(max_length=20, null=False, blank=False) # 獎品名稱
+class Attribute(models.Model):
+    name = models.CharField(
+        max_length=20,
+        choices=settings.ATTRIBUTE_CHOICES,
+        default=settings.ATTRIBUTE_WHOLE,
+    )
+
+
+class ItemType(models.Model):
+    type = models.CharField(
+        max_length=20,
+        choices=settings.ITEM_CHOICES,
+        default=settings.ITEM_CASH,
+    )
+
+
+class Item(models.Model):
+    itemName = models.CharField(max_length=20, null=False, blank=False) # 物品名稱
+    itemType = models.ForeignKey(ItemType, null=True, on_delete=models.SET_NULL)
+    itemAttribute = models.ForeignKey(Attribute, null=True, blank=True, on_delete=models.SET_NULL)
+    point = models.IntegerField(null=True, blank=True) #加多少親密點數
 
 
 class ItemBox(models.Model):
     personalInfo = models.ForeignKey(PersonalInfo, null=True, on_delete=models.SET_NULL)
-    prize = models.ForeignKey(Prize, null=True, on_delete=models.SET_NULL)
+    item = models.ForeignKey(Item, null=True, on_delete=models.SET_NULL)
     quantity = models.IntegerField()
 
 
 class Reward(models.Model):
-    prize = models.ForeignKey(Prize, null=True, blank=False, on_delete=models.SET_NULL) # 對應獎品
+    prize = models.ForeignKey(Item, null=True, blank=False, on_delete=models.SET_NULL) # 對應獎品
     receiver = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL) # 得獎者
     quantity = models.IntegerField() # 個數
+
+
+class Pet(models.Model):
+    name = models.CharField(max_length=20, null=False, blank=False)
+    attribute = models.ForeignKey(Attribute, null=True, on_delete=models.SET_NULL)
+    description = models.TextField(null=True, blank=True)
+    fullPoint = models.IntegerField() #最多累積的親密點數
+
+
+class PersonalPet(models.Model):
+    personalInfo = models.ForeignKey(PersonalInfo, null=True, on_delete=models.SET_NULL)
+    pet = models.ForeignKey(Pet, null=True, on_delete=models.SET_NULL)
+    currentPoint = models.IntegerField()

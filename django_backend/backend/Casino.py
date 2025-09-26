@@ -1,6 +1,6 @@
 import random
 
-from .models import OfficialEvent, OfficialEventParticipant, PersonalInfo, Prize, ItemBox, Reward
+from .models import OfficialEvent, OfficialEventParticipant, PersonalInfo, Item, ItemBox, Reward
 from django.conf import settings
 from django.db.models import Sum
 
@@ -38,9 +38,9 @@ def createOrUpdateBet(user, betEvent, betAmount):
     try:
         personalInfo = PersonalInfo.objects.filter(user=user).first()
 
-        prize = Prize.objects.filter(name=settings.PRIZE_COIN).first()
+        prize = Item.objects.filter(name=settings.ITEM_CASH).first()
 
-        coinAmount = ItemBox.objects.filter(personalInfo=personalInfo, prize=prize).first().quantity
+        coinAmount = ItemBox.objects.filter(personalInfo=personalInfo, item=prize).first().quantity
 
         if betAmount > coinAmount:
             return False
@@ -62,9 +62,9 @@ def deductCoin(user, betAmount):
 
     personalInfo = PersonalInfo.objects.filter(user=user).first()
 
-    prize = Prize.objects.filter(name=settings.PRIZE_COIN).first()
+    prize = Item.objects.filter(name=settings.ITEM_CASH).first()
 
-    item = ItemBox.objects.filter(personalInfo=personalInfo, prize=prize).first()
+    item = ItemBox.objects.filter(personalInfo=personalInfo, item=prize).first()
     item.quantity = item.quantity - betAmount
     item.save()
 
@@ -95,7 +95,7 @@ def saveWinner(user, betEvent):
     totalBetAmount = getTotalBetAmount()
     #0.5=>拿到總價的0.5
     quantity = totalBetAmount * 0.5
-    prize = Prize.objects.filter(name=settings.PRIZE_COIN).first()
+    prize = Item.objects.filter(name=settings.ITEM_CASH).first()
     receiver = user
     reward = Reward.objects.create(prize=prize, receiver=receiver, quantity=quantity)
     reward.save()

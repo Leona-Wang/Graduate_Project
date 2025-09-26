@@ -337,7 +337,6 @@ class AddCharityEventUserRecord(APIView):
     def post(self, request, *args, **kwargs):
         try:
             recordChoice = request.query_params.get('user_record_choice', "")
-            print(recordChoice)
 
             user = request.user
 
