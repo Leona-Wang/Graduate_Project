@@ -1,10 +1,11 @@
+import os
 from django.http import JsonResponse
 from rest_framework.response import Response
 from .serializers import CharityEventSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord, OfficialEvent
+from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord, OfficialEvent, ItemBox, Item, PersonalPet, Pet
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -522,3 +523,54 @@ class IsBetWinner(APIView):
         if lastEventWithWinner.winner == user:
             return JsonResponse({'success': True, 'isWinner': True}, status=200)
         return JsonResponse({'success': True, 'isWinner': False}, status=200)
+
+
+class getPowerupList(APIView):
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        itemBoxList = ItemBox.objects.filter(personalInfo__user=user, item__itemType=settings.ITEM_POWERUP)
+        itemList = []
+
+        for itemBox in itemBoxList:
+            imagePath = f"powerup/{itemBox.item.itemName}.png"
+            fullPath = os.path.join(settings.MEDIA_ROOT, imagePath)
+
+            if not os.path.exists(fullPath):
+                imagePath = "None.png"
+
+            imageUrl = f"{settings.MEDIA_URL}{imagePath}"
+            itemList.append({'name': itemBox.item.itemName, 'quantity': itemBox.quantity, 'imageUrl': imageUrl})
+
+        return JsonResponse({'success': True, 'itemList': itemList}, status=200)
+
+
+class deductPowerup(APIView):
+
+    def post(self, request, *args, **kwargs):
+
+        user = request.user
+        powerup = request.data.get('powerupName', None)
+        petName = request.data.get('petName', None)
+
+        personalInfo = PersonalInfo.objects.filter(user=user).first()
+        item = Item.objects.filter(itemName=powerup).first()
+        pet = Pet.objects.filter(name=petName).first()
+        personalPet = PersonalPet.objects.filter(pet=pet, personalInfo=personalInfo).first()
+
+        itemAttribute = item.itemAttribute
+        petAttribute = pet.attribute
+
+        addPoint = item.point
+
+        if itemAttribute == petAttribute:
+            addPoint = addPoint * 1.5
+
+        personalPet.currentPoint += addPoint
+        personalPet.save()
+
+        itemBox = ItemBox.objects.filter(personalInfo=personalInfo, item=item).first()
+        itemBox.quantity = itemBox.quantity - 1
+        itemBox.save()
+
+        return JsonResponse({'success': True}, status=200)

@@ -154,4 +154,10 @@ class ApiPath {
   //後端傳{'success': True, 'isWinner': True/False} isWinner 為 True 就是中獎人
   static String get isBetWinner =>
       '${BaseConfig.baseUrl}/events/casino/winner/';
+
+  //後端傳{'success':True,'itemList':({'name': , 'quantity': , 'imageUrl': })},itemList傳的會是一個list，裡面有圖片，再自己查一下要怎麼用url拿圖
+  static String get getPowerupList => '${BaseConfig.baseUrl}/pet/powerup/';
+
+  //前端傳{'powerupName':,'petName':}給我名字，因為我沒給你們id
+  static String get deductPowerup => '${BaseConfig.baseUrl}/pet/powerup/edit/';
 }

@@ -49,5 +49,6 @@ urlpatterns = [
     path('mail/list/', views.GetMailListByType.as_view(), name="mailListByType"),
     path('events/casino/', views.GetBetDetail.as_view(), name="getBetDetail"),
     path('events/casino/bet_amount/edit/', views.CreateOrUpdateBet.as_view(), name="createOrUpdateBet"),
-    path('events/casino/winner/', views.IsBetWinner.as_view(), name="isBetWinner")
+    path('pet/powerup/', views.getPowerupList.as_view(), name="getPowerupList"),
+    path('pet/powerup/edit/', views.deductPowerup.as_view(), name="deductPowerup"),
 ]
