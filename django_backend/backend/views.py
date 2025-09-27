@@ -398,7 +398,7 @@ class CoOrganizeEvent(APIView):
 class GetCoOrganizeApplications(APIView):
     """活動主辦方查詢協辦申請列表""" #只回傳 verified=None 的協辦申請者
 
-    def post(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         return getCoOrganizeApplications(request)
 
 
