@@ -185,6 +185,7 @@ class Item(models.Model): #金幣與道具
     itemType = models.ForeignKey(ItemType, null=True, on_delete=models.SET_NULL)
     itemAttribute = models.ForeignKey(Attribute, null=True, blank=True, on_delete=models.SET_NULL)
     point = models.IntegerField(null=True, blank=True) #加多少親密點數
+    itemImage = models.ImageField(upload_to='powerup/', null=True, blank=True)
 
 
 class ItemBox(models.Model): #用戶持有的金幣跟道具
@@ -204,6 +205,7 @@ class Pet(models.Model):
     attribute = models.ForeignKey(Attribute, null=True, on_delete=models.SET_NULL)
     description = models.TextField(null=True, blank=True)
     fullPoint = models.IntegerField() #最多累積的親密點數
+    itemImage = models.ImageField(upload_to='pet/', null=True, blank=True)
 
 
 class PersonalPet(models.Model):
