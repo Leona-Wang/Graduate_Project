@@ -160,4 +160,24 @@ class ApiPath {
 
   //前端傳{'powerupName':,'petName':}給我名字，因為我沒給你們id
   static String get deductPowerup => '${BaseConfig.baseUrl}/pet/powerup/edit/';
+
+  // 回傳所有寵物以及該玩家是否有該寵物
+  // 後端回傳範例:
+  // {
+  //   "success": true,
+  //   "pets": [
+  //     {
+  //       "id": 1,
+  //       "name": "血哥",
+  //       "hasThisPet": true  (true代表玩家有這隻寵物，false代表沒有)
+  //     },
+  //     {
+  //       "id": 2,
+  //       "name": "白米星人",
+  //       "hasThisPet": false
+  //     },
+  //     // ...更多寵物
+  //   ]
+  // }
+  static String getAllPets => '${BaseConfig.baseUrl}/pets/all/';
 }

@@ -23,6 +23,7 @@ from .charityEvent import (
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from .mails import getMailDetail, getMailListByType
+from .pets import getAllPets
 
 
 # Create your views here.
@@ -574,3 +575,12 @@ class deductPowerup(APIView):
         itemBox.save()
 
         return JsonResponse({'success': True}, status=200)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GetAllPets(APIView):
+    """回傳所有寵物以及該玩家是否有該寵物"""
+
+    def get(self, request, *args, **kwargs):
+        return getAllPets(request)
+

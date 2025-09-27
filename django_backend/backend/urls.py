@@ -51,4 +51,5 @@ urlpatterns = [
     path('events/casino/bet_amount/edit/', views.CreateOrUpdateBet.as_view(), name="createOrUpdateBet"),
     path('pet/powerup/', views.getPowerupList.as_view(), name="getPowerupList"),
     path('pet/powerup/edit/', views.deductPowerup.as_view(), name="deductPowerup"),
+    path('pets/all/', views.GetAllPets.as_view(), name="getAllPets"),
 ]
