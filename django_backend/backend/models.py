@@ -180,20 +180,20 @@ class ItemType(models.Model):
     )
 
 
-class Item(models.Model):
+class Item(models.Model): #金幣與道具
     itemName = models.CharField(max_length=20, null=False, blank=False) # 物品名稱
     itemType = models.ForeignKey(ItemType, null=True, on_delete=models.SET_NULL)
     itemAttribute = models.ForeignKey(Attribute, null=True, blank=True, on_delete=models.SET_NULL)
     point = models.IntegerField(null=True, blank=True) #加多少親密點數
 
 
-class ItemBox(models.Model):
+class ItemBox(models.Model): #用戶持有的金幣跟道具
     personalInfo = models.ForeignKey(PersonalInfo, null=True, on_delete=models.SET_NULL)
     item = models.ForeignKey(Item, null=True, on_delete=models.SET_NULL)
     quantity = models.IntegerField()
 
 
-class Reward(models.Model):
+class Reward(models.Model): #辦完活動的獎勵&fifty fifty
     prize = models.ForeignKey(Item, null=True, blank=False, on_delete=models.SET_NULL) # 對應獎品
     receiver = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL) # 得獎者
     quantity = models.IntegerField() # 個數
