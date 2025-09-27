@@ -23,7 +23,7 @@ from .charityEvent import (
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from .mails import getMailDetail, getMailListByType
-from .pets import getAllPets
+from .pets import getAllPets, petDetail
 
 
 # Create your views here.
@@ -584,3 +584,11 @@ class GetAllPets(APIView):
     def get(self, request, *args, **kwargs):
         return getAllPets(request)
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PetDetail(APIView):
+    """回傳特定寵物的詳細資訊"""
+
+    def get(self, request, *args, **kwargs):
+        petId = kwargs.get('petId')  # 這裡從 URL 參數拿 petId
+        return petDetail(request, petId)

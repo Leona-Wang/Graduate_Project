@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from .models import Pet, PersonalPet
+from .models import Pet, PersonalPet, PersonalInfo
 
 def getAllPets(request):
     try:
@@ -19,5 +19,38 @@ def getAllPets(request):
             })
 
         return JsonResponse({'success': True, 'pets': result}, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+def petDetail(request, petId):
+    try:
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        if not petId:
+            return JsonResponse({'success': False, 'message': '缺少寵物ID'}, status=400)
+
+        pet = Pet.objects.filter(id=petId).first()
+        if not pet:
+            return JsonResponse({'success': False, 'message': '查無此寵物'}, status=404)
+
+        personalInfo = PersonalInfo.objects.filter(user=user).first()
+        if not personalInfo:
+            return JsonResponse({'success': False, 'message': '查無玩家資訊'}, status=404)
+
+        # 取得玩家與這隻寵物的 PersonalPet
+        personalPet = PersonalPet.objects.filter(personalInfo=personalInfo, pet=pet).first()
+        if personalPet and pet.fullPoint:
+            point = int((personalPet.currentPoint / pet.fullPoint) * 100)
+        else:
+            point = 0
+
+        return JsonResponse({
+            'success': True,
+            'name': pet.name,
+            'description': pet.description,
+            'point': point
+        }, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)

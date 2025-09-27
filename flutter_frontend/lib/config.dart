@@ -179,5 +179,16 @@ class ApiPath {
   //     // ...更多寵物
   //   ]
   // }
-  static String getAllPets => '${BaseConfig.baseUrl}/pets/all/';
+  static String getAllPets() => '${BaseConfig.baseUrl}/pets/all/';
+
+  // 回傳特定寵物的詳細資訊(一次查一隻寵物)
+  // 使用方式：final url = ApiPath.petDetail(petId);
+  // 後端回傳範例:
+  // {
+  // "success": true,
+  // "name": "白米星人",
+  // "description": "...",
+  // "point": 75 (寵物親密度百分比，0~100)
+  // }
+  static String petDetail(int petId) => '${BaseConfig.baseUrl}/pets/$petId/';
 }
