@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from backend.models import EventParticipant, Letter, CharityEvent
+from backend.models import EventParticipant, Letter, CharityEvent, LetterType
 from django.template import loader
 from django.conf import settings
 
@@ -15,6 +15,8 @@ class Command(BaseCommand):
 
         promoteLetters = []
         joinLetters = []
+
+        letterType = LetterType.objects.filter(type=settings.MAIL_TYPE_EVENT).first()
 
         for charityEvent in charityEvents:
             #預設3天前宣傳
@@ -42,7 +44,12 @@ class Command(BaseCommand):
                     }).strip()
 
                     promoteLetter = Letter(
-                        receiver=save.personalUser, date=now, title=title, content=content, charityEvent=charityEvent
+                        receiver=save.personalUser,
+                        date=now,
+                        title=title,
+                        content=content,
+                        charityEvent=charityEvent,
+                        letterType=letterType
                     )
                     promoteLetters.append(promoteLetter)
 
@@ -58,7 +65,12 @@ class Command(BaseCommand):
                     }).strip()
 
                     joinLetter = Letter(
-                        receiver=join.personalUser, date=now, title=title, content=content, charityEvent=charityEvent
+                        receiver=join.personalUser,
+                        date=now,
+                        title=title,
+                        content=content,
+                        charityEvent=charityEvent,
+                        letterType=letterType
                     )
                     joinLetters.append(joinLetter)
 

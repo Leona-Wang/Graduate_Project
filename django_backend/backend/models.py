@@ -143,27 +143,6 @@ class QRCodeRecord(models.Model):
         super().save(*args, **kwargs)
 
 
-class LetterType(models.Model):
-    type = models.CharField(max_length=10, null=False, blank=False)
-
-
-class Letter(models.Model):
-    receiver = models.ForeignKey(
-        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="receivedLetters"
-    ) # 收件人
-    date = models.DateTimeField(auto_now_add=True) # 寄信日期
-    type = models.ForeignKey(LetterType, null=True, blank=True, on_delete=models.SET_NULL) # 信件類型
-    title = models.CharField(max_length=255, null=False, blank=False) # 標題
-    content = models.TextField(null=False, blank=False) # 內容
-    isRead = models.BooleanField(default=False) # 是否已讀
-    charityEvent = models.ForeignKey(
-        'CharityEvent', null=True, blank=True, on_delete=models.CASCADE, related_name="letters"
-    )
-    officialEvent = models.ForeignKey(
-        'OfficialEvent', null=True, blank=True, on_delete=models.CASCADE, related_name="letters"
-    )
-
-
 class Attribute(models.Model):
     name = models.CharField(
         max_length=20,
@@ -195,7 +174,7 @@ class ItemBox(models.Model): #用戶持有的金幣跟道具
 
 
 class Reward(models.Model): #辦完活動的獎勵&fifty fifty
-    prize = models.ForeignKey(Item, null=True, blank=False, on_delete=models.SET_NULL) # 對應獎品
+    item = models.ForeignKey(Item, null=True, blank=False, on_delete=models.SET_NULL) # 對應獎品
     receiver = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL) # 得獎者
     quantity = models.IntegerField() # 個數
 
@@ -212,3 +191,22 @@ class PersonalPet(models.Model):
     personalInfo = models.ForeignKey(PersonalInfo, null=True, on_delete=models.SET_NULL)
     pet = models.ForeignKey(Pet, null=True, on_delete=models.SET_NULL)
     currentPoint = models.IntegerField()
+
+
+class LetterType(models.Model):
+    type = models.CharField(max_length=10, null=False, blank=False)
+
+
+class Letter(models.Model):
+    receiver = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="receivedLetters"
+    ) # 收件人
+    date = models.DateTimeField(auto_now_add=True) # 寄信日期
+    title = models.CharField(max_length=255, null=False, blank=False) # 標題
+    content = models.TextField(null=False, blank=False) # 內容
+    type = models.ForeignKey(LetterType, null=True, blank=True, on_delete=models.SET_NULL) #種類
+    isRead = models.BooleanField(default=False) # 是否已讀
+    charityEvent = models.ForeignKey(
+        'CharityEvent', null=True, blank=True, on_delete=models.CASCADE, related_name="letters"
+    )
+    reward = models.ForeignKey('Reward', null=True, blank=True, on_delete=models.CASCADE)

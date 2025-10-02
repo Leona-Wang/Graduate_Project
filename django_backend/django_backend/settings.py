@@ -210,3 +210,8 @@ ATTRIBUTE_CHOICES = [
     (ATTRIBUTE_RICE, 'Rice'),
     (ATTRIBUTE_WHOLE, 'Whole'),
 ]
+
+MAIL_TYPE_REWARD = "reward"
+MAIL_TYPE_EVENT = "event"
+MAIL_TYPE_SYSTEM = "system"
+MAIL_TYPE_PERSONAL = "notice"

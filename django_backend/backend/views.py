@@ -5,7 +5,7 @@ from .serializers import CharityEventSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord, OfficialEvent, ItemBox, Item, PersonalPet, Pet
+from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord, OfficialEvent, ItemBox, Item, PersonalPet, Pet, Letter
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -333,12 +333,13 @@ class CharityEventDetail(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AddCharityEventUserRecord(APIView):
-    """選擇收藏/參與活動"""
-    permission_classes = [AllowAny]
+    """選擇收藏/參與或取消收藏/參與活動"""
 
     def post(self, request, *args, **kwargs):
         try:
             recordChoice = request.query_params.get('user_record_choice', "")
+            if recordChoice == 'revert':
+                recordChoice = None
 
             user = request.user
 
@@ -590,5 +591,34 @@ class PetDetail(APIView):
     """回傳特定寵物的詳細資訊"""
 
     def get(self, request, *args, **kwargs):
-        petId = kwargs.get('petId')  # 這裡從 URL 參數拿 petId
+        petId = kwargs.get('petId') # 這裡從 URL 參數拿 petId
         return petDetail(request, petId)
+
+
+class SendReward(APIView):
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        personalInfo = PersonalInfo.objects.filter(user=user).first()
+
+        mailId = kwargs.get('mailId', None)
+        if not mailId:
+            return JsonResponse({'success': False, 'message': '沒有這封信'}, status=404)
+
+        letter = Letter.objects.filter(id=mailId).first()
+        reward = letter.reward
+
+        itemBoxRecord = ItemBox.objects.filter(personalInfo=personalInfo, item=reward.item)
+        itemExists = itemBoxRecord.exists()
+
+        if itemExists:
+            currentRecord = itemBoxRecord.first()
+            currentRecord.quantity = currentRecord.quantity + reward.quantity
+            currentRecord.save()
+        else:
+            sendItem = ItemBox.objects.create(personalInfo=personalInfo, item=reward.item, quantity=reward.quantity)
+
+        reward.delete()
+        letter.delete()
+
+        return JsonResponse({'success': True}, status=200)

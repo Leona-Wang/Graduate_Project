@@ -46,6 +46,7 @@ urlpatterns = [
     ),
     path('events/user_QRCode/', views.ProcessUserQRCode.as_view(), name="ProcessUserQRCode"),
     path('mail/<int:mailId>/', views.GetMailDetail.as_view(), name="mailDetail"),
+    path('mail/<int:mailId>/reward/', views.SendReward.as_view(), name="sendReward"),
     path('mail/list/', views.GetMailListByType.as_view(), name="mailListByType"),
     path('events/casino/', views.GetBetDetail.as_view(), name="getBetDetail"),
     path('events/casino/bet_amount/edit/', views.CreateOrUpdateBet.as_view(), name="createOrUpdateBet"),

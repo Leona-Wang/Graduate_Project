@@ -101,6 +101,10 @@ class ApiPath {
   static String addCharityEventUserJoin(int eventId) =>
       '${BaseConfig.baseUrl}/events/$eventId/participant_record/?user_record_choice=Join';
 
+  //讓用戶取消參加/收藏
+  static String addCharityEventUserRevert(int eventId) =>
+      '${BaseConfig.baseUrl}/events/$eventId/participant_record/?user_record_choice=revert';
+
   //用 GET ，後端回傳：{'success': True, 'code': code} 拿 code 產 QRcode
   static String get createUserQRCode =>
       '${BaseConfig.baseUrl}/events/user_QRCode/';
@@ -124,6 +128,11 @@ class ApiPath {
   // }
   static String getMailDetail(int mailId) =>
       '${BaseConfig.baseUrl}/mail/$mailId/';
+
+  //用 POST ，不用給{}(如果不能不給就隨便丟個 id 或其他的就好，反正我用不到)
+  //成功傳{'success':True}，失敗回404(找不到 mailId)
+  static String sendReward(int mailId) =>
+      '${BaseConfig.baseUrl}/mail/$mailId/reward/';
 
   //查詢user的某種type的mail list，用GET，後端回傳範例:
   // {
