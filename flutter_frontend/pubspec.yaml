@@ -80,6 +80,7 @@ flutter:
   assets:
     - assets/welcomeSlides/
     - assets/background/
+    - assets/petFoods/
 
 
   # The following line ensures that the Material Icons font is

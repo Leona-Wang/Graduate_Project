@@ -217,7 +217,7 @@ class PersonalEventListState extends State<PersonalEventListPage> {
             ),
           ),
         ),
-        title: const Text('設定'),
+        title: const Text('任務一覽'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

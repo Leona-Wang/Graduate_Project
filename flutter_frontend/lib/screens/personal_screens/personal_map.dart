@@ -140,6 +140,7 @@ class PersonalMapPageState extends State<PersonalMapPage> {
           "name": "高雄助學市集",
           "address": "高雄市苓雅區四維三路2號", // 高雄市政府
         },
+        {'id': 4, 'name': '捐米', 'address': '台北市文山區指南二路政治大學'},
       ];
 
       List<Marker> newMarkers = [];
