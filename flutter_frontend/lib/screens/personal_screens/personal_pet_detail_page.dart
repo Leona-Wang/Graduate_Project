@@ -58,7 +58,7 @@ class _PersonalPetDetailPageState extends State<PersonalPetDetailPage> {
                 tag: 'pet:${widget.id}',
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
+                  child: Image.asset(
                     widget.imageUrl,
                     height: 240,
                     fit: BoxFit.cover,
