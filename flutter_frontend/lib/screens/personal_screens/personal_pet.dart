@@ -6,7 +6,7 @@ import '../../api_client.dart';
 import 'package:flutter_frontend/config.dart';
 
 class _Pet {
-  final String id;
+  final int id;
   final String name;
   final String imageUrl;
   final bool owned;
@@ -19,7 +19,7 @@ class _Pet {
   });
 
   factory _Pet.fromJson(Map<String, dynamic> j) => _Pet(
-    id: j['id'].toString(),
+    id: j['id'],
     name: j['name'] ?? '',
     imageUrl: 'assets/pet/${j['id']}.PNG',
     owned: j['hasThisPet'] ?? false,
@@ -151,7 +151,7 @@ class _PetCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: pet.owned ? Colors.green : Colors.grey.shade300,
+            color: pet.owned ? Colors.amber : Colors.grey.shade300,
           ),
         ),
         padding: const EdgeInsets.all(8),
@@ -200,6 +200,7 @@ class _PetCard extends StatelessWidget {
                           child: Image.asset(pet.imageUrl, fit: BoxFit.cover),
                         ),
                       ),
+                      /*
                       if (pet.owned)
                         Align(
                           alignment: Alignment.topRight,
@@ -232,7 +233,7 @@ class _PetCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                        ),
+                        ),*/
                     ],
                   ),
                 ),
