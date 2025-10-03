@@ -549,6 +549,7 @@ class deductPowerup(APIView):
         user = request.user
         powerup = request.data.get('powerupName', None)
         petName = request.data.get('petName', None)
+        quantity = request.data.get('quantity', 1)
 
         personalInfo = PersonalInfo.objects.filter(user=user).first()
         item = Item.objects.filter(itemName=powerup).first()
@@ -558,7 +559,7 @@ class deductPowerup(APIView):
         itemAttribute = item.itemAttribute
         petAttribute = pet.attribute
 
-        addPoint = item.point
+        addPoint = item.point * quantity
 
         if itemAttribute == petAttribute:
             addPoint = addPoint * 1.5
@@ -567,7 +568,7 @@ class deductPowerup(APIView):
         personalPet.save()
 
         itemBox = ItemBox.objects.filter(personalInfo=personalInfo, item=item).first()
-        itemBox.quantity = itemBox.quantity - 1
+        itemBox.quantity = itemBox.quantity - quantity
         itemBox.save()
 
         return JsonResponse({'success': True}, status=200)

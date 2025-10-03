@@ -167,7 +167,7 @@ class ApiPath {
   //後端傳{'success':True,'itemList':({'name': , 'quantity': , 'imageUrl': })},itemList傳的會是一個list，裡面有圖片，再自己查一下要怎麼用url拿圖
   static String get getPowerupList => '${BaseConfig.baseUrl}/pet/powerup/';
 
-  //前端傳{'powerupName':,'petName':}給我名字，因為我沒給你們id
+  //前端傳{'powerupName':,'petName':,'quantity':}給我名字，因為我沒給你們id
   static String get deductPowerup => '${BaseConfig.baseUrl}/pet/powerup/edit/';
 
   // 回傳所有寵物以及該玩家是否有該寵物
