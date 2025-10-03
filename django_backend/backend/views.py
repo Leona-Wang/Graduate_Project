@@ -531,17 +531,12 @@ class getPowerupList(APIView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        itemBoxList = ItemBox.objects.filter(personalInfo__user=user, item__itemType=settings.ITEM_POWERUP)
+        itemBoxList = ItemBox.objects.filter(personalInfo__user=user, item__itemType__type=settings.ITEM_POWERUP)
         itemList = []
 
         for itemBox in itemBoxList:
-            imagePath = f"powerup/{itemBox.item.itemName}.png"
-            fullPath = os.path.join(settings.MEDIA_ROOT, imagePath)
 
-            if not os.path.exists(fullPath):
-                imagePath = "None.png"
-
-            imageUrl = f"{settings.MEDIA_URL}{imagePath}"
+            imageUrl = itemBox.item.itemImage.url
             itemList.append({'name': itemBox.item.itemName, 'quantity': itemBox.quantity, 'imageUrl': imageUrl})
 
         return JsonResponse({'success': True, 'itemList': itemList}, status=200)
