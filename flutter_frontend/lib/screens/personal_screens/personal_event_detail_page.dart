@@ -99,7 +99,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
   bool busyFavorite = false;
   bool busyJoin = false;
   bool joined = false;
-  int? participantsOverride; // 報名成功後前端 +1 顯示
+  int? participantsOverride; // 報名／取消後前端即時顯示
 
   @override
   void initState() {
@@ -111,13 +111,11 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     final apiClient = ApiClient();
     await apiClient.init();
 
-    // 活動詳情 API（共用 charity 路徑）
     final url = ApiPath.charityEventDetail(id);
     final resp = await apiClient.get(url);
 
     if (resp.statusCode == 200) {
       final map = json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
-      // 有些後端會包一層 { event: {...} }
       final raw = (map['event'] is Map<String, dynamic>) ? map['event'] as Map<String, dynamic> : map;
       return FullEvent.fromJson(raw);
     } else {
@@ -131,14 +129,34 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
            '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
+  // ---- Helpers ----
+
+  // 強制把 ApiPath 內的 revert 參數改成首字大寫 Revert（避免後端 400）
+  String _revertUrl(int eventId) {
+    final raw = ApiPath.addCharityEventUserRevert(eventId);
+    return raw.replaceFirst('user_record_choice=revert', 'user_record_choice=Revert');
+  }
+
+  // 讀後端錯誤訊息字串
+  String _respMsg(dynamic resp) {
+    try {
+      return utf8.decode(resp.bodyBytes);
+    } catch (_) {
+      try {
+        return resp.body?.toString() ?? '';
+      } catch (_) {
+        return '';
+      }
+    }
+  }
+
+  // ---- 收藏 ----
   Future<void> handleFavorite(int eventId) async {
     if (busyFavorite || isFavorite) return;
     setState(() => busyFavorite = true);
 
     final apiClient = ApiClient();
     await apiClient.init();
-
-    // 收藏 API（共用 charity 路徑）
     final url = ApiPath.addCharityEventUserSave(eventId);
 
     try {
@@ -146,49 +164,75 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         setState(() => isFavorite = true);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('已加入收藏')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已加入收藏')));
         }
       } else if (resp.statusCode == 409) {
         setState(() => isFavorite = true);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('你已收藏過')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('你已收藏過')));
         }
       } else if (resp.statusCode == 401) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('請先登入後再試')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('請先登入後再試')));
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('加入收藏失敗：${resp.statusCode}')),
+            SnackBar(content: Text('加入收藏失敗：${resp.statusCode}｜${_respMsg(resp)}')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加入收藏時發生錯誤：$e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加入收藏時發生錯誤：$e')));
       }
     } finally {
       if (mounted) setState(() => busyFavorite = false);
     }
   }
 
+  Future<void> handleUnfavorite(int eventId) async {
+    if (busyFavorite || !isFavorite) return;
+    setState(() => busyFavorite = true);
+
+    final apiClient = ApiClient();
+    await apiClient.init();
+    final url = _revertUrl(eventId);
+
+    try {
+      final resp = await apiClient.post(url, {}).timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200 || resp.statusCode == 204) {
+        setState(() => isFavorite = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已取消收藏')));
+        }
+      } else if (resp.statusCode == 401) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('請先登入後再試')));
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('取消收藏失敗：${resp.statusCode}｜${_respMsg(resp)}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('取消收藏時發生錯誤：$e')));
+      }
+    } finally {
+      if (mounted) setState(() => busyFavorite = false);
+    }
+  }
+
+  // ---- 報名 ----
   Future<void> handleJoin(FullEvent event) async {
     if (busyJoin || joined) return;
     setState(() => busyJoin = true);
 
     final apiClient = ApiClient();
     await apiClient.init();
-
-    // 報名 API（共用 charity 路徑）
     final url = ApiPath.addCharityEventUserJoin(event.id);
 
     try {
@@ -196,38 +240,71 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         setState(() {
           joined = true;
-          participantsOverride = (event.participants) + 1;
+          final base = participantsOverride ?? event.participants;
+          participantsOverride = base + 1;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('報名成功！')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('報名成功！')));
         }
       } else if (resp.statusCode == 409) {
         setState(() => joined = true);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('你已報名過此活動')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('你已報名過此活動')));
         }
       } else if (resp.statusCode == 401) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('請先登入後再試')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('請先登入後再試')));
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('報名失敗：${resp.statusCode}')),
+            SnackBar(content: Text('報名失敗：${resp.statusCode}｜${_respMsg(resp)}')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('報名時發生錯誤：$e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('報名時發生錯誤：$e')));
+      }
+    } finally {
+      if (mounted) setState(() => busyJoin = false);
+    }
+  }
+
+  Future<void> handleUnjoin(FullEvent event) async {
+    if (busyJoin || !joined) return;
+    setState(() => busyJoin = true);
+
+    final apiClient = ApiClient();
+    await apiClient.init();
+    final url = _revertUrl(event.id);
+
+    try {
+      final resp = await apiClient.post(url, {}).timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200 || resp.statusCode == 204) {
+        setState(() {
+          joined = false;
+          final base = participantsOverride ?? event.participants;
+          final next = base - 1;
+          participantsOverride = next < 0 ? 0 : next;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已取消報名')));
+        }
+      } else if (resp.statusCode == 401) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('請先登入後再試')));
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('取消報名失敗：${resp.statusCode}｜${_respMsg(resp)}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('取消報名時發生錯誤：$e')));
       }
     } finally {
       if (mounted) setState(() => busyJoin = false);
@@ -239,7 +316,6 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('活動詳情'),
-        // 原本 AppBar 的收藏按鈕已移除
       ),
       body: FutureBuilder<FullEvent>(
         future: eventFuture,
@@ -303,31 +379,35 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
 
                   const SizedBox(height: 32),
 
-                  // 報名按鈕
+                  // 報名按鈕（切換）
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
                       icon: joined
-                          ? const Icon(Icons.check_circle)
+                          ? const Icon(Icons.cancel)
                           : const Icon(Icons.check_circle_outline),
-                      label: Text(joined ? '已報名' : '我要參加'),
-                      onPressed: (busyJoin || joined) ? null : () => handleJoin(event),
+                      label: Text(joined ? '取消報名' : '我要參加'),
+                      onPressed: busyJoin
+                          ? null
+                          : () => joined ? handleUnjoin(event) : handleJoin(event),
                     ),
                   ),
 
                   const SizedBox(height: 12),
 
-                  // 收藏按鈕（移到下方、樣式與報名一致）
+                  // 收藏按鈕（切換）
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
                       icon: isFavorite ? const Icon(Icons.star) : const Icon(Icons.star_border),
-                      label: Text(isFavorite ? '已收藏' : '加入收藏'),
-                      onPressed: (busyFavorite || isFavorite)
+                      label: Text(isFavorite ? '取消收藏' : '加入收藏'),
+                      onPressed: busyFavorite
                           ? null
-                          : () => handleFavorite(widget.event.id),
+                          : () => isFavorite
+                              ? handleUnfavorite(widget.event.id)
+                              : handleFavorite(widget.event.id),
                     ),
                   ),
                 ],
