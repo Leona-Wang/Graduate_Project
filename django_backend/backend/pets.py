@@ -50,7 +50,8 @@ def petDetail(request, petId):
             'success': True,
             'name': pet.name,
             'description': pet.description,
-            'point': point
+            'point': point,
+            'imageUrl': pet.itemImage.url if pet.itemImage else ""
         }, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)

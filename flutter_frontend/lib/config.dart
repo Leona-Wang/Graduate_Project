@@ -198,6 +198,7 @@ class ApiPath {
   // "name": "白米星人",
   // "description": "...",
   // "point": 75 (寵物親密度百分比，0~100)
+  // "imageUrl": "/media/pet/白米星人.jpg", (寵物圖片url)
   // }
   static String petDetail(int petId) => '${BaseConfig.baseUrl}/pets/$petId/';
 }
