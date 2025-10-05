@@ -23,7 +23,7 @@ from .charityEvent import (
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from .mails import getMailDetail, getMailListByType
-from .pets import getAllPets, petDetail
+from .pets import getAllPets, petDetail, gachaPet
 
 
 # Create your views here.
@@ -618,3 +618,11 @@ class SendReward(APIView):
         letter.delete()
 
         return JsonResponse({'success': True}, status=200)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GachaPet(APIView):
+    """寵物扭蛋機"""
+
+    def post(self, request, *args, **kwargs):
+        return gachaPet(request)

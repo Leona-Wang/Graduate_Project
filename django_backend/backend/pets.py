@@ -1,5 +1,8 @@
+from django.db import transaction
 from django.http import JsonResponse
-from .models import Pet, PersonalPet, PersonalInfo
+from .models import Pet, PersonalPet, PersonalInfo, ItemBox, Item
+from django.conf import settings
+import random
 
 def getAllPets(request):
     try:
@@ -52,6 +55,69 @@ def petDetail(request, petId):
             'description': pet.description,
             'point': point,
             'imageUrl': pet.itemImage.url if pet.itemImage else ""
+        }, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+# 寵物扭蛋機
+def gachaPet(request):
+    try:
+        user = request.user
+        if not user or not user.is_authenticated:
+            return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+
+        personalInfo = PersonalInfo.objects.filter(user=user).first()
+        if not personalInfo:
+            return JsonResponse({'success': False, 'message': '查無玩家資訊'}, status=404)
+
+        # 檢查金幣是否足夠
+        cashItem = Item.objects.filter(itemAttribute=settings.ITEM_CASH).first()
+        if not cashItem:
+            return JsonResponse({'success': False, 'message': '查無金幣道具'}, status=404)
+
+        itemBox = ItemBox.objects.filter(personalInfo=personalInfo, item=cashItem).first()
+        if not itemBox or itemBox.quantity < 5:
+            return JsonResponse({'success': False, 'message': '金幣不足'}, status=400)
+
+        # 取得寵物池（假設只有6隻）
+        pets = list(Pet.objects.all()[:6])
+        if len(pets) < 6:
+            return JsonResponse({'success': False, 'message': '寵物池不足6隻'}, status=400)
+
+        # 設定機率（假設每隻寵物機率都一樣）
+        weights = [1] * 6 
+        chosenPet = random.choices(pets, weights=weights, k=1)[0]
+
+        # 檢查玩家是否已擁有這隻寵物
+        personalPet = PersonalPet.objects.filter(personalInfo=personalInfo, pet=chosenPet).first()
+        newPet = False
+
+        with transaction.atomic():
+            if not personalPet:
+                # 新增寵物
+                PersonalPet.objects.create(personalInfo=personalInfo, pet=chosenPet, currentPoint=1)
+                newPet = True
+            else:
+                # 已擁有該寵物，親密度未滿才加親密度
+                if chosenPet.fullPoint and personalPet.currentPoint < chosenPet.fullPoint:
+                    addPoint = min(10, chosenPet.fullPoint - personalPet.currentPoint)
+                    personalPet.currentPoint += addPoint
+                    personalPet.save()
+                # 若親密度已滿則不再加親密度
+
+            # 扣金幣
+            itemBox.quantity -= 5
+            itemBox.save()
+
+        return JsonResponse({
+            'success': True,
+            'pet': {
+                'id': chosenPet.id,
+                'name': chosenPet.name,
+                'description': chosenPet.description,
+                'imageUrl': chosenPet.itemImage.url if chosenPet.itemImage else "",
+                'newPet': newPet
+            }
         }, status=200)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)

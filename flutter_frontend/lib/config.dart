@@ -198,7 +198,21 @@ class ApiPath {
   // "name": "白米星人",
   // "description": "...",
   // "point": 75 (寵物親密度百分比，0~100)
-  // "imageUrl": "/media/pet/白米星人.jpg", (寵物圖片url)
+  // "imageUrl": "/media/pet/白米星人.png", (寵物圖片url)
   // }
   static String petDetail(int petId) => '${BaseConfig.baseUrl}/pets/$petId/';
+
+  // 寵物扭蛋機(用POST)，一次花費5金幣，若抽到已擁有的寵物則親密度+10(若親密度已滿則不再加親密度)
+  // 後端回傳範例:
+  // {
+  //   "success": true,
+  //   "pet": { (抽到的寵物資訊)
+  //     "id": 1,
+  //     "name": "章魚燒紳士",
+  //     "description": "章魚燒紳士",
+  //     "imageUrl": "/media/pet/章魚燒紳士.png",
+  //     "newPet": true  (true代表抽到新寵物，false代表抽到已擁有的寵物)
+  //   }
+  // }
+  static String get gachaPet => '${BaseConfig.baseUrl}/pets/gacha/';
 }
