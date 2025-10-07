@@ -54,5 +54,5 @@ urlpatterns = [
     path('pet/powerup/edit/', views.deductPowerup.as_view(), name="deductPowerup"),
     path('pets/all/', views.GetAllPets.as_view(), name="getAllPets"),
     path('pets/<int:petId>/', views.PetDetail.as_view(), name="petDetail"),
-    path('pets/gacha/', views.GachaPetView.as_view(), name="gachaPet"),
+    path('pets/gacha/', views.GachaPet.as_view(), name="gachaPet"),
 ]
