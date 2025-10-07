@@ -1,6 +1,9 @@
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
+import 'package:flutter_frontend/config.dart';
+import 'package:flutter_frontend/api_client.dart';
+import 'package:flutter_frontend/base_config.dart';
 
 class PersonalShopPage extends StatefulWidget {
   const PersonalShopPage({super.key});
@@ -10,101 +13,243 @@ class PersonalShopPage extends StatefulWidget {
 }
 
 class PersonalShopPageState extends State<PersonalShopPage> {
-  final random = Random();
+  // 之後餘額可改為向後端查詢；目前僅 UI 顯示，不參與扣款（由後端主導）
+  int coinBalance = 10000;
 
-  int coinBalance = 120; // 初始持有金幣（可改）
-  int gachaCost = 50;
+  // 後端規格：每抽 5 金幣（僅顯示用）
+  static const int gachaCost = 5;
 
-  // 示範商品資料
-  final List<ShopItem> items = [
+  bool isSpinning = false;
+
+  // 假資料（購買/儲值都先「敬請期待」）
+  final List<ShopItem> items = const [
     ShopItem(id: 1, name: 'A商品', price: 80, icon: Icons.backpack),
     ShopItem(id: 2, name: 'B商品', price: 120, icon: Icons.crop_square),
     ShopItem(id: 3, name: 'C商品', price: 60, icon: Icons.badge),
     ShopItem(id: 4, name: 'D商品', price: 100, icon: Icons.expand),
   ];
 
-  // 扭蛋獎池（可自行調整機率：用 weight 權重）
-  final List<GachaPrize> prizes = [
-    GachaPrize(name: '安慰獎勵', type: PrizeType.coin, value: 10, weight: 45),
-    GachaPrize(name: '普通獎勵', type: PrizeType.item, value: 1, weight: 30),
-    GachaPrize(name: '稀有獎勵', type: PrizeType.coin, value: 80, weight: 15),
-    GachaPrize(name: '超稀有獎勵', type: PrizeType.item, value: 1, weight: 7),
-    GachaPrize(name: '傳說獎勵', type: PrizeType.coin, value: 300, weight: 3),
-  ];
-
   void backToHome() {
     PersonalHomeTab.of(context)?.switchTab(0);
   }
 
-  void topUp(int amount) {
-    setState(() {
-      coinBalance += amount;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('已儲值 $amount 金幣')),
-    );
-  }
-
-  void purchaseItem(ShopItem item) {
-    if (coinBalance < item.price) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('金幣不足')),
-      );
-      return;
-    }
-    setState(() {
-      coinBalance -= item.price;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('已購買：${item.name}')),
-    );
-  }
-
-  void spinGacha() {
-    if (coinBalance < gachaCost) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('金幣不足，無法抽取')),
-      );
-      return;
-    }
-
-    setState(() {
-      coinBalance -= gachaCost;
-    });
-
-    final prize = pickPrizeByWeight(prizes, random);
-
-    // 結算獎勵
-    if (prize.type == PrizeType.coin) {
-      setState(() {
-        coinBalance += prize.value;
-      });
-    }
-
+  // ===== 公用：敬請期待 =====
+  void _comingSoon([String? feature]) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('扭蛋結果'),
-        content: Text(prize.name),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('確定'),
+      builder:
+          (dialogCtx) => AlertDialog(
+            title: const Text('敬請期待'),
+            content: Text(feature ?? '功能即將開放，請稍候～'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('了解'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
-  // 權重隨機
-  GachaPrize pickPrizeByWeight(List<GachaPrize> pool, Random rng) {
-    final total = pool.fold<int>(0, (sum, p) => sum + p.weight);
-    int roll = rng.nextInt(total) + 1;
-    for (final p in pool) {
-      roll -= p.weight;
-      if (roll <= 0) return p;
+  // ===== API：寵物扭蛋（依你提供的介面）=====
+  // POST ${BaseConfig.baseUrl}/pets/gacha/
+  Future<PetGachaResult> _gachaOnce() async {
+    final apiClient = ApiClient();
+    await apiClient.init();
+
+    final url = ApiPath.gachaPet; // e.g. ${BaseConfig.baseUrl}/pets/gacha/
+    final resp = await apiClient.post(ApiPath.gachaPet, {});
+
+    // 把錯誤內容 decode 出來，方便debug
+    Map<String, dynamic>? errJson;
+    try {
+      errJson = jsonDecode(resp.body);
+    } catch (_) {}
+
+    if (resp.statusCode == 200 || resp.statusCode == 201) {
+      final Map<String, dynamic> data = jsonDecode(resp.body);
+      if (data['success'] == true && data['pet'] != null) {
+        final pet = data['pet'] as Map<String, dynamic>;
+        return PetGachaResult(
+          success: true,
+          pet: PetModel(
+            id: pet['id'] ?? 0,
+            name: (pet['name'] ?? '').toString(),
+            description: (pet['description'] ?? '').toString(),
+            imageUrl: (pet['imageUrl'] ?? '').toString(),
+            newPet: pet['newPet'] == true,
+          ),
+        );
+      }
+      throw Exception('回傳格式不正確：${resp.body}');
+    } else if (resp.statusCode == 401) {
+      // 常見：未帶登入
+      throw Exception(
+        '未授權（401）。請確認已登入並帶到 Authorization header。伺服器回應：${resp.body}',
+      );
+    } else if (resp.statusCode == 400) {
+      // 常見：Content-Type 錯、或缺欄位、或餘額不足等業務錯
+      final msg =
+          (errJson?['detail'] ?? errJson?['message'] ?? resp.body).toString();
+      throw Exception('扭蛋失敗（400）：$msg');
+    } else {
+      throw Exception('扭蛋失敗（${resp.statusCode}）：${resp.body}');
     }
-    return pool.last;
+  }
+
+  // ===== 抽卡流程（前端）=====
+  Future<void> spinGacha() async {
+    if (isSpinning) return;
+    setState(() => isSpinning = true);
+
+    try {
+      final result = await _gachaOnce();
+      if (!mounted) return;
+      await _showSingleResult(result);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())), // 直接顯示 Exception 內容
+      );
+    }
+  }
+
+  Future<void> spinGachaTen() async {
+    if (isSpinning) return;
+    setState(() => isSpinning = true);
+
+    final results = <PetGachaResult>[];
+    try {
+      for (int i = 0; i < 10; i++) {
+        try {
+          final r = await _gachaOnce();
+          results.add(r);
+        } catch (e) {
+          // 單抽錯誤就略過，但在彙總結果時可顯示「失敗」項（這裡簡化為不顯示）
+          debugPrint('十連第 ${i + 1} 抽失敗：$e');
+        }
+      }
+      if (!mounted) return;
+      await _showTenResults(results);
+    } finally {
+      if (mounted) setState(() => isSpinning = false);
+    }
+  }
+
+  // ===== 對話框（使用內層 context）=====
+  Future<void> _showSingleResult(PetGachaResult r) {
+    final img = _fullMediaUrl(r.pet.imageUrl);
+    return showDialog(
+      context: context,
+      builder:
+          (dialogCtx) => AlertDialog(
+            title: const Text('扭蛋結果'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (img != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      img,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                Text(
+                  r.pet.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 6),
+                Text(r.pet.description.isEmpty ? '—' : r.pet.description),
+                const SizedBox(height: 8),
+                if (r.pet.newPet)
+                  const Chip(label: Text('新獲得！'))
+                else
+                  const Chip(label: Text('已有寵物（親密度 +10，若已滿不再增加）')),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('確定'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _showTenResults(List<PetGachaResult> results) {
+    return showDialog(
+      context: context,
+      builder:
+          (dialogCtx) => AlertDialog(
+            title: const Text('十連結果'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: results.length,
+                separatorBuilder: (_, __) => const Divider(height: 12),
+                itemBuilder: (_, i) {
+                  final r = results[i];
+                  final img = _fullMediaUrl(r.pet.imageUrl);
+                  return Row(
+                    children: [
+                      if (img != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.network(
+                            img,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      else
+                        const Icon(Icons.pets),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r.pet.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (!r.pet.newPet)
+                              const Text(
+                                '已有寵物（親密度 +10）',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (r.pet.newPet) const Chip(label: Text('新')),
+                    ],
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('收下'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // 後端若回 /media/...，這裡補完整網址
+  String? _fullMediaUrl(String? path) {
+    if (path == null || path.isEmpty) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return '${BaseConfig.baseUrl}$path';
   }
 
   @override
@@ -131,24 +276,30 @@ class PersonalShopPageState extends State<PersonalShopPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // 金幣資訊
+            // 金幣資訊（暫時顯示本地數字，後端接好再同步）
             Card(
               elevation: 2,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(Icons.monetization_on, size: 32, color: Colors.amber),
+                    const Icon(
+                      Icons.monetization_on,
+                      size: 32,
+                      color: Colors.amber,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         '持有金幣：$coinBalance',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     FilledButton.icon(
-                      onPressed: () => _showTopUpSheet(),
+                      onPressed: () => _comingSoon('儲值功能將於正式版開放'),
                       icon: const Icon(Icons.add),
                       label: const Text('儲值'),
                     ),
@@ -159,7 +310,68 @@ class PersonalShopPageState extends State<PersonalShopPage> {
 
             const SizedBox(height: 16),
 
-            // 克金（儲值）區域（快捷按鈕）
+            // 扭蛋機（往上放）
+            Text('扭蛋機', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.toys,
+                          size: 32,
+                          color: Colors.pinkAccent,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '每抽 $gachaCost 金幣',
+                            style: theme.textTheme.bodyLarge,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: '說明',
+                          onPressed: _showGachaInfo,
+                          icon: const Icon(Icons.info_outline),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isSpinning ? null : spinGacha,
+                            child:
+                                isSpinning
+                                    ? const Text('抽卡中…')
+                                    : const Text('單抽'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: isSpinning ? null : spinGachaTen,
+                            child:
+                                isSpinning
+                                    ? const Text('抽卡中…')
+                                    : const Text('十連'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 克金（儲值）快捷區 → 敬請期待
             Text('克金區域', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Row(
@@ -174,7 +386,7 @@ class PersonalShopPageState extends State<PersonalShopPage> {
 
             const SizedBox(height: 24),
 
-            // 商城商品
+            // 商品清單 → 敬請期待
             Text('商品清單', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             GridView.builder(
@@ -182,7 +394,7 @@ class PersonalShopPageState extends State<PersonalShopPage> {
               itemCount: items.length,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // 每列兩個
+                crossAxisCount: 2,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: 0.95,
@@ -200,11 +412,13 @@ class PersonalShopPageState extends State<PersonalShopPage> {
                         Text(
                           item.name,
                           textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         Text('價格：${item.price}'),
                         FilledButton(
-                          onPressed: () => purchaseItem(item),
+                          onPressed: () => _comingSoon('購買功能將於正式版開放'),
                           child: const Text('購買'),
                         ),
                       ],
@@ -215,200 +429,60 @@ class PersonalShopPageState extends State<PersonalShopPage> {
             ),
 
             const SizedBox(height: 24),
-
-            // 扭蛋機
-            Text('扭蛋機', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.toys, size: 32, color: Colors.pinkAccent),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text('每抽 $gachaCost 金幣', style: theme.textTheme.bodyLarge),
-                        ),
-                        IconButton(
-                          tooltip: '說明',
-                          onPressed: _showGachaInfo,
-                          icon: const Icon(Icons.info_outline),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: spinGacha,
-                            child: const Text('單抽'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () {
-                              // 十連：先檢查是否足夠
-                              final totalCost = gachaCost * 10;
-                              if (coinBalance < totalCost) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('金幣不足（需要 $totalCost）')),
-                                );
-                                return;
-                              }
-                              // 扣款並連抽
-                              setState(() {
-                                coinBalance -= totalCost;
-                              });
-                              final results = <GachaPrize>[];
-                              for (int i = 0; i < 10; i++) {
-                                final p = pickPrizeByWeight(prizes, random);
-                                results.add(p);
-                                if (p.type == PrizeType.coin) {
-                                  setState(() {
-                                    coinBalance += p.value;
-                                  });
-                                }
-                              }
-                              _showTenPullResults(results);
-                            },
-                            child: const Text('十連'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  // ======== UI Helpers ========
-
+  // ===== UI Helpers =====
   Widget _topUpButton(int amount, String label) {
     return OutlinedButton(
-      onPressed: () => topUp(amount),
-      child: Text('$label'),
+      onPressed: () => _comingSoon('儲值功能將於正式版開放'),
+      child: Text(label),
     );
-  }
-
-  void _showTopUpSheet() {
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('選擇儲值方案', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            ListTile(
-              leading: const Icon(Icons.flash_on),
-              title: const Text('小額 +100'),
-              trailing: FilledButton(onPressed: () => _closeThenTopUp(100), child: const Text('購買')),
-            ),
-            ListTile(
-              leading: const Icon(Icons.bolt),
-              title: const Text('中額 +300'),
-              trailing: FilledButton(onPressed: () => _closeThenTopUp(300), child: const Text('購買')),
-            ),
-            ListTile(
-              leading: const Icon(Icons.local_fire_department),
-              title: const Text('大額 +1000'),
-              trailing: FilledButton(onPressed: () => _closeThenTopUp(1000), child: const Text('購買')),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _closeThenTopUp(int amount) {
-    Navigator.pop(context);
-    topUp(amount);
   }
 
   void _showGachaInfo() {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('扭蛋機說明'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('每抽 $gachaCost 金幣。'),
-            const SizedBox(height: 8),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('獎池示意：'),
-            ),
-            const SizedBox(height: 6),
-            ...prizes.map((p) => Align(
+      builder:
+          (dialogCtx) => AlertDialog(
+            title: const Text('扭蛋機說明'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text('本轉蛋包含六種寵物。'),
+                SizedBox(height: 6),
+                Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('• ${p.name}（權重：${p.weight}）'),
-                )),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('了解')),
-        ],
-      ),
-    );
-  }
-
-  void _showTenPullResults(List<GachaPrize> results) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('十連結果'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: results.length,
-            separatorBuilder: (_, __) => const Divider(height: 12),
-            itemBuilder: (_, i) {
-              final p = results[i];
-              return Row(
-                children: [
-                  Icon(
-                    p.type == PrizeType.coin ? Icons.monetization_on : Icons.card_giftcard,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(p.name)),
-                ],
-              );
-            },
+                  child: Text('• 單抽花費五金幣、十抽花費五十金幣。'),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('• 抽到重複的寵物會增加親密值。'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('了解'),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('收下')),
-        ],
-      ),
     );
   }
 }
 
-// ======== Models ========
+// ===== Models =====
 
 class ShopItem {
   final int id;
   final String name;
   final int price;
   final IconData icon;
-
-  ShopItem({
+  const ShopItem({
     required this.id,
     required this.name,
     required this.price,
@@ -416,18 +490,23 @@ class ShopItem {
   });
 }
 
-enum PrizeType { coin, item }
+class PetGachaResult {
+  final bool success;
+  final PetModel pet;
+  PetGachaResult({required this.success, required this.pet});
+}
 
-class GachaPrize {
+class PetModel {
+  final int id;
   final String name;
-  final PrizeType type;
-  final int value; // coin：加幣數；item：可先用 1 代表獲得一次
-  final int weight; // 權重（機率比）
-
-  GachaPrize({
+  final String description;
+  final String imageUrl;
+  final bool newPet;
+  PetModel({
+    required this.id,
     required this.name,
-    required this.type,
-    required this.value,
-    required this.weight,
+    required this.description,
+    required this.imageUrl,
+    required this.newPet,
   });
 }
