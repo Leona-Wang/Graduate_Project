@@ -117,6 +117,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     if (resp.statusCode == 200) {
       final map = json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
       final raw = (map['event'] is Map<String, dynamic>) ? map['event'] as Map<String, dynamic> : map;
+      // TODO: 若後端有提供使用者是否已收藏/已報名，這裡可據回傳初始化 isFavorite/joined
       return FullEvent.fromJson(raw);
     } else {
       throw Exception('載入詳情失敗 (${resp.statusCode})');
@@ -150,9 +151,21 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     }
   }
 
-  // ---- 收藏 ----
+  void _showSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  // ---- 收藏（與報名互斥）----
   Future<void> handleFavorite(int eventId) async {
     if (busyFavorite || isFavorite) return;
+
+    // 互斥保護：已報名就不允許收藏
+    if (joined) {
+      _showSnack('你已報名此活動，無法收藏。若要收藏，請先取消報名');
+      return;
+    }
+
     setState(() => busyFavorite = true);
 
     final apiClient = ApiClient();
@@ -163,29 +176,17 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
       final resp = await apiClient.post(url, {}).timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         setState(() => isFavorite = true);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已加入收藏')));
-        }
+        _showSnack('已加入收藏');
       } else if (resp.statusCode == 409) {
         setState(() => isFavorite = true);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('你已收藏過')));
-        }
+        _showSnack('你已收藏過');
       } else if (resp.statusCode == 401) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('請先登入後再試')));
-        }
+        _showSnack('請先登入後再試');
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('加入收藏失敗：${resp.statusCode}｜${_respMsg(resp)}')),
-          );
-        }
+        _showSnack('加入收藏失敗：${resp.statusCode}｜${_respMsg(resp)}');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加入收藏時發生錯誤：$e')));
-      }
+      _showSnack('加入收藏時發生錯誤：$e');
     } finally {
       if (mounted) setState(() => busyFavorite = false);
     }
@@ -203,32 +204,29 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
       final resp = await apiClient.post(url, {}).timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200 || resp.statusCode == 204) {
         setState(() => isFavorite = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已取消收藏')));
-        }
+        _showSnack('已取消收藏');
       } else if (resp.statusCode == 401) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('請先登入後再試')));
-        }
+        _showSnack('請先登入後再試');
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('取消收藏失敗：${resp.statusCode}｜${_respMsg(resp)}')),
-          );
-        }
+        _showSnack('取消收藏失敗：${resp.statusCode}｜${_respMsg(resp)}');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('取消收藏時發生錯誤：$e')));
-      }
+      _showSnack('取消收藏時發生錯誤：$e');
     } finally {
       if (mounted) setState(() => busyFavorite = false);
     }
   }
 
-  // ---- 報名 ----
+  // ---- 報名（與收藏互斥）----
   Future<void> handleJoin(FullEvent event) async {
     if (busyJoin || joined) return;
+
+    // 互斥保護：已收藏就不允許報名
+    if (isFavorite) {
+      _showSnack('你已收藏此活動，無法報名。若要報名，請先取消收藏');
+      return;
+    }
+
     setState(() => busyJoin = true);
 
     final apiClient = ApiClient();
@@ -243,29 +241,17 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
           final base = participantsOverride ?? event.participants;
           participantsOverride = base + 1;
         });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('報名成功！')));
-        }
+        _showSnack('報名成功！');
       } else if (resp.statusCode == 409) {
         setState(() => joined = true);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('你已報名過此活動')));
-        }
+        _showSnack('你已報名過此活動');
       } else if (resp.statusCode == 401) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('請先登入後再試')));
-        }
+        _showSnack('請先登入後再試');
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('報名失敗：${resp.statusCode}｜${_respMsg(resp)}')),
-          );
-        }
+        _showSnack('報名失敗：${resp.statusCode}｜${_respMsg(resp)}');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('報名時發生錯誤：$e')));
-      }
+      _showSnack('報名時發生錯誤：$e');
     } finally {
       if (mounted) setState(() => busyJoin = false);
     }
@@ -288,24 +274,14 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
           final next = base - 1;
           participantsOverride = next < 0 ? 0 : next;
         });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已取消報名')));
-        }
+        _showSnack('已取消報名');
       } else if (resp.statusCode == 401) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('請先登入後再試')));
-        }
+        _showSnack('請先登入後再試');
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('取消報名失敗：${resp.statusCode}｜${_respMsg(resp)}')),
-          );
-        }
+        _showSnack('取消報名失敗：${resp.statusCode}｜${_respMsg(resp)}');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('取消報名時發生錯誤：$e')));
-      }
+      _showSnack('取消報名時發生錯誤：$e');
     } finally {
       if (mounted) setState(() => busyJoin = false);
     }
@@ -333,6 +309,14 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
           final event = snapshot.data!;
           final participantsShown = participantsOverride ?? event.participants;
 
+          // 互斥：當一方成立時，另一方（未切換狀態的主動動作）被禁用
+          final bool joinBlockedByFavorite = !joined && isFavorite; // 未報名且已收藏 → 禁用「我要參加」
+          final bool favoriteBlockedByJoin = !isFavorite && joined; // 未收藏且已報名 → 禁用「加入收藏」
+
+          // 允許使用者在已經 "加入" 的狀態下做「取消」行為
+          final bool joinEnabled = !busyJoin && (joined || !joinBlockedByFavorite);
+          final bool favoriteEnabled = !busyFavorite && (isFavorite || !favoriteBlockedByJoin);
+
           return Padding(
             padding: const EdgeInsets.all(20),
             child: SingleChildScrollView(
@@ -348,15 +332,17 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
                   const SizedBox(height: 16),
 
                   // 主/協辦
-                  if (event.mainOrganizer.isNotEmpty) Text('主辦單位：${event.mainOrganizer}'),
-                  if (event.coOrganizers.isNotEmpty) Text('協辦單位：${event.coOrganizers.join(', ')}'),
+                  if (event.mainOrganizer.isNotEmpty) Text('主辦單位：${event.mainOrganizer}')
+                  else const SizedBox.shrink(),
+                  if (event.coOrganizers.isNotEmpty) Text('協辦單位：${event.coOrganizers.join(', ')}')
+                  else const SizedBox.shrink(),
 
                   const SizedBox(height: 16),
 
                   // 基本資訊
-                  if (event.type.isNotEmpty) Text('活動類型：${event.type}'),
-                  if (event.location.isNotEmpty) Text('活動地區：${event.location}'),
-                  if (event.address.isNotEmpty) Text('地址：${event.address}'),
+                  if (event.type.isNotEmpty) Text('活動類型：${event.type}') else const SizedBox.shrink(),
+                  if (event.location.isNotEmpty) Text('活動地區：${event.location}') else const SizedBox.shrink(),
+                  if (event.address.isNotEmpty) Text('地址：${event.address}') else const SizedBox.shrink(),
 
                   const SizedBox(height: 16),
 
@@ -367,7 +353,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
                   Text('報名截止：${formatDateTime(event.signupDeadline)}'),
 
                   // 狀態與人數
-                  if (event.status.isNotEmpty) Text('狀態：${event.status}'),
+                  if (event.status.isNotEmpty) Text('狀態：${event.status}') else const SizedBox.shrink(),
                   Text('目前報名人數：$participantsShown'),
 
                   const SizedBox(height: 24),
@@ -379,7 +365,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
 
                   const SizedBox(height: 32),
 
-                  // 報名按鈕（切換）
+                  // 報名按鈕（切換 + 互斥）
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -387,27 +373,35 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
                       icon: joined
                           ? const Icon(Icons.cancel)
                           : const Icon(Icons.check_circle_outline),
-                      label: Text(joined ? '取消報名' : '我要參加'),
-                      onPressed: busyJoin
-                          ? null
-                          : () => joined ? handleUnjoin(event) : handleJoin(event),
+                      label: Text(
+                        joined
+                            ? '取消報名'
+                            : (joinBlockedByFavorite ? '已收藏，無法報名' : '我要參加'),
+                      ),
+                      onPressed: joinEnabled
+                          ? () => joined ? handleUnjoin(event) : handleJoin(event)
+                          : null,
                     ),
                   ),
 
                   const SizedBox(height: 12),
 
-                  // 收藏按鈕（切換）
+                  // 收藏按鈕（切換 + 互斥）
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
                       icon: isFavorite ? const Icon(Icons.star) : const Icon(Icons.star_border),
-                      label: Text(isFavorite ? '取消收藏' : '加入收藏'),
-                      onPressed: busyFavorite
-                          ? null
-                          : () => isFavorite
+                      label: Text(
+                        isFavorite
+                            ? '取消收藏'
+                            : (favoriteBlockedByJoin ? '已報名，無法收藏' : '加入收藏'),
+                      ),
+                      onPressed: favoriteEnabled
+                          ? () => isFavorite
                               ? handleUnfavorite(widget.event.id)
-                              : handleFavorite(widget.event.id),
+                              : handleFavorite(widget.event.id)
+                          : null,
                     ),
                   ),
                 ],
