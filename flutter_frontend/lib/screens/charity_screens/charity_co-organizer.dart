@@ -16,17 +16,19 @@ class CharityCoorganizerPage extends StatefulWidget {
 
 class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
     with SingleTickerProviderStateMixin {
+  // ---- Tab 控制 ----
+  late final TabController tabController;
+
+  // ---- Tab1：輸入邀請碼 ----
   final formKey = GlobalKey<FormState>();
   final codeController = TextEditingController();
   final codeFocusNode = FocusNode();
-
-  // 審核分頁輸入
-  final _eventNameController = TextEditingController();
-  String? _eventName; // charityEventName
-
-  late final TabController tabController;
   bool isSubmitting = false;
   String code = '';
+
+  // ---- Tab2：審核清單 ----
+  final _eventNameController = TextEditingController();
+  String? _eventName; // charityEventName
 
   @override
   void initState() {
@@ -49,8 +51,10 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
     super.dispose();
   }
 
-  // ================== Tab1：輸入協辦邀請碼 ==================
-  Future<void> submit() async {
+  // ===============================================================
+  // Tab1：輸入協辦邀請碼（POST）
+  // ===============================================================
+  Future<void> _submitInviteCode() async {
     if (!(formKey.currentState?.validate() ?? false)) return;
     codeFocusNode.unfocus();
     setState(() => isSubmitting = true);
@@ -59,7 +63,7 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
       final api = ApiClient();
       await api.init();
 
-      final body = {'inviteCode': code};
+      final body = {'inviteCode': code.trim()};
       final resp = await api
           .post(ApiPath.coOrganizeEvent, body)
           .timeout(const Duration(seconds: 10));
@@ -70,52 +74,58 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
       } catch (_) {}
 
       final msg = data?['message']?.toString();
+      final ok = data?['success'] == true ||
+          data?['ok'] == true ||
+          data?['status']?.toString().toLowerCase() == 'ok';
 
       if (!mounted) return;
-      if (resp.statusCode == 200) {
-        final ok = data?['success'] == true ||
-            data?['ok'] == true ||
-            data?['status']?.toString().toLowerCase() == 'ok';
-        if (ok) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('邀請已送出，請等待主辦方審核')),
-          );
-          codeController.clear();
-          setState(() => code = '');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(msg ?? '處理失敗，請稍後再試')),
-          );
-        }
+
+      if (resp.statusCode == 200 && ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('邀請已送出，請等待主辦方審核')),
+        );
+        codeController.clear();
+        setState(() => code = '');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('送出失敗（${resp.statusCode}）${msg != null ? "：$msg" : ""}')),
+          SnackBar(
+            content: Text(
+              '送出失敗（${resp.statusCode}）${msg != null ? "：$msg" : ""}',
+            ),
+          ),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('送出失敗：$e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('送出失敗：$e')));
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }
   }
 
-  // ================== Tab2：讀取協辦申請清單（GET + charityEventName） ==================
+  // ===============================================================
+  // Tab2：讀取協辦申請清單（GET with charityEventName）
+  // 未輸入活動名稱：不丟 Exception，直接回傳空清單
+  // ===============================================================
   Future<List<Map<String, dynamic>>> _fetchApplications() async {
     final name = (_eventName ?? '').trim();
-    if (name.isEmpty) {
-      throw Exception('請先輸入「活動名稱」再按「載入申請」。');
-    }
+    if (name.isEmpty) return <Map<String, dynamic>>[];
 
     final api = ApiClient();
     await api.init();
 
-    final url =
-        '${ApiPath.getCoOrganizeApplications}?${Uri.encodeQueryComponent('charityEventName')}=${Uri.encodeQueryComponent(name)}';
+    final uri = Uri.parse(ApiPath.getCoOrganizeApplications).replace(
+      queryParameters: {
+        'charityEventName': name,
+      },
+    );
 
-    final resp = await api.get(url).timeout(const Duration(seconds: 10));
+    final resp =
+        await api.get(uri.toString()).timeout(const Duration(seconds: 10));
 
     if (resp.statusCode != 200) {
+      // 讓 FutureBuilder 進入 hasError，但畫面會顯示友善訊息（不曝露 Exception 內容）
       String backendMsg = '';
       try {
         final d = jsonDecode(resp.body);
@@ -130,17 +140,21 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
     try {
       decoded = jsonDecode(resp.body);
     } catch (_) {
-      throw Exception('無法解析後端回傳：${resp.body}');
+      throw Exception('無法解析後端回傳');
     }
 
-    // 後端：{"success": true, "applications": [...]}
+    // 後端預期：{"success": true, "applications": [...]}
     final list = decoded is Map ? (decoded['applications'] ?? []) : decoded;
     return List<Map<String, dynamic>>.from(
       (list as List).map((e) => Map<String, dynamic>.from(e as Map)),
     );
   }
 
-  // ================== 審核（通過/拒絕） ==================
+  // ===============================================================
+  // 審核（通過/拒絕）
+  // 規格：{'charityEventName':(必填),'coOrganizerName':(必填),'approve':true/false}
+  // 同時附帶 coOrganizerEmail（非必填，輔助辨識）
+  // ===============================================================
   Future<void> _verifyApplication({
     required String coOrganizerName,
     required String coOrganizerEmail,
@@ -153,7 +167,6 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
       return;
     }
 
-    // 名稱可能沒有，就用 email 頂上避免空值
     final safeName = coOrganizerName.trim().isNotEmpty
         ? coOrganizerName.trim()
         : coOrganizerEmail.trim();
@@ -169,21 +182,11 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
       final api = ApiClient();
       await api.init();
 
-      // 同步帶多別名，讓後端不管驗哪個 key 都能辨識
       final body = {
-        // 活動
         'charityEventName': eventName,
-        'charity_event_name': eventName,
-        'eventName': eventName,
-        'event_name': eventName,
-
-        // 協辦者（名稱 & Email）
         'coOrganizerName': safeName,
-        'co_organizer_name': safeName,
-        'coOrganizerEmail': safeEmail,
-        'co_organizer_email': safeEmail,
-
         'approve': approve,
+        if (safeEmail.isNotEmpty) 'coOrganizerEmail': safeEmail,
       };
 
       final resp = await api
@@ -220,182 +223,224 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
     setState(() => _eventName = _eventNameController.text.trim());
   }
 
+  // ===============================================================
+  // UI
+  // ===============================================================
   @override
   Widget build(BuildContext context) {
-    final canSubmit = code.length == 6 && !isSubmitting;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('協辦控制面板'),
         bottom: TabBar(
           controller: tabController,
-          tabs: const [Tab(text: '協辦邀請碼輸入'), Tab(text: '協辦審核')],
+          tabs: const [
+            Tab(text: '協辦邀請碼輸入'),
+            Tab(text: '協辦審核'),
+          ],
         ),
       ),
       body: TabBarView(
         controller: tabController,
         children: [
-          // ---------- Tab1 ----------
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 24),
-                    Text('請輸入 6 位數邀請碼',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: codeController,
-                      focusNode: codeFocusNode,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.done,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(6),
-                      ],
-                      decoration: const InputDecoration(
-                        hintText: '例如：123456',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (v) => setState(() => code = v.trim()),
-                      validator: (v) {
-                        final s = (v ?? '').trim();
-                        if (s.length != 6) return '邀請碼必須為 6 位數字！';
-                        return null;
-                      },
-                      onFieldSubmitted: (_) {
-                        if (canSubmit) submit();
-                      },
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: canSubmit ? submit : null,
-                        child: isSubmitting
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator())
-                            : const Text('送出'),
-                      ),
-                    ),
-                  ],
+          buildInviteTab(),
+          buildReviewTab(),
+        ],
+      ),
+    );
+  }
+
+  // ---------- Tab1：輸入邀請碼 ----------
+  Widget buildInviteTab() {
+    final canSubmit = code.length == 6 && !isSubmitting;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 24),
+              Text('請輸入 6 位數邀請碼',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: codeController,
+                focusNode: codeFocusNode,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
+                decoration: const InputDecoration(
+                  hintText: '例如：123456',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (v) => setState(() => code = v.trim()),
+                validator: (v) {
+                  final s = (v ?? '').trim();
+                  if (s.length != 6) return '邀請碼必須為 6 位數字！';
+                  return null;
+                },
+                onFieldSubmitted: (_) {
+                  if (canSubmit) _submitInviteCode();
+                },
+              ),
+              const Spacer(),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: canSubmit ? _submitInviteCode : null,
+                  child: isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(),
+                        )
+                      : const Text('送出'),
                 ),
               ),
-            ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
 
-          // ---------- Tab2 ----------
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _eventNameController,
-                          decoration: const InputDecoration(
-                            hintText: '輸入活動名稱（charityEventName）',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          onSubmitted: (_) {
-                            _applyEventName();
-                            setState(() {}); // 觸發 FutureBuilder
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          _applyEventName();
-                          setState(() {}); // 觸發 FutureBuilder
-                        },
-                        child: const Text('載入申請'),
-                      ),
-                    ],
-                  ),
+  // ---------- Tab2：協辦審核 ----------
+  Widget buildReviewTab() {
+    final shouldLoad = (_eventName?.trim().isNotEmpty ?? false);
+
+    return SafeArea(
+      child: Column(
+        children: [
+          buildEventNameRow(),
+          const SizedBox(height: 8),
+
+          // 尚未輸入活動名稱：只顯示提示，不打 API、不顯示錯誤文案
+          if (!shouldLoad)
+            Expanded(
+              child: Center(
+                child: Text(
+                  '請先輸入「活動名稱」並點「載入申請」。',
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: FutureBuilder<List<Map<String, dynamic>>>(
-                    future: _fetchApplications(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                            child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return Center(
-                            child: Text('讀取失敗：${snapshot.error}'));
-                      }
+              ),
+            )
+          else
+            Expanded(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _fetchApplications(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                      final apps = snapshot.data ?? [];
-                      if (apps.isEmpty) {
-                        return const Center(child: Text('目前沒有待審核的協辦申請'));
-                      }
+                  // 讀取失敗 → 顯示友善訊息（不露 Exception）
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('讀取失敗，請稍後再試。'),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: () => setState(() {}),
+                            child: const Text('重試'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
-                      return RefreshIndicator(
-                        onRefresh: () async => setState(() {}),
-                        child: ListView.separated(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(16),
-                          itemCount: apps.length,
-                          separatorBuilder: (_, __) =>
-                              const Divider(height: 1),
-                          itemBuilder: (context, index) {
-                            final app = apps[index];
+                  final apps = snapshot.data ?? [];
+                  if (apps.isEmpty) {
+                    return const Center(child: Text('目前沒有待審核的協辦申請'));
+                  }
 
-                            // 後端欄位（做 fallback）
-                            final coName = (app['coOrganizerName'] ??
-                                    app['name'] ??
-                                    '')
+                  return RefreshIndicator(
+                    onRefresh: () async => setState(() {}),
+                    child: ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
+                      itemCount: apps.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final app = apps[index];
+
+                        // 後端欄位（做 fallback）
+                        final coName =
+                            (app['coOrganizerName'] ?? app['name'] ?? '')
                                 .toString()
                                 .trim();
-                            final coEmail =
-                                (app['coOrganizerEmail'] ?? app['email'] ?? '')
-                                    .toString()
-                                    .trim();
+                        final coEmail =
+                            (app['coOrganizerEmail'] ?? app['email'] ?? '')
+                                .toString()
+                                .trim();
 
-                            final titleText = coName.isNotEmpty
-                                ? coName
-                                : (coEmail.isNotEmpty ? coEmail : '未知');
-                            final subtitleText =
-                                coEmail.isNotEmpty ? coEmail : '—';
+                        final titleText = coName.isNotEmpty
+                            ? coName
+                            : (coEmail.isNotEmpty ? coEmail : '未知');
+                        final subtitleText = coEmail.isNotEmpty ? coEmail : '—';
 
-                            return _VerifyTile(
-                              title: titleText,
-                              subtitle: subtitleText,
-                              onApprove: () async {
-                                await _verifyApplication(
-                                  coOrganizerName: coName,
-                                  coOrganizerEmail: coEmail,
-                                  approve: true,
-                                );
-                              },
-                              onReject: () async {
-                                await _verifyApplication(
-                                  coOrganizerName: coName,
-                                  coOrganizerEmail: coEmail,
-                                  approve: false,
-                                );
-                              },
+                        return _VerifyTile(
+                          title: titleText,
+                          subtitle: subtitleText,
+                          onApprove: () async {
+                            await _verifyApplication(
+                              coOrganizerName: coName,
+                              coOrganizerEmail: coEmail,
+                              approve: true,
                             );
                           },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                          onReject: () async {
+                            await _verifyApplication(
+                              coOrganizerName: coName,
+                              coOrganizerEmail: coEmail,
+                              approve: false,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
+        ],
+      ),
+    );
+  }
+
+  // 活動名稱輸入列
+  Widget buildEventNameRow() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _eventNameController,
+              decoration: const InputDecoration(
+                hintText: '請輸入活動名稱',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              onSubmitted: (_) {
+                _applyEventName();
+                setState(() {}); // 觸發 FutureBuilder
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: () {
+              _applyEventName();
+              setState(() {}); // 觸發 FutureBuilder
+            },
+            child: const Text('載入申請'),
           ),
         ],
       ),
