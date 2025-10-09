@@ -79,13 +79,12 @@ def gachaPet(request):
         if not itemBox or itemBox.quantity < 5:
             return JsonResponse({'success': False, 'message': '金幣不足'}, status=400)
 
-        # 取得寵物池（假設只有6隻）
-        pets = list(Pet.objects.all()[:6])
-        if len(pets) < 6:
-            return JsonResponse({'success': False, 'message': '寵物池不足6隻'}, status=400)
-
-        # 設定機率（假設每隻寵物機率都一樣）
-        weights = [1] * len(pets)
+        # 取得可抽寵物池（所有寵物）
+        pets = list(Pet.objects.all())
+        weights = [max(0.0, p.probability or 0.0) for p in pets]
+        total = sum(weights)
+        if total <= 0:
+            weights = [1] * len(pets)
         chosenPet = random.choices(pets, weights=weights, k=1)[0]
 
         # 檢查玩家是否已擁有這隻寵物

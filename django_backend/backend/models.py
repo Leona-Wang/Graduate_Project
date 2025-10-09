@@ -185,6 +185,7 @@ class Pet(models.Model):
     description = models.TextField(null=True, blank=True)
     fullPoint = models.IntegerField() #最多累積的親密點數
     itemImage = models.ImageField(upload_to='pet/', null=True, blank=True)
+    probability = models.FloatField(default=1.0)  # 抽中機率權重
 
 
 class PersonalPet(models.Model):
