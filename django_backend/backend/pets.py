@@ -71,7 +71,7 @@ def gachaPet(request):
             return JsonResponse({'success': False, 'message': '查無玩家資訊'}, status=404)
 
         # 檢查金幣是否足夠
-        cashItem = Item.objects.filter(itemAttribute=settings.ITEM_CASH).first()
+        cashItem = Item.objects.filter(itemType__type=settings.ITEM_CASH).first()
         if not cashItem:
             return JsonResponse({'success': False, 'message': '查無金幣道具'}, status=404)
 
@@ -85,7 +85,7 @@ def gachaPet(request):
             return JsonResponse({'success': False, 'message': '寵物池不足6隻'}, status=400)
 
         # 設定機率（假設每隻寵物機率都一樣）
-        weights = [1] * 6 
+        weights = [1] * len(pets)
         chosenPet = random.choices(pets, weights=weights, k=1)[0]
 
         # 檢查玩家是否已擁有這隻寵物
