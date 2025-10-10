@@ -632,11 +632,8 @@ class GachaPet(APIView):
 class UserCharityEvents(APIView):
     """拿個人資料的活動清單"""
 
-    permission_classes = [AllowAny]
-
     def get(self, request, *args, **kwargs):
-        user = User.objects.get(id=4)
-        #user = request.user
+        user = request.user
         eventStatus = request.query_params.get('eventStatus', None)
         joinType = request.query_params.get('joinType', None)
         filters = Q(personalUser=user)
