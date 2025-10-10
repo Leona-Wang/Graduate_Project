@@ -215,4 +215,30 @@ class ApiPath {
   //   }
   // }
   static String get gachaPet => '${BaseConfig.baseUrl}/pets/gacha/';
+
+  //個人活動清單(用 GET )，回傳長這樣，
+  //如果想做連過去的詳情用 charityEvent 拿到的 id 塞進 charityEventDetail 的 id 就好
+  //{
+  //  "events": [
+  //      {
+  //          "id": 2,
+  //          "eventName": "789",
+  //          "joinType": "Join",
+  //          "personalUser": 4,
+  //          "charityEvent": 3
+  //      },
+  //  ]
+  //}
+  static String get userCharityEventsUpcomingJoin =>
+      '${BaseConfig.baseUrl}person/event_list/?joinType=Join&eventStatus=upcoming';
+  static String get userCharityEventsUpcomingSave =>
+      '${BaseConfig.baseUrl}person/event_list/?joinType=Save&eventStatus=upcoming';
+  static String get userCharityEventsFinishedJoin =>
+      '${BaseConfig.baseUrl}person/event_list/?joinType=Join&eventStatus=finished';
+  static String get userCharityEventsFinishedSave =>
+      '${BaseConfig.baseUrl}person/event_list/?joinType=Save&eventStatus=finished';
+  static String get userCharityEventsDeletedJoin =>
+      '${BaseConfig.baseUrl}person/event_list/?joinType=Join&eventStatus=deleted';
+  static String get userCharityEventsDeletedSave =>
+      '${BaseConfig.baseUrl}person/event_list/?joinType=Save&eventStatus=deleted';
 }

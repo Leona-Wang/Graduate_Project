@@ -25,3 +25,11 @@ class CharityEventSerializer(serializers.ModelSerializer):
     def get_statusDisplay(self, obj):
         status = obj.status or 'unknown'
         return settings.CHARITY_EVENT_STATUS_DISPLAY.get(status, '未知')
+
+
+class EventParticipantSerializer(serializers.ModelSerializer):
+    eventName = serializers.CharField(source='charityEvent.name', read_only=True)
+
+    class Meta:
+        model = EventParticipant
+        fields = '__all__'

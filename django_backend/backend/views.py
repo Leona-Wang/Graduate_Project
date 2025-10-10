@@ -1,7 +1,7 @@
 import os
 from django.http import JsonResponse
 from rest_framework.response import Response
-from .serializers import CharityEventSerializer
+from .serializers import CharityEventSerializer, EventParticipantSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -626,3 +626,29 @@ class GachaPet(APIView):
 
     def post(self, request, *args, **kwargs):
         return gachaPet(request)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UserCharityEvents(APIView):
+    """拿個人資料的活動清單"""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        user = User.objects.get(id=4)
+        #user = request.user
+        eventStatus = request.query_params.get('eventStatus', None)
+        joinType = request.query_params.get('joinType', None)
+        filters = Q(personalUser=user)
+
+        if eventStatus:
+            filters &= Q(charityEvent__status=eventStatus)
+        if joinType:
+            filters &= Q(joinType=joinType)
+
+        events = EventParticipant.objects.filter(filters).distinct().order_by('-charityEvent__startTime')
+        eventList = EventParticipantSerializer(events, many=True)
+
+        return Response({
+            'events': eventList.data,
+        })

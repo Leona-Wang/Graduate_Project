@@ -55,4 +55,5 @@ urlpatterns = [
     path('pets/all/', views.GetAllPets.as_view(), name="getAllPets"),
     path('pets/<int:petId>/', views.PetDetail.as_view(), name="petDetail"),
     path('pets/gacha/', views.GachaPet.as_view(), name="gachaPet"),
+    path('person/event_list/', views.UserCharityEvents.as_view(), name="userCharityEvents"),
 ]
