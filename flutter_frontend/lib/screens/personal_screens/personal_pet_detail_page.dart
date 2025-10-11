@@ -654,10 +654,10 @@ class _PetProgressBarState extends State<PetProgressBar>
 
   @override
   Widget build(BuildContext context) {
-    /*final displayText =
+    final displayText =
         (_animation.value >= 1.0)
             ? "已達最大親密度"
-            : "${(_animation.value * 100).toInt()}%";*/
+            : "${(_animation.value * 100).toInt()}%";
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -668,13 +668,13 @@ class _PetProgressBarState extends State<PetProgressBar>
           color: Colors.amber,
           borderRadius: BorderRadius.circular(8),
         ),
-        /*Text(
+        Text(
           displayText,
           style: const TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
           ),
-        ),*/
+        ),
       ],
     );
   }

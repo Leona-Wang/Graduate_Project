@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'personal_pet_detail_page.dart';
 import '../../api_client.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
+
 import 'package:flutter_frontend/config.dart';
 
 class _Pet {
@@ -43,6 +45,8 @@ class _PersonalPetPageState extends State<PersonalPetPage> {
     super.initState();
     _future = _fetchPets();
   }
+
+  void backToHome() => PersonalHomeTab.of(context)?.switchTab(0);
 
   Future<List<_Pet>> _fetchPets() async {
     setState(() => isLoading = true);
@@ -86,52 +90,71 @@ class _PersonalPetPageState extends State<PersonalPetPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('我的寵物')),
-      body: FutureBuilder<List<_Pet>>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done || isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snap.hasError) {
-            return Center(child: Text('載入失敗：${snap.error}'));
-          }
-
-          final pets = snap.data ?? [];
-          if (pets.isEmpty) {
-            return const Center(child: Text('目前沒有寵物資料'));
-          }
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(12),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 3 / 4,
-            ),
-            itemCount: pets.length,
-            itemBuilder: (_, i) {
-              final p = pets[i];
-              return _PetCard(
-                pet: p,
-                onTap:
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (_) => PersonalPetDetailPage(
-                              id: p.id,
-                              name: p.name,
-                              imageUrl: p.imageUrl,
-                              owned: p.owned,
-                            ),
-                      ),
-                    ),
-              );
-            },
-          );
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
+            onPressed: backToHome,
+            tooltip: '返回主頁',
+          ),
+        ),
+        title: const Text('我的寵物'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final pets = await _fetchPets();
+          setState(() {
+            _future = Future.value(pets);
+          });
         },
+        child: FutureBuilder<List<_Pet>>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done || isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snap.hasError) {
+              return Center(child: Text('載入失敗：${snap.error}'));
+            }
+
+            final pets = snap.data ?? [];
+            if (pets.isEmpty) {
+              return const Center(child: Text('目前沒有寵物資料'));
+            }
+
+            return GridView.builder(
+              padding: const EdgeInsets.all(12),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 3 / 4,
+              ),
+              itemCount: pets.length,
+              itemBuilder: (_, i) {
+                final p = pets[i];
+                return _PetCard(
+                  pet: p,
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => PersonalPetDetailPage(
+                                id: p.id,
+                                name: p.name,
+                                imageUrl: p.imageUrl,
+                                owned: p.owned,
+                              ),
+                        ),
+                      ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

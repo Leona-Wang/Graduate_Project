@@ -61,6 +61,9 @@ dependencies:
   #marquee
   marquee: ^2.2.3
 
+  #animation
+  animate_do: ^3.3.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

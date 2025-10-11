@@ -5,23 +5,21 @@ import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/api_client.dart';
 import 'package:flutter_frontend/base_config.dart';
 
+//import 'dart:math';
+import 'package:animate_do/animate_do.dart';
+
 class PersonalShopPage extends StatefulWidget {
   const PersonalShopPage({super.key});
 
   @override
-  State<PersonalShopPage> createState() => PersonalShopPageState();
+  State<PersonalShopPage> createState() => _PersonalShopPageState();
 }
 
-class PersonalShopPageState extends State<PersonalShopPage> {
-  // 之後餘額可改為向後端查詢；目前僅 UI 顯示，不參與扣款（由後端主導）
+class _PersonalShopPageState extends State<PersonalShopPage> {
   int coinBalance = 10000;
-
-  // 後端規格：每抽 5 金幣（僅顯示用）
   static const int gachaCost = 5;
-
   bool isSpinning = false;
 
-  // 假資料（購買/儲值都先「敬請期待」）
   final List<ShopItem> items = const [
     ShopItem(id: 1, name: 'A商品', price: 80, icon: Icons.backpack),
     ShopItem(id: 2, name: 'B商品', price: 120, icon: Icons.crop_square),
@@ -29,21 +27,19 @@ class PersonalShopPageState extends State<PersonalShopPage> {
     ShopItem(id: 4, name: 'D商品', price: 100, icon: Icons.expand),
   ];
 
-  void backToHome() {
-    PersonalHomeTab.of(context)?.switchTab(0);
-  }
+  void backToHome() => PersonalHomeTab.of(context)?.switchTab(0);
 
-  // ===== 公用：敬請期待 =====
-  void _comingSoon([String? feature]) {
-    showDialog(
+  // ===== 通用對話框 =====
+  Future<void> _showDialog(String title, Widget content) {
+    return showDialog(
       context: context,
       builder:
-          (dialogCtx) => AlertDialog(
-            title: const Text('敬請期待'),
-            content: Text(feature ?? '功能即將開放，請稍候～'),
+          (ctx) => AlertDialog(
+            title: Text(title),
+            content: content,
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
+                onPressed: () => Navigator.of(ctx).pop(),
                 child: const Text('了解'),
               ),
             ],
@@ -51,53 +47,59 @@ class PersonalShopPageState extends State<PersonalShopPage> {
     );
   }
 
-  // ===== API：寵物扭蛋（依你提供的介面）=====
-  // POST ${BaseConfig.baseUrl}/pets/gacha/
+  void _comingSoon([String? feature]) {
+    _showDialog('敬請期待', Text(feature ?? '功能即將開放，請稍候～'));
+  }
+
+  void _showGachaInfo() {
+    _showDialog(
+      '扭蛋機說明',
+      const Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('本轉蛋包含六種寵物。'),
+          SizedBox(height: 6),
+          Text('• 單抽花費五金幣、十抽花費五十金幣。'),
+          Text('• 抽到重複的寵物會增加親密值。'),
+        ],
+      ),
+    );
+  }
+
+  // ===== API：寵物扭蛋 =====
   Future<PetGachaResult> _gachaOnce() async {
     final apiClient = ApiClient();
     await apiClient.init();
-
-    final url = ApiPath.gachaPet; // e.g. ${BaseConfig.baseUrl}/pets/gacha/
     final resp = await apiClient.post(ApiPath.gachaPet, {});
 
-    // 把錯誤內容 decode 出來，方便debug
-    Map<String, dynamic>? errJson;
+    final body = resp.body;
+    Map<String, dynamic>? json;
     try {
-      errJson = jsonDecode(resp.body);
+      json = jsonDecode(body);
     } catch (_) {}
 
     if (resp.statusCode == 200 || resp.statusCode == 201) {
-      final Map<String, dynamic> data = jsonDecode(resp.body);
+      final data = json ?? {};
       if (data['success'] == true && data['pet'] != null) {
         final pet = data['pet'] as Map<String, dynamic>;
-        return PetGachaResult(
-          success: true,
-          pet: PetModel(
-            id: pet['id'] ?? 0,
-            name: (pet['name'] ?? '').toString(),
-            description: (pet['description'] ?? '').toString(),
-            imageUrl: (pet['imageUrl'] ?? '').toString(),
-            newPet: pet['newPet'] == true,
-          ),
-        );
+        return PetGachaResult(success: true, pet: PetModel.fromJson(pet));
       }
-      throw Exception('回傳格式不正確：${resp.body}');
-    } else if (resp.statusCode == 401) {
-      // 常見：未帶登入
-      throw Exception(
-        '未授權（401）。請確認已登入並帶到 Authorization header。伺服器回應：${resp.body}',
-      );
-    } else if (resp.statusCode == 400) {
-      // 常見：Content-Type 錯、或缺欄位、或餘額不足等業務錯
-      final msg =
-          (errJson?['detail'] ?? errJson?['message'] ?? resp.body).toString();
-      throw Exception('扭蛋失敗（400）：$msg');
-    } else {
-      throw Exception('扭蛋失敗（${resp.statusCode}）：${resp.body}');
+      throw Exception('回傳格式不正確：$body');
+    }
+
+    final msg = (json?['detail'] ?? json?['message'] ?? body).toString();
+    switch (resp.statusCode) {
+      case 400:
+        throw Exception('扭蛋失敗（400）：$msg');
+      case 401:
+        throw Exception('未授權（401）：請確認登入狀態。');
+      default:
+        throw Exception('扭蛋失敗（${resp.statusCode}）：$msg');
     }
   }
 
-  // ===== 抽卡流程（前端）=====
+  // ===== 抽卡流程 =====
   Future<void> spinGacha() async {
     if (isSpinning) return;
     setState(() => isSpinning = true);
@@ -107,10 +109,9 @@ class PersonalShopPageState extends State<PersonalShopPage> {
       if (!mounted) return;
       await _showSingleResult(result);
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())), // 直接顯示 Exception 內容
-      );
+      _showSnack(e.toString());
+    } finally {
+      if (mounted) setState(() => isSpinning = false);
     }
   }
 
@@ -119,139 +120,208 @@ class PersonalShopPageState extends State<PersonalShopPage> {
     setState(() => isSpinning = true);
 
     final results = <PetGachaResult>[];
-    try {
-      for (int i = 0; i < 10; i++) {
-        try {
-          final r = await _gachaOnce();
-          results.add(r);
-        } catch (e) {
-          // 單抽錯誤就略過，但在彙總結果時可顯示「失敗」項（這裡簡化為不顯示）
-          debugPrint('十連第 ${i + 1} 抽失敗：$e');
-        }
+    for (int i = 0; i < 10; i++) {
+      try {
+        results.add(await _gachaOnce());
+      } catch (e) {
+        debugPrint('十連第 ${i + 1} 抽失敗：$e');
       }
-      if (!mounted) return;
+    }
+
+    if (mounted) {
       await _showTenResults(results);
-    } finally {
-      if (mounted) setState(() => isSpinning = false);
+      setState(() => isSpinning = false);
     }
   }
 
-  // ===== 對話框（使用內層 context）=====
-  Future<void> _showSingleResult(PetGachaResult r) {
+  // ===== 結果顯示 =====
+  Future<void> _showSingleResult(PetGachaResult r) async {
     final img = _fullMediaUrl(r.pet.imageUrl);
-    return showDialog(
+
+    await showDialog(
       context: context,
+      barrierDismissible: false,
       builder:
-          (dialogCtx) => AlertDialog(
-            title: const Text('扭蛋結果'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (img != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      img,
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
+          (context) => ZoomIn(
+            duration: const Duration(milliseconds: 500),
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text(
+                '🎉 新夥伴！',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (img != null)
+                    BounceInDown(
+                      duration: const Duration(milliseconds: 800),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          img,
+                          width: 140,
+                          height: 140,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  Text(
+                    r.pet.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
                     ),
                   ),
-                const SizedBox(height: 12),
-                Text(
-                  r.pet.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 6),
-                Text(r.pet.description.isEmpty ? '—' : r.pet.description),
-                const SizedBox(height: 8),
-                if (r.pet.newPet)
-                  const Chip(label: Text('新獲得！'))
-                else
-                  const Chip(label: Text('已有寵物（親密度 +10，若已滿不再增加）')),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text('確定'),
+                  const SizedBox(height: 6),
+                  Text(
+                    r.pet.description.isEmpty ? '—' : r.pet.description,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 10),
+                  Chip(
+                    label: Text(r.pet.newPet ? '新獲得！' : '已有寵物（親密度 +10）'),
+                    backgroundColor:
+                        r.pet.newPet ? Colors.green[100] : Colors.grey[200],
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber[400],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('確認'),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
     );
   }
 
-  Future<void> _showTenResults(List<PetGachaResult> results) {
-    return showDialog(
+  Future<void> _showTenResults(List<PetGachaResult> results) async {
+    await showDialog(
       context: context,
+      barrierDismissible: false,
       builder:
-          (dialogCtx) => AlertDialog(
-            title: const Text('十連結果'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: results.length,
-                separatorBuilder: (_, __) => const Divider(height: 12),
-                itemBuilder: (_, i) {
-                  final r = results[i];
-                  final img = _fullMediaUrl(r.pet.imageUrl);
-                  return Row(
-                    children: [
-                      if (img != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.network(
-                            img,
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      else
-                        const Icon(Icons.pets),
-                      const SizedBox(width: 8),
-                      Expanded(
+          (context) => FadeIn(
+            duration: const Duration(milliseconds: 400),
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text(
+                '🌟 十連結果',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  itemCount: results.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 0.9,
+                  ),
+                  itemBuilder: (_, i) {
+                    final r = results[i];
+                    final img = _fullMediaUrl(r.pet.imageUrl);
+                    return ZoomIn(
+                      duration: Duration(milliseconds: 100 * i + 200),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.amber[50],
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.amber.withOpacity(0.3),
+                              blurRadius: 6,
+                              offset: const Offset(2, 3),
+                            ),
+                          ],
+                        ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            if (img != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  img,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            const SizedBox(height: 6),
                             Text(
                               r.pet.name,
+                              textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            if (!r.pet.newPet)
-                              const Text(
-                                '已有寵物（親密度 +10）',
-                                style: TextStyle(fontSize: 12),
+                            if (r.pet.newPet)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 4),
+                                child: Chip(
+                                  label: Text('新'),
+                                  backgroundColor: Colors.greenAccent,
+                                  visualDensity: VisualDensity.compact,
+                                ),
                               ),
                           ],
                         ),
                       ),
-                      if (r.pet.newPet) const Chip(label: Text('新')),
-                    ],
-                  );
-                },
+                    );
+                  },
+                ),
               ),
+              actions: [
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber[400],
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('確認'),
+                  ),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text('收下'),
-              ),
-            ],
           ),
     );
   }
 
-  // 後端若回 /media/...，這裡補完整網址
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   String? _fullMediaUrl(String? path) {
     if (path == null || path.isEmpty) return null;
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('http')) return path;
     return '${BaseConfig.baseUrl}$path';
   }
 
+  // ===== UI =====
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -260,14 +330,11 @@ class PersonalShopPageState extends State<PersonalShopPage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.amberAccent,
-            child: IconButton(
-              onPressed: backToHome,
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
-              tooltip: '返回主頁',
-            ),
+          padding: const EdgeInsets.only(left: 8),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
+            onPressed: backToHome,
+            tooltip: '返回主頁',
           ),
         ),
         title: const Text('商城'),
@@ -276,207 +343,216 @@ class PersonalShopPageState extends State<PersonalShopPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // 金幣資訊（暫時顯示本地數字，後端接好再同步）
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.monetization_on,
-                      size: 32,
-                      color: Colors.amber,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        '持有金幣：$coinBalance',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      onPressed: () => _comingSoon('儲值功能將於正式版開放'),
-                      icon: const Icon(Icons.add),
-                      label: const Text('儲值'),
-                    ),
-                  ],
-                ),
+            _buildCardSection(
+              icon: Icons.monetization_on,
+              iconColor: Colors.amber,
+              title: '持有金幣：$coinBalance',
+              trailing: FilledButton.icon(
+                onPressed: () => _comingSoon('儲值功能將於正式版開放'),
+                icon: const Icon(Icons.add),
+                label: const Text('儲值'),
               ),
             ),
-
             const SizedBox(height: 16),
 
-            // 扭蛋機（往上放）
-            Text('扭蛋機', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.toys,
-                          size: 32,
-                          color: Colors.pinkAccent,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            '每抽 $gachaCost 金幣',
-                            style: theme.textTheme.bodyLarge,
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: '說明',
-                          onPressed: _showGachaInfo,
-                          icon: const Icon(Icons.info_outline),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: isSpinning ? null : spinGacha,
-                            child:
-                                isSpinning
-                                    ? const Text('抽卡中…')
-                                    : const Text('單抽'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: isSpinning ? null : spinGachaTen,
-                            child:
-                                isSpinning
-                                    ? const Text('抽卡中…')
-                                    : const Text('十連'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
+            _buildGachaSection(theme),
             const SizedBox(height: 24),
 
-            // 克金（儲值）快捷區 → 敬請期待
-            Text('克金區域', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(child: _topUpButton(100, '小額 +100')),
-                const SizedBox(width: 8),
-                Expanded(child: _topUpButton(300, '中額 +300')),
-                const SizedBox(width: 8),
-                Expanded(child: _topUpButton(1000, '大額 +1000')),
-              ],
-            ),
-
+            _buildTopUpSection(),
             const SizedBox(height: 24),
 
-            // 商品清單 → 敬請期待
-            Text('商品清單', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            GridView.builder(
-              shrinkWrap: true,
-              itemCount: items.length,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.95,
-              ),
-              itemBuilder: (_, i) {
-                final item = items[i];
-                return Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(item.icon, size: 48),
-                        Text(
-                          item.name,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text('價格：${item.price}'),
-                        FilledButton(
-                          onPressed: () => _comingSoon('購買功能將於正式版開放'),
-                          child: const Text('購買'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 24),
+            _buildShopSection(theme),
           ],
         ),
       ),
     );
   }
 
-  // ===== UI Helpers =====
-  Widget _topUpButton(int amount, String label) {
-    return OutlinedButton(
-      onPressed: () => _comingSoon('儲值功能將於正式版開放'),
-      child: Text(label),
+  // ===== 各區塊 =====
+  Widget _buildCardSection({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    Widget? trailing,
+  }) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(icon, size: 32, color: iconColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            if (trailing != null) trailing,
+          ],
+        ),
+      ),
     );
   }
 
-  void _showGachaInfo() {
-    showDialog(
-      context: context,
-      builder:
-          (dialogCtx) => AlertDialog(
-            title: const Text('扭蛋機說明'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text('本轉蛋包含六種寵物。'),
-                SizedBox(height: 6),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('• 單抽花費五金幣、十抽花費五十金幣。'),
+  Widget _buildGachaSection(ThemeData theme) {
+    return Card(
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.toys, size: 32, color: Colors.pinkAccent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '每抽 $gachaCost 金幣',
+                    style: theme.textTheme.bodyLarge,
+                  ),
                 ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('• 抽到重複的寵物會增加親密值。'),
+                IconButton(
+                  onPressed: _showGachaInfo,
+                  icon: const Icon(Icons.info_outline),
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text('了解'),
+            const SizedBox(height: 20),
+
+            // 扭蛋球動畫顯示區
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child:
+                  isSpinning
+                      ? RotationTransition(
+                        turns: const AlwaysStoppedAnimation(1),
+                        child: Image.asset(
+                          'assets/pet/Gotcha.png',
+                          key: const ValueKey('spinning'),
+                          width: 100,
+                          height: 100,
+                        ),
+                      )
+                      : Image.asset(
+                        'assets/pet/Gotcha.png',
+                        key: const ValueKey('idle'),
+                        width: 100,
+                        height: 100,
+                      ),
+            ),
+            const SizedBox(height: 20),
+
+            // 抽卡按鈕區
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: isSpinning ? null : spinGacha,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.amber),
+                    ),
+                    child: Text(isSpinning ? '抽卡中…' : '單抽'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: isSpinning ? null : spinGachaTen,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.amber[400],
+                    ),
+                    child: Text(isSpinning ? '抽卡中…' : '十連'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopUpSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '克金區域',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            for (final amount in [100, 300, 1000])
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: OutlinedButton(
+                    onPressed: () => _comingSoon('儲值功能將於正式版開放'),
+                    child: Text('儲值 +$amount'),
+                  ),
+                ),
               ),
-            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShopSection(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '商品清單',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        GridView.builder(
+          shrinkWrap: true,
+          itemCount: items.length,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.95,
           ),
+          itemBuilder: (_, i) {
+            final item = items[i];
+            return Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(item.icon, size: 48),
+                    Text(
+                      item.name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text('價格：${item.price}'),
+                    FilledButton(
+                      onPressed: () => _comingSoon('購買功能將於正式版開放'),
+                      child: const Text('購買'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
 
 // ===== Models =====
-
 class ShopItem {
   final int id;
   final String name;
@@ -490,18 +566,13 @@ class ShopItem {
   });
 }
 
-class PetGachaResult {
-  final bool success;
-  final PetModel pet;
-  PetGachaResult({required this.success, required this.pet});
-}
-
 class PetModel {
   final int id;
   final String name;
   final String description;
   final String imageUrl;
   final bool newPet;
+
   PetModel({
     required this.id,
     required this.name,
@@ -509,4 +580,20 @@ class PetModel {
     required this.imageUrl,
     required this.newPet,
   });
+
+  factory PetModel.fromJson(Map<String, dynamic> json) {
+    return PetModel(
+      id: json['id'] ?? 0,
+      name: json['name']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      imageUrl: json['imageUrl']?.toString() ?? '',
+      newPet: json['newPet'] == true,
+    );
+  }
+}
+
+class PetGachaResult {
+  final bool success;
+  final PetModel pet;
+  PetGachaResult({required this.success, required this.pet});
 }
