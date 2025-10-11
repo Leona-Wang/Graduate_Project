@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
 
-class PersonalEventJournalPage extends StatefulWidget {
-  const PersonalEventJournalPage({super.key});
+class PersonalEventFavoritePage extends StatefulWidget {
+  const PersonalEventFavoritePage({super.key});
 
   @override
-  State<PersonalEventJournalPage> createState() =>
-      PersonalEventJournalPageState();
+  State<PersonalEventFavoritePage> createState() =>
+      PersonalEventFavoritePageState();
 }
 
-class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
+class PersonalEventFavoritePageState extends State<PersonalEventFavoritePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -82,7 +82,7 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
             ),
           ),
         ),
-        title: const Text('個人任務履歷'),
+        title: const Text('個人任務收藏櫃'),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.brown,

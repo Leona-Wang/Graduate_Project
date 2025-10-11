@@ -11,6 +11,7 @@ import 'package:flutter_frontend/screens/charity_screens/charity_edit_event.dart
 import 'package:flutter_frontend/screens/charity_screens/charity_setting.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.dart';
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer_list.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_event_favorite.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_ff_event.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
@@ -64,6 +65,7 @@ class AppRoutes {
   static const String personalEventJournal =
       '/personal_event_journal'; //個人用戶活動履歷
   static const String personalJournalList = '/personal_journal_list';
+  static const String personalEventFavorite = '/personal_event_favorite';
   static const String personalFFEvent = '/personal_ff_event'; //5050活動頁面
 
   //charity_screens
@@ -166,6 +168,9 @@ class AppRoutes {
       case personalJournalList:
         return MaterialPageRoute(builder: (_) => PersonalJournalListPage());
 
+      case personalEventFavorite:
+        return MaterialPageRoute(builder: (_) => PersonalEventFavoritePage());
+
       case personalFFEvent:
         return MaterialPageRoute(builder: (_) => PersonalFFEventPage());
 
@@ -202,7 +207,7 @@ class AppRoutes {
                 // initialCoOrganizers: [...], // 可選
               ),
         );
-      
+
       case AppRoutes.charityEventDetail:
         final charityEvent = settings.arguments as CharityEvent;
         return MaterialPageRoute(
