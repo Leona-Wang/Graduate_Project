@@ -73,10 +73,14 @@ class FullEvent {
       location: _toString(json['location'] ?? json['city']),
       address: _toString(json['address']),
       mainOrganizer: _toString(json['mainOrganizer'] ?? json['main_organizer']),
-      coOrganizers: _toStringList(json['coOrganizers'] ?? json['co_organizers']),
+      coOrganizers: _toStringList(
+        json['coOrganizers'] ?? json['co_organizers'],
+      ),
       startTime: _parseDate(json['startTime'] ?? json['start_time']),
       endTime: _parseDate(json['endTime'] ?? json['end_time']),
-      signupDeadline: _parseDate(json['signupDeadline'] ?? json['signup_deadline']),
+      signupDeadline: _parseDate(
+        json['signupDeadline'] ?? json['signup_deadline'],
+      ),
       status: _toString(json['statusDisplay']),
       participants: _toIntCount(json['participants']),
       description: _toString(json['description'], '（無活動介紹）'),
@@ -85,12 +89,13 @@ class FullEvent {
 }
 
 class PersonalEventDetailPage extends StatefulWidget {
-  final Event event; // 從列表傳入的簡略資料（含 id）
+  final Event event;
 
   const PersonalEventDetailPage({super.key, required this.event});
 
   @override
-  State<PersonalEventDetailPage> createState() => _PersonalEventDetailPageState();
+  State<PersonalEventDetailPage> createState() =>
+      _PersonalEventDetailPageState();
 }
 
 class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
@@ -99,7 +104,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
   bool busyFavorite = false;
   bool busyJoin = false;
   bool joined = false;
-  int? participantsOverride; // 報名／取消後前端即時顯示
+  int? participantsOverride;
 
   @override
   void initState() {
@@ -110,14 +115,12 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
   Future<FullEvent> fetchDetail(int id) async {
     final apiClient = ApiClient();
     await apiClient.init();
-
     final url = ApiPath.charityEventDetail(id);
     final resp = await apiClient.get(url);
-
     if (resp.statusCode == 200) {
-      final map = json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
-      final raw = (map['event'] is Map<String, dynamic>) ? map['event'] as Map<String, dynamic> : map;
-      // TODO: 若後端有提供使用者是否已收藏/已報名，這裡可據回傳初始化 isFavorite/joined
+      final map =
+          json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
+      final raw = (map['event'] is Map<String, dynamic>) ? map['event'] : map;
       return FullEvent.fromJson(raw);
     } else {
       throw Exception('載入詳情失敗 (${resp.statusCode})');
@@ -127,28 +130,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
   String formatDateTime(DateTime? dt) {
     if (dt == null) return '未定義';
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
-           '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
-  // ---- Helpers ----
-
-  // 強制把 ApiPath 內的 revert 參數改成首字大寫 Revert（避免後端 400）
-  String _revertUrl(int eventId) {
-    final raw = ApiPath.addCharityEventUserRevert(eventId);
-    return raw.replaceFirst('user_record_choice=revert', 'user_record_choice=Revert');
-  }
-
-  // 讀後端錯誤訊息字串
-  String _respMsg(dynamic resp) {
-    try {
-      return utf8.decode(resp.bodyBytes);
-    } catch (_) {
-      try {
-        return resp.body?.toString() ?? '';
-      } catch (_) {
-        return '';
-      }
-    }
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
   void _showSnack(String msg) {
@@ -156,142 +138,107 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  // ---- 收藏（與報名互斥）----
   Future<void> handleFavorite(int eventId) async {
-    if (busyFavorite || isFavorite) return;
-
-    // 互斥保護：已報名就不允許收藏
-    if (joined) {
-      _showSnack('你已報名此活動，無法收藏。若要收藏，請先取消報名');
-      return;
-    }
-
+    if (busyFavorite || isFavorite || joined) return;
     setState(() => busyFavorite = true);
-
     final apiClient = ApiClient();
     await apiClient.init();
     final url = ApiPath.addCharityEventUserSave(eventId);
-
     try {
-      final resp = await apiClient.post(url, {}).timeout(const Duration(seconds: 10));
+      final resp = await apiClient.post(url, {});
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         setState(() => isFavorite = true);
         _showSnack('已加入收藏');
-      } else if (resp.statusCode == 409) {
-        setState(() => isFavorite = true);
-        _showSnack('你已收藏過');
-      } else if (resp.statusCode == 401) {
-        _showSnack('請先登入後再試');
-      } else {
-        _showSnack('加入收藏失敗：${resp.statusCode}｜${_respMsg(resp)}');
       }
     } catch (e) {
-      _showSnack('加入收藏時發生錯誤：$e');
+      _showSnack('加入收藏錯誤：$e');
     } finally {
-      if (mounted) setState(() => busyFavorite = false);
+      setState(() => busyFavorite = false);
     }
   }
 
   Future<void> handleUnfavorite(int eventId) async {
     if (busyFavorite || !isFavorite) return;
     setState(() => busyFavorite = true);
-
     final apiClient = ApiClient();
     await apiClient.init();
-    final url = _revertUrl(eventId);
-
+    final url = ApiPath.addCharityEventUserRevert(eventId);
     try {
-      final resp = await apiClient.post(url, {}).timeout(const Duration(seconds: 10));
+      final resp = await apiClient.post(url, {});
       if (resp.statusCode == 200 || resp.statusCode == 204) {
         setState(() => isFavorite = false);
         _showSnack('已取消收藏');
-      } else if (resp.statusCode == 401) {
-        _showSnack('請先登入後再試');
-      } else {
-        _showSnack('取消收藏失敗：${resp.statusCode}｜${_respMsg(resp)}');
       }
     } catch (e) {
-      _showSnack('取消收藏時發生錯誤：$e');
+      _showSnack('取消收藏錯誤：$e');
     } finally {
-      if (mounted) setState(() => busyFavorite = false);
+      setState(() => busyFavorite = false);
     }
   }
 
-  // ---- 報名（與收藏互斥）----
   Future<void> handleJoin(FullEvent event) async {
-    if (busyJoin || joined) return;
-
-    // 互斥保護：已收藏就不允許報名
-    if (isFavorite) {
-      _showSnack('你已收藏此活動，無法報名。若要報名，請先取消收藏');
-      return;
-    }
-
+    if (busyJoin || joined || isFavorite) return;
     setState(() => busyJoin = true);
-
     final apiClient = ApiClient();
     await apiClient.init();
     final url = ApiPath.addCharityEventUserJoin(event.id);
-
     try {
-      final resp = await apiClient.post(url, {}).timeout(const Duration(seconds: 10));
+      final resp = await apiClient.post(url, {});
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         setState(() {
           joined = true;
-          final base = participantsOverride ?? event.participants;
-          participantsOverride = base + 1;
+          participantsOverride =
+              (participantsOverride ?? event.participants) + 1;
         });
         _showSnack('報名成功！');
-      } else if (resp.statusCode == 409) {
-        setState(() => joined = true);
-        _showSnack('你已報名過此活動');
-      } else if (resp.statusCode == 401) {
-        _showSnack('請先登入後再試');
-      } else {
-        _showSnack('報名失敗：${resp.statusCode}｜${_respMsg(resp)}');
       }
     } catch (e) {
-      _showSnack('報名時發生錯誤：$e');
+      _showSnack('報名錯誤：$e');
     } finally {
-      if (mounted) setState(() => busyJoin = false);
+      setState(() => busyJoin = false);
     }
   }
 
   Future<void> handleUnjoin(FullEvent event) async {
     if (busyJoin || !joined) return;
     setState(() => busyJoin = true);
-
     final apiClient = ApiClient();
     await apiClient.init();
-    final url = _revertUrl(event.id);
-
+    final url = ApiPath.addCharityEventUserRevert(event.id);
     try {
-      final resp = await apiClient.post(url, {}).timeout(const Duration(seconds: 10));
+      final resp = await apiClient.post(url, {});
       if (resp.statusCode == 200 || resp.statusCode == 204) {
         setState(() {
           joined = false;
-          final base = participantsOverride ?? event.participants;
-          final next = base - 1;
-          participantsOverride = next < 0 ? 0 : next;
+          participantsOverride =
+              (participantsOverride ?? event.participants) - 1;
         });
         _showSnack('已取消報名');
-      } else if (resp.statusCode == 401) {
-        _showSnack('請先登入後再試');
-      } else {
-        _showSnack('取消報名失敗：${resp.statusCode}｜${_respMsg(resp)}');
       }
     } catch (e) {
-      _showSnack('取消報名時發生錯誤：$e');
+      _showSnack('取消報名錯誤：$e');
     } finally {
-      if (mounted) setState(() => busyJoin = false);
+      setState(() => busyJoin = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    const parchmentColor = Color(0xFFF8F4E3); //底色
+    const borderColor = Color.fromRGBO(199, 167, 108, 1); //邊框主題色
+    const textMain = Color(0xFF4A3C1A); //文字顏色
+
     return Scaffold(
+      backgroundColor: parchmentColor,
       appBar: AppBar(
-        title: const Text('活動詳情'),
+        backgroundColor: borderColor,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          "任務詳情",
+          style: TextStyle(color: textMain, fontWeight: FontWeight.bold),
+        ),
+        iconTheme: const IconThemeData(color: textMain),
       ),
       body: FutureBuilder<FullEvent>(
         future: eventFuture,
@@ -303,112 +250,163 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
             return Center(child: Text('錯誤：${snapshot.error}'));
           }
           if (!snapshot.hasData) {
-            return const Center(child: Text('查無活動資料'));
+            return const Center(child: Text('查無任務資料'));
           }
 
           final event = snapshot.data!;
           final participantsShown = participantsOverride ?? event.participants;
 
-          // 互斥：當一方成立時，另一方（未切換狀態的主動動作）被禁用
-          final bool joinBlockedByFavorite = !joined && isFavorite; // 未報名且已收藏 → 禁用「我要參加」
-          final bool favoriteBlockedByJoin = !isFavorite && joined; // 未收藏且已報名 → 禁用「加入收藏」
-
-          // 允許使用者在已經 "加入" 的狀態下做「取消」行為
-          final bool joinEnabled = !busyJoin && (joined || !joinBlockedByFavorite);
-          final bool favoriteEnabled = !busyFavorite && (isFavorite || !favoriteBlockedByJoin);
-
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDF8EC),
+                border: Border.all(color: borderColor, width: 2),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.brown.withOpacity(0.25),
+                    offset: const Offset(3, 3),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 標題
+                  //標題
+                  Center(
+                    child: Column(
+                      children: [
+                        Text(
+                          event.title,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: textMain,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${event.type}｜${event.location}",
+                          style: const TextStyle(color: Color(0xFF7A6543)),
+                        ),
+                        const SizedBox(height: 10),
+                        Container(width: 100, height: 2, color: borderColor),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  _infoLine(
+                    "任務時間",
+                    "${formatDateTime(event.startTime)} ～ ${formatDateTime(event.endTime)}",
+                  ),
+                  _infoLine(
+                    "任務地點",
+                    "${event.location} ${event.address.isNotEmpty ? event.address : '（無地址資料）'}",
+                  ),
+                  _infoLine(
+                    "委託所",
+                    "${event.mainOrganizer}${event.coOrganizers.isNotEmpty ? "、${event.coOrganizers.join(", ")}" : ""}",
+                  ),
+                  _infoLine("參與人數", "$participantsShown 位冒險者"),
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    "任務詳情",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textMain,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Text(
-                    event.title,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 主/協辦
-                  if (event.mainOrganizer.isNotEmpty) Text('主辦單位：${event.mainOrganizer}')
-                  else const SizedBox.shrink(),
-                  if (event.coOrganizers.isNotEmpty) Text('協辦單位：${event.coOrganizers.join(', ')}')
-                  else const SizedBox.shrink(),
-
-                  const SizedBox(height: 16),
-
-                  // 基本資訊
-                  if (event.type.isNotEmpty) Text('活動類型：${event.type}') else const SizedBox.shrink(),
-                  if (event.location.isNotEmpty) Text('活動地區：${event.location}') else const SizedBox.shrink(),
-                  if (event.address.isNotEmpty) Text('地址：${event.address}') else const SizedBox.shrink(),
-
-                  const SizedBox(height: 16),
-
-                  // 時間
-                  const Text('活動時間：'),
-                  Text('${formatDateTime(event.startTime)} ～ ${formatDateTime(event.endTime)}'),
-                  const SizedBox(height: 8),
-                  Text('報名截止：${formatDateTime(event.signupDeadline)}'),
-
-                  // 狀態與人數
-                  if (event.status.isNotEmpty) Text('狀態：${event.status}') else const SizedBox.shrink(),
-                  Text('目前報名人數：$participantsShown'),
-
-                  const SizedBox(height: 24),
-
-                  // 介紹
-                  const Text('活動介紹', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(event.description),
-
-                  const SizedBox(height: 32),
-
-                  // 報名按鈕（切換 + 互斥）
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      icon: joined
-                          ? const Icon(Icons.cancel)
-                          : const Icon(Icons.check_circle_outline),
-                      label: Text(
-                        joined
-                            ? '取消報名'
-                            : (joinBlockedByFavorite ? '已收藏，無法報名' : '我要參加'),
-                      ),
-                      onPressed: joinEnabled
-                          ? () => joined ? handleUnjoin(event) : handleJoin(event)
-                          : null,
+                    event.description,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: textMain,
                     ),
                   ),
 
+                  const SizedBox(height: 30),
+                  _rpgButton(
+                    label: joined ? "取消任務" : "接受任務",
+                    onPressed:
+                        () => joined ? handleUnjoin(event) : handleJoin(event),
+                    filled: true,
+                  ),
                   const SizedBox(height: 12),
-
-                  // 收藏按鈕（切換 + 互斥）
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      icon: isFavorite ? const Icon(Icons.star) : const Icon(Icons.star_border),
-                      label: Text(
-                        isFavorite
-                            ? '取消收藏'
-                            : (favoriteBlockedByJoin ? '已報名，無法收藏' : '加入收藏'),
-                      ),
-                      onPressed: favoriteEnabled
-                          ? () => isFavorite
-                              ? handleUnfavorite(widget.event.id)
-                              : handleFavorite(widget.event.id)
-                          : null,
-                    ),
+                  _rpgButton(
+                    label: isFavorite ? "移除收藏" : "收藏任務",
+                    onPressed:
+                        () =>
+                            isFavorite
+                                ? handleUnfavorite(widget.event.id)
+                                : handleFavorite(widget.event.id),
+                    filled: false,
                   ),
                 ],
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _infoLine(String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            fontSize: 15,
+            height: 1.5,
+            color: Color(0xFF4A3C1A),
+          ),
+          children: [
+            TextSpan(
+              text: "$title：",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            TextSpan(text: content),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _rpgButton({
+    required String label,
+    required VoidCallback onPressed,
+    bool filled = true,
+  }) {
+    const gold = Color(0xFFD7C09A);
+    const textMain = Color(0xFF4A3C1A);
+
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: filled ? gold : Colors.transparent,
+          foregroundColor: textMain,
+          shadowColor: Colors.brown.withOpacity(0.3),
+          elevation: filled ? 3 : 0,
+          side: BorderSide(color: gold, width: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
