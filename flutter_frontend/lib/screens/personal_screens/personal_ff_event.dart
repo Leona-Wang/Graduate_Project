@@ -265,7 +265,7 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
             ),
 
           // 主要內容置中
-          Expanded(
+          Positioned.fill(
             child: Center(
               child:
                   isLoading
@@ -464,7 +464,11 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
                                         ),
                                         //跑動部分
                                         Container(
-                                          width: 250 * (value / total!),
+                                          width:
+                                              250 *
+                                              ((total != null && total! > 0)
+                                                  ? (value / total!).clamp(0, 1)
+                                                  : 0),
                                           height: 16,
                                           decoration: BoxDecoration(
                                             gradient: const LinearGradient(
