@@ -9,6 +9,16 @@ import 'package:flutter_frontend/screens/personal_screens/personal_setting.dart'
 class PersonalHomeTab extends StatefulWidget {
   const PersonalHomeTab({super.key});
 
+  static final List<void Function(int)> _tabListeners = [];
+
+  static void registerTabListener(void Function(int) listener) {
+    _tabListeners.add(listener);
+  }
+
+  static void unregisterTabListener(void Function(int) listener) {
+    _tabListeners.remove(listener);
+  }
+
   static _HomePageState? of(BuildContext context) {
     return context.findAncestorStateOfType<_HomePageState>();
   }
@@ -52,6 +62,10 @@ class _HomePageState extends State<PersonalHomeTab> {
     setState(() {
       _currentTabIndex = index;
     });
+
+    for (final listener in PersonalHomeTab._tabListeners) {
+      listener(index);
+    }
   }
 
   void _openMapPage() {

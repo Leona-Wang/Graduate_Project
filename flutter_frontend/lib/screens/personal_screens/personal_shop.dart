@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/api_client.dart';
@@ -69,34 +70,71 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
 
   // ===== API：寵物扭蛋 =====
   Future<PetGachaResult> _gachaOnce() async {
-    final apiClient = ApiClient();
-    await apiClient.init();
-    final resp = await apiClient.post(ApiPath.gachaPet, {});
-
-    final body = resp.body;
-    Map<String, dynamic>? json;
     try {
-      json = jsonDecode(body);
-    } catch (_) {}
+      final apiClient = ApiClient();
+      await apiClient.init();
+      final resp = await apiClient.post(ApiPath.gachaPet, {});
 
-    if (resp.statusCode == 200 || resp.statusCode == 201) {
-      final data = json ?? {};
-      if (data['success'] == true && data['pet'] != null) {
-        final pet = data['pet'] as Map<String, dynamic>;
-        return PetGachaResult(success: true, pet: PetModel.fromJson(pet));
+      Map<String, dynamic> json = {};
+      try {
+        json = jsonDecode(resp.body);
+      } catch (e) {
+        debugPrint("JSON 解析錯誤: $e");
       }
-      throw Exception('回傳格式不正確：$body');
+
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        if (json['success'] == true && json['pet'] != null) {
+          final pet = json['pet'] as Map<String, dynamic>;
+          return PetGachaResult(success: true, pet: PetModel.fromJson(pet));
+        }
+      } else if (resp.statusCode == 400) {
+        // 金幣不足時
+        coinException();
+        // 確保回傳失敗結果，而不是 null
+        return PetGachaResult(
+          success: false,
+          pet: PetModel(
+            id: 0,
+            name: '',
+            description: '金幣不足',
+            imageUrl: '',
+            newPet: false,
+          ),
+        );
+      }
+    } catch (e, stack) {
+      debugPrint("發生例外: $e\n$stack");
     }
 
-    final msg = (json?['detail'] ?? json?['message'] ?? body).toString();
-    switch (resp.statusCode) {
-      case 400:
-        throw Exception('扭蛋失敗（400）：$msg');
-      case 401:
-        throw Exception('未授權（401）：請確認登入狀態。');
-      default:
-        throw Exception('扭蛋失敗（${resp.statusCode}）：$msg');
-    }
+    // 預設失敗結果（避免回傳 null）
+    return PetGachaResult(
+      success: false,
+      pet: PetModel(
+        id: 0,
+        name: '',
+        description: '抽卡失敗',
+        imageUrl: '',
+        newPet: false,
+      ),
+    );
+  }
+
+  void coinException() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("金幣數量不足 QQ"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("確認"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // ===== 抽卡流程 =====
@@ -106,10 +144,20 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
 
     try {
       final result = await _gachaOnce();
-      if (!mounted) return;
+
+      // 若抽卡失敗或金幣不足，立即停止，顯示提示
+      if (!result.success) {
+        if (mounted) {
+          debugPrint('金幣不足或抽卡失敗，已停止抽卡');
+          //coinException(); //直接跳出彈窗
+        }
+        return; // 不再繼續顯示抽卡結果
+      }
+
+      // 抽卡成功才顯示結果
       await _showSingleResult(result);
     } catch (e) {
-      _showSnack(e.toString());
+      _showSnack('發生錯誤：$e');
     } finally {
       if (mounted) setState(() => isSpinning = false);
     }
@@ -120,17 +168,27 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
     setState(() => isSpinning = true);
 
     final results = <PetGachaResult>[];
-    for (int i = 0; i < 10; i++) {
-      try {
-        results.add(await _gachaOnce());
-      } catch (e) {
-        debugPrint('十連第 ${i + 1} 抽失敗：$e');
-      }
-    }
 
-    if (mounted) {
-      await _showTenResults(results);
-      setState(() => isSpinning = false);
+    try {
+      for (int i = 0; i < 10; i++) {
+        final add = await _gachaOnce();
+        // 若金幣不足或失敗 → 直接停止十連抽
+        if (!add.success) {
+          if (mounted) {
+            debugPrint('金幣不足或抽卡失敗，已停止十連抽');
+          }
+          break;
+        }
+        results.add(add);
+      }
+
+      if (mounted && results.isNotEmpty) {
+        await _showTenResults(results);
+      }
+    } catch (e) {
+      debugPrint("十連抽錯誤: $e");
+    } finally {
+      if (mounted) setState(() => isSpinning = false);
     }
   }
 

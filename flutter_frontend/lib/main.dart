@@ -6,6 +6,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import 'screens/personal_screens/personal_pet.dart';
+
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -45,6 +49,7 @@ class MyApp extends StatelessWidget {
           title: '',
           initialRoute: AppRoutes.welcomeSlides,
           onGenerateRoute: AppRoutes.generateRoute,
+          navigatorObservers: [routeObserver],
           builder: (context, widget) {
             // 這樣可以讓文字大小自動跟隨縮放
             ScreenUtil.init(context);

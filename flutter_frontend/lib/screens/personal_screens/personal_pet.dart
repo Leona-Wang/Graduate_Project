@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/main.dart';
 import 'personal_pet_detail_page.dart';
 import '../../api_client.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
@@ -35,15 +36,57 @@ class PersonalPetPage extends StatefulWidget {
   State<PersonalPetPage> createState() => _PersonalPetPageState();
 }
 
-class _PersonalPetPageState extends State<PersonalPetPage> {
+class _PersonalPetPageState extends State<PersonalPetPage>
+    with RouteAware, AutomaticKeepAliveClientMixin {
   late Future<List<_Pet>> _future;
 
   bool isLoading = false;
+  bool showAnimation = false; //動畫控制
+
+  @override
+  bool get wantKeepAlive => true; //保留頁面狀態
 
   @override
   void initState() {
     super.initState();
     _future = _fetchPets();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+
+    // 監聽 tab 切換（PersonalHomeTab 提供的 callback）
+    PersonalHomeTab.registerTabListener(_onTabChanged);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    PersonalHomeTab.unregisterTabListener(_onTabChanged);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _refresh();
+  }
+
+  void _onTabChanged(int index) {
+    if (index == 1) {
+      _refresh();
+    }
+  }
+
+  //自動刷新
+  void _refresh() {
+    setState(() {
+      _future = _fetchPets();
+    });
   }
 
   void backToHome() => PersonalHomeTab.of(context)?.switchTab(0);
@@ -71,6 +114,13 @@ class _PersonalPetPageState extends State<PersonalPetPage> {
             return a.name.compareTo(b.name);
           }); //組內排序，已持有在前，按名稱排序
 
+          //抓取完資料後觸發淡入動畫
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted) {
+              setState(() => showAnimation = true);
+            }
+          });
+
           return pets;
         } else {
           return <_Pet>[];
@@ -89,6 +139,7 @@ class _PersonalPetPageState extends State<PersonalPetPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -124,21 +175,26 @@ class _PersonalPetPageState extends State<PersonalPetPage> {
               return const Center(child: Text('目前沒有寵物資料'));
             }
 
-            return GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 3 / 4,
-              ),
-              itemCount: pets.length,
-              itemBuilder: (_, i) {
-                final p = pets[i];
-                return _PetCard(
-                  pet: p,
-                  onTap:
-                      () => Navigator.push(
+            //刷新動畫
+            return AnimatedOpacity(
+              opacity: showAnimation ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              child: GridView.builder(
+                padding: const EdgeInsets.all(12),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 3 / 4,
+                ),
+                itemCount: pets.length,
+                itemBuilder: (_, i) {
+                  final p = pets[i];
+                  return _PetCard(
+                    pet: p,
+                    onTap: () {
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder:
@@ -149,9 +205,11 @@ class _PersonalPetPageState extends State<PersonalPetPage> {
                                 owned: p.owned,
                               ),
                         ),
-                      ),
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             );
           },
         ),
