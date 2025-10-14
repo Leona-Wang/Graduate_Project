@@ -5,6 +5,7 @@ import 'package:flutter_frontend/api_client.dart';
 import 'charity_co-organizer_list.dart';
 import 'charity_event_list.dart';
 import 'charity_edit_event.dart';
+import 'package:flutter/services.dart';
 
 class FullEvent {
   final int id;
@@ -269,6 +270,66 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                       _infoRow("任務地點", "${event.location} ${event.address}"),
                       _infoRow("委託所", event.mainOrganizer),
                       _infoRow("參與人數", "${event.participants} 位冒險者"),
+                      //邀請碼
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Expanded(
+                              flex: 2,
+                              child: Text(
+                                "邀請碼：",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF4A3C1A),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    event.inviteCode == 0
+                                        ? "尚未產生"
+                                        : event.inviteCode.toString(),
+                                    style: const TextStyle(
+                                      color: Color(0xFF7B5E3C),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.copy,
+                                      size: 18,
+                                      color: Color(0xFFC7A76C),
+                                    ),
+                                    tooltip: "複製邀請碼",
+                                    onPressed: () {
+                                      if (event.inviteCode != 0) {
+                                        Clipboard.setData(
+                                          ClipboardData(
+                                            text: event.inviteCode.toString(),
+                                          ),
+                                        );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text("已複製邀請碼！"),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                       const SizedBox(height: 16),
 
                       // 活動介紹

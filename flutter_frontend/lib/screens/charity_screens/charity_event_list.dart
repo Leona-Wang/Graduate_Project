@@ -66,6 +66,10 @@ class CharityEventListState extends State<CharityEventListPage> {
   bool sortAscending = true;
   bool? filterOnline; // ← 新增：null=全部, true=線上, false=線下
 
+  //Position? _cachedPosition; //快取定位
+  static const defaultLat = 24.98750;
+  static const defaultLng = 121.57639;
+
   @override
   void initState() {
     super.initState();
@@ -74,17 +78,49 @@ class CharityEventListState extends State<CharityEventListPage> {
 
   // 取得使用者位置
   Future<Position> getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) throw '請開啟定位服務';
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('定位服務未開啟，使用預設位址');
+        return _defaultPosition();
+      }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) throw '定位權限被拒絕';
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print('定位權限被拒絕，使用預設位址');
+          return _defaultPosition();
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        print('定位權限永久拒絕，使用預設位址');
+        return _defaultPosition();
+      }
+
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+    } catch (e) {
+      print('定位失敗 ($e)，使用預設位址');
+      return _defaultPosition();
     }
+  }
 
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+  /// 用來模擬一個預設定位結果的函式
+  Position _defaultPosition() {
+    return Position(
+      latitude: defaultLat,
+      longitude: defaultLng,
+      timestamp: DateTime.now(),
+      accuracy: 1.0,
+      altitude: 0.0,
+      heading: 0.0,
+      speed: 0.0,
+      speedAccuracy: 1.0,
+      altitudeAccuracy: 1.0, // flutter_geolocator 10+ 需要這些新欄位
+      headingAccuracy: 1.0,
     );
   }
 
@@ -118,15 +154,15 @@ class CharityEventListState extends State<CharityEventListPage> {
         final loadedEvents =
             results.map((e) => CharityEvent.fromJson(e)).toList();
 
-        await sortEventsByDistance(loadedEvents);
-
         setState(() {
           events = loadedEvents;
           totalPage = events.length < pageSize ? currentPage : currentPage + 1;
           isLoading = false;
         });
+
         final eventTypes = List<String>.from(json['eventTypes']);
         final locations = List<String>.from(json['locations']);
+        await sortEventsByDistance(loadedEvents);
         print('可用篩選器: $eventTypes, $locations');
       } else {
         throw Exception('載入活動失敗');
@@ -168,26 +204,37 @@ class CharityEventListState extends State<CharityEventListPage> {
 
   // 排序活動列表
   Future<void> sortEventsByDistance(List<CharityEvent> events) async {
-    Position userPos = await getCurrentLocation();
+    final userPos = await getCurrentLocation();
 
-    for (var event in events) {
-      if (!event.online && (event.lat == null || event.lng == null)) {
-        await getEventCoordinates(event);
-      }
-    }
+    // 同時進行多筆地理編碼
+    await Future.wait(
+      events.map((event) async {
+        if (!event.online && (event.lat == null || event.lng == null)) {
+          try {
+            final locations = await locationFromAddress(event.location);
+            if (locations.isNotEmpty) {
+              event.lat = locations.first.latitude;
+              event.lng = locations.first.longitude;
+            }
+          } catch (_) {}
+        }
+      }),
+    );
 
+    // 排序
     events.sort((a, b) {
       if (a.online) return 1;
       if (b.online) return -1;
       if (a.lat == null || a.lng == null) return 1;
       if (b.lat == null || b.lng == null) return -1;
-      final da = distanceInKm(
+
+      final da = Geolocator.distanceBetween(
         userPos.latitude,
         userPos.longitude,
         a.lat!,
         a.lng!,
       );
-      final db = distanceInKm(
+      final db = Geolocator.distanceBetween(
         userPos.latitude,
         userPos.longitude,
         b.lat!,
