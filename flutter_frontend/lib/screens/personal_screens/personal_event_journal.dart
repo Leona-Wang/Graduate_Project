@@ -1,5 +1,10 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
+import 'package:flutter_frontend/api_client.dart';
+import 'package:flutter_frontend/config.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_journal_detail.dart';
 
 class PersonalEventJournalPage extends StatefulWidget {
   const PersonalEventJournalPage({super.key});
@@ -13,16 +18,18 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  List<String> ongoingEvents = [];
-  List<String> pastEvents = [];
+  List<Map<String, dynamic>> ongoingEvents = [];
+  List<Map<String, dynamic>> pastEvents = [];
 
   bool isLoadingOngoing = true;
   bool isLoadingPast = true;
 
-  void toEventDetail() {
+  void toEventDetail(Map<String, dynamic> event) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PersonalJournalListPage()),
+      MaterialPageRoute(
+        builder: (context) => PersonalJournalDetailPage(eventId: event['id']),
+      ),
     );
   }
 
@@ -40,29 +47,122 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
     super.dispose();
   }
 
+  //未到期的任務
   Future<void> fetchOngoingEvents() async {
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => isLoadingOngoing = false); //補API
+    setState(() => isLoadingOngoing = true);
+    try {
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final url = ApiPath.userCharityEventsUpcomingJoin;
+      final response = await apiClient.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List events = data['events'] ?? [];
+
+        setState(() {
+          ongoingEvents =
+              events
+                  .map(
+                    (e) => {
+                      'id': e['id'],
+                      'title': e['eventName'],
+                      'joinType': e['joinType'], //這是啥
+                      'charityEvent': e['charityEvent'], //這又是啥
+                    },
+                  )
+                  .toList();
+        });
+      } else {
+        debugPrint('取得進行中任務失敗');
+      }
+    } catch (e) {
+      debugPrint('錯誤: $e');
+    } finally {
+      setState(() => isLoadingOngoing = false);
+    }
   }
 
+  //已過期的任務
   Future<void> fetchPastEvents() async {
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => isLoadingPast = false); //補API
+    setState(() => isLoadingPast = true);
+
+    try {
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final url = ApiPath.userCharityEventsFinishedJoin;
+      final response = await apiClient.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List events = data['events'] ?? [];
+
+        setState(() {
+          pastEvents =
+              events
+                  .map(
+                    (e) => {
+                      'id': e['id'],
+                      'title': e['eventName'],
+                      'joinType': e['joinType'],
+                      'charityEvent': e['charityEvent'],
+                    },
+                  )
+                  .toList();
+        });
+      } else {
+        debugPrint('取得已過期任務失敗');
+      }
+    } catch (e) {
+      debugPrint('錯誤: $e');
+    } finally {
+      setState(() => isLoadingPast = false);
+    }
   }
 
-  Widget buildEventList(List<String> events, bool isLoading) {
+  Widget buildEventList(List<Map<String, dynamic>> events, bool isLoading) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (events.isEmpty) {
       return const Center(child: Text('目前沒有任務，快去探索看看吧!'));
     }
-    return ListView.builder(
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final event = events[index];
-        return ListTile(title: Text(event), onTap: toEventDetail);
+    return RefreshIndicator(
+      onRefresh: () async {
+        if (_tabController.index == 0) {
+          await fetchOngoingEvents();
+        } else {
+          await fetchPastEvents();
+        }
       },
+      child: ListView.builder(
+        itemCount: events.length,
+        itemBuilder: (context, index) {
+          final event = events[index];
+
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 3,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              title: Text(
+                event['title'] ?? '未命名任務',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text('狀態: ${event['joinType'] ?? "未知"}'),
+              onTap: () => toEventDetail(event),
+            ),
+          );
+        },
+      ),
     );
   }
 

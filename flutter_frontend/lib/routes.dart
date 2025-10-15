@@ -13,8 +13,9 @@ import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer.da
 import 'package:flutter_frontend/screens/charity_screens/charity_co-organizer_list.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_favorite.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_favorite_detail.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_ff_event.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_journal_detail.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_map_tab.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_profile.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
@@ -64,8 +65,9 @@ class AppRoutes {
   static const String personalProfile = '/personal_profile'; //個人用戶資訊
   static const String personalEventJournal =
       '/personal_event_journal'; //個人用戶活動履歷
-  static const String personalJournalList = '/personal_journal_list';
+  static const String personalJournalDetail = '/personal_journal_detail';
   static const String personalEventFavorite = '/personal_event_favorite';
+  static const String personalFavoriteDetail = '/personal_favorite_detail';
   static const String personalFFEvent = '/personal_ff_event'; //5050活動頁面
 
   //charity_screens
@@ -165,11 +167,17 @@ class AppRoutes {
       case personalEventJournal:
         return MaterialPageRoute(builder: (_) => PersonalEventJournalPage());
 
-      case personalJournalList:
-        return MaterialPageRoute(builder: (_) => PersonalJournalListPage());
+      case personalJournalDetail:
+        final eventId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => PersonalJournalDetailPage(eventId: eventId),
+        );
 
       case personalEventFavorite:
         return MaterialPageRoute(builder: (_) => PersonalEventFavoritePage());
+
+      case personalFavoriteDetail:
+        return MaterialPageRoute(builder: (_) => PersonalFavoriteDetailPage());
 
       case personalFFEvent:
         return MaterialPageRoute(builder: (_) => PersonalFFEventPage());

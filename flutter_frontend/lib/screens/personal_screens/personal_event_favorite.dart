@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_journal_list.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_journal_detail.dart';
 
 class PersonalEventFavoritePage extends StatefulWidget {
   const PersonalEventFavoritePage({super.key});
@@ -20,10 +20,13 @@ class PersonalEventFavoritePageState extends State<PersonalEventFavoritePage>
   bool isLoadingPast = true;
 
   void toEventDetail() {
+    /*
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PersonalJournalListPage()),
-    );
+      MaterialPageRoute(
+        builder: (context) => const PersonalJournalDetailPage(),
+      ),
+    );*/
   }
 
   @override

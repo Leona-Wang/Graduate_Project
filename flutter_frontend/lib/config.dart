@@ -230,15 +230,15 @@ class ApiPath {
   //  ]
   //}
   static String get userCharityEventsUpcomingJoin =>
-      '${BaseConfig.baseUrl}person/event_list/?joinType=Join&eventStatus=upcoming';
+      '${BaseConfig.baseUrl}/person/event_list/?joinType=Join&eventStatus=upcoming';
   static String get userCharityEventsUpcomingSave =>
-      '${BaseConfig.baseUrl}person/event_list/?joinType=Save&eventStatus=upcoming';
+      '${BaseConfig.baseUrl}/person/event_list/?joinType=Save&eventStatus=upcoming';
   static String get userCharityEventsFinishedJoin =>
-      '${BaseConfig.baseUrl}person/event_list/?joinType=Join&eventStatus=finished';
+      '${BaseConfig.baseUrl}/person/event_list/?joinType=Join&eventStatus=finished';
   static String get userCharityEventsFinishedSave =>
-      '${BaseConfig.baseUrl}person/event_list/?joinType=Save&eventStatus=finished';
+      '${BaseConfig.baseUrl}/person/event_list/?joinType=Save&eventStatus=finished';
   static String get userCharityEventsDeletedJoin =>
-      '${BaseConfig.baseUrl}person/event_list/?joinType=Join&eventStatus=deleted';
+      '${BaseConfig.baseUrl}/person/event_list/?joinType=Join&eventStatus=deleted';
   static String get userCharityEventsDeletedSave =>
-      '${BaseConfig.baseUrl}person/event_list/?joinType=Save&eventStatus=deleted';
+      '${BaseConfig.baseUrl}/person/event_list/?joinType=Save&eventStatus=deleted';
 }

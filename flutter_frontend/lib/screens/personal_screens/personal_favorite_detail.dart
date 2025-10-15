@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_qr_code.dart';
 
-class PersonalJournalListPage extends StatefulWidget {
-  const PersonalJournalListPage({super.key});
+class PersonalFavoriteDetailPage extends StatefulWidget {
+  const PersonalFavoriteDetailPage({super.key});
 
   @override
-  State<PersonalJournalListPage> createState() =>
-      PersonalJournalListPageState();
+  State<PersonalFavoriteDetailPage> createState() =>
+      PersonalFavoriteDetailPageState();
 }
 
-class PersonalJournalListPageState extends State<PersonalJournalListPage> {
+class PersonalFavoriteDetailPageState
+    extends State<PersonalFavoriteDetailPage> {
   final String eventName = '台北西門町的捐血車'; //測試用假資料
   void toQRCode() {
     Navigator.of(context).push(
