@@ -233,6 +233,10 @@ class ApiPath {
       '${BaseConfig.baseUrl}/person/event_list/?joinType=Join&eventStatus=upcoming';
   static String get userCharityEventsUpcomingSave =>
       '${BaseConfig.baseUrl}/person/event_list/?joinType=Save&eventStatus=upcoming';
+  static String get userCharityEventsOngoingJoin =>
+      '${BaseConfig.baseUrl}/person/event_list/?joinType=Join&eventStatus=ongoing';
+  static String get userCharityEventsOngoingSave =>
+      '${BaseConfig.baseUrl}/person/event_list/?joinType=Save&eventStatus=ongoing';
   static String get userCharityEventsFinishedJoin =>
       '${BaseConfig.baseUrl}/person/event_list/?joinType=Join&eventStatus=finished';
   static String get userCharityEventsFinishedSave =>
