@@ -649,3 +649,42 @@ class UserCharityEvents(APIView):
         return Response({
             'events': eventList.data,
         })
+
+
+class GetCoinQuantity(APIView):
+
+    def get(self, request, *args, **kwargs):
+
+        try:
+            user = request.user
+            coin = ItemBox.objects.filter(item__itemType__type=settings.ITEM_CASH, personalInfo__user=user).last()
+            coinQuantity = coin.quantity
+            coinUrl = coin.item.itemImage.url
+
+            return JsonResponse({'success': True, 'coinQuantity': coinQuantity, 'coinUrl': coinUrl}, status=200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class GetPersonalInfo(APIView):
+
+    def get(self, request, *args, **kwargs):
+
+        try:
+            user = request.user
+            personalEmail = user.email
+            personalName = user.first_name
+            personalInfo = PersonalInfo.objects.filter(user=user).first()
+            personalLocation = personalInfo.location.locationName
+            personalImageUrl = personalInfo.avatar.url
+
+            return JsonResponse({
+                'success': True,
+                'personalEmail': personalEmail,
+                'personalName': personalName,
+                'personalLocation': personalLocation,
+                'personalImageUrl': personalImageUrl
+            },
+                                status=200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)

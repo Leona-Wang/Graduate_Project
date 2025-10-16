@@ -245,4 +245,10 @@ class ApiPath {
       '${BaseConfig.baseUrl}/person/event_list/?joinType=Join&eventStatus=deleted';
   static String get userCharityEventsDeletedSave =>
       '${BaseConfig.baseUrl}/person/event_list/?joinType=Save&eventStatus=deleted';
+
+  //後端傳值(用 GET ){"success": true, "coinQuantity": 9995, "coinUrl": "/media/powerup/%E9%87%91%E5%B9%A3.png"}
+  static String get getCoinQuantity => '${BaseConfig.baseUrl}/person/coin/';
+
+  //後端傳值(用 GET ){"success": true, "personalEmail": "personal1@gmail.com", "personalName": "personal1", "personalLocation": "\u53f0\u5317\u5e02", "personalImageUrl": "/media/avatars/1000013116.jpg"}
+  static String get getPersonalInfo => '${BaseConfig.baseUrl}/person/info/';
 }
