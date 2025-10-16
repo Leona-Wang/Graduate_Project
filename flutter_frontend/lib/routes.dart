@@ -177,7 +177,10 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => PersonalEventFavoritePage());
 
       case personalFavoriteDetail:
-        return MaterialPageRoute(builder: (_) => PersonalFavoriteDetailPage());
+        final eventId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => PersonalFavoriteDetailPage(eventId: eventId),
+        );
 
       case personalFFEvent:
         return MaterialPageRoute(builder: (_) => PersonalFFEventPage());

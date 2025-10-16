@@ -28,7 +28,9 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PersonalJournalDetailPage(eventId: event['id']),
+        builder:
+            (context) =>
+                PersonalJournalDetailPage(eventId: event['charityEvent']),
       ),
     );
   }
@@ -54,28 +56,45 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
       final apiClient = ApiClient();
       await apiClient.init();
 
-      final url = ApiPath.userCharityEventsUpcomingJoin;
-      final response = await apiClient.get(url);
+      final urlOn = ApiPath.userCharityEventsOngoingJoin;
+      final urlUp = ApiPath.userCharityEventsUpcomingJoin;
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List events = data['events'] ?? [];
+      final responseOn = await apiClient.get(urlOn);
+      final responseUp = await apiClient.get(urlUp);
+
+      if (responseOn.statusCode == 200 && responseUp.statusCode == 200) {
+        final dataOn = jsonDecode(responseOn.body);
+        final dataUp = jsonDecode(responseUp.body);
+
+        final List eventsOn = dataOn['events'] ?? [];
+        final List eventsUp = dataUp['events'] ?? [];
+
+        final List<Map<String, dynamic>> combined = [
+          ...eventsOn.map(
+            (e) => {
+              'id': e['id'],
+              'title': e['eventName'],
+              'joinType': e['joinType'],
+              'charityEvent': e['charityEvent'],
+              'status': '正在進行',
+            },
+          ),
+          ...eventsUp.map(
+            (e) => {
+              'id': e['id'],
+              'title': e['eventName'],
+              'joinType': e['joinType'],
+              'charityEvent': e['charityEvent'],
+              'status': '即將到來',
+            },
+          ),
+        ];
 
         setState(() {
-          ongoingEvents =
-              events
-                  .map(
-                    (e) => {
-                      'id': e['id'],
-                      'title': e['eventName'],
-                      'joinType': e['joinType'], //這是啥
-                      'charityEvent': e['charityEvent'], //這又是啥
-                    },
-                  )
-                  .toList();
+          ongoingEvents = combined;
         });
       } else {
-        debugPrint('取得進行中任務失敗');
+        debugPrint('取得進行中或即將到來任務失敗');
       }
     } catch (e) {
       debugPrint('錯誤: $e');
@@ -92,25 +111,42 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
       final apiClient = ApiClient();
       await apiClient.init();
 
-      final url = ApiPath.userCharityEventsFinishedJoin;
-      final response = await apiClient.get(url);
+      final urlFin = ApiPath.userCharityEventsFinishedJoin;
+      final urlDel = ApiPath.userCharityEventsDeletedJoin;
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List events = data['events'] ?? [];
+      final responseFin = await apiClient.get(urlFin);
+      final responseDel = await apiClient.get(urlDel);
+
+      if (responseFin.statusCode == 200 && responseDel.statusCode == 200) {
+        final dataFin = jsonDecode(responseFin.body);
+        final dataDel = jsonDecode(responseDel.body);
+
+        final List eventsFin = dataFin['events'] ?? [];
+        final List eventsDel = dataDel['events'] ?? [];
+
+        final List<Map<String, dynamic>> combined = [
+          ...eventsFin.map(
+            (e) => {
+              'id': e['id'],
+              'title': e['eventName'],
+              'joinType': e['joinType'],
+              'charityEvent': e['charityEvent'],
+              'status': '已結束',
+            },
+          ),
+          ...eventsDel.map(
+            (e) => {
+              'id': e['id'],
+              'title': e['eventName'],
+              'joinType': e['joinType'],
+              'charityEvent': e['charityEvent'],
+              'status': '已刪除',
+            },
+          ),
+        ];
 
         setState(() {
-          pastEvents =
-              events
-                  .map(
-                    (e) => {
-                      'id': e['id'],
-                      'title': e['eventName'],
-                      'joinType': e['joinType'],
-                      'charityEvent': e['charityEvent'],
-                    },
-                  )
-                  .toList();
+          pastEvents = combined;
         });
       } else {
         debugPrint('取得已過期任務失敗');
@@ -141,8 +177,36 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
         itemCount: events.length,
         itemBuilder: (context, index) {
           final event = events[index];
+          final status = event['status'] ?? '';
+
+          // 顏色與互動設定
+          late Color cardColor;
+          late Color labelColor;
+
+          switch (status) {
+            case '正在進行':
+              cardColor = const Color.fromARGB(255, 255, 235, 205);
+              labelColor = const Color.fromARGB(255, 239, 187, 109);
+              break;
+            case '即將到來':
+              cardColor = const Color.fromARGB(255, 233, 198, 164);
+              labelColor = const Color.fromARGB(255, 159, 121, 68);
+              break;
+            case '已結束':
+              cardColor = const Color.fromARGB(255, 255, 235, 205);
+              labelColor = const Color.fromARGB(255, 239, 187, 109);
+              break;
+            case '已刪除':
+              cardColor = const Color.fromARGB(255, 233, 198, 164);
+              labelColor = const Color.fromARGB(255, 159, 121, 68);
+              break;
+            default:
+              cardColor = Colors.grey.shade50;
+              labelColor = Colors.grey;
+          }
 
           return Card(
+            color: cardColor,
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -157,8 +221,40 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
                 event['title'] ?? '未命名任務',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text('狀態: ${event['joinType'] ?? "未知"}'),
-              onTap: () => toEventDetail(event),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: labelColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: labelColor),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      color: labelColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+              onTap: () {
+                if (status != '已刪除') {
+                  toEventDetail(event);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('已刪除任務無法查看詳細內容'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
             ),
           );
         },
