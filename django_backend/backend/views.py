@@ -509,7 +509,7 @@ class CreateOrUpdateBet(APIView):
 
         result = createOrUpdateBet(user=user, betEvent=betEvent, betAmount=betAmount)
 
-        if result is False:
+        if result is not True:
             return JsonResponse({'success': False, 'message': '金額不夠'}, status=400)
 
         return JsonResponse({'success': True}, status=200)
