@@ -19,7 +19,8 @@ class FullEvent {
   final DateTime? endTime;
   final DateTime? signupDeadline;
   final String status;
-  final int participants;
+  final int joinAmount;
+  final int saveAmount;
   final String description;
   final int inviteCode;
 
@@ -35,10 +36,16 @@ class FullEvent {
     required this.endTime,
     required this.signupDeadline,
     required this.status,
-    required this.participants,
+    required this.joinAmount,
+    required this.saveAmount,
     required this.description,
     required this.inviteCode,
   });
+
+  static String _toString(dynamic v, [String fallback = '']) {
+    if (v == null) return fallback;
+    return v.toString();
+  }
 
   static int _toIntCount(dynamic v) {
     if (v == null) return 0;
@@ -48,6 +55,18 @@ class FullEvent {
     return 0;
   }
 
+  static DateTime? _parseDate(dynamic v) {
+    if (v == null) return null;
+    final s = v.toString().trim();
+    if (s.isEmpty) return null;
+    try {
+      return DateTime.parse(s);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /*
   static DateTime? _tryParse(dynamic v) {
     if (v == null) return null;
     final s = v.toString();
@@ -57,29 +76,30 @@ class FullEvent {
     } catch (_) {
       return null;
     }
-  }
+  }*/
 
   factory FullEvent.fromJson(Map<String, dynamic> json) {
     final inviteStr = json['inviteCode']?.toString() ?? '0';
     return FullEvent(
       id: (json['id'] as num?)?.toInt() ?? 0,
-      title: (json['name'] ?? json['title'] ?? '').toString(),
-      type: (json['eventType'] ?? json['type'] ?? '').toString(),
-      location: (json['location'] ?? json['city'] ?? '此為線上活動').toString(),
-      address: (json['address'] ?? '線上').toString(),
-      mainOrganizer: (json['mainOrganizer'] ?? '').toString(),
+      title: _toString(json['name'], '未命名活動'),
+      type: _toString(json['eventType'], '未分類'),
+      location: _toString(json['location'], '未知地點'), //地區
+      address: _toString(json['address'], '（無地址資料）'), //地址
+      mainOrganizer: _toString(json['mainOrganizer']), //主辦單位
       coOrganizers:
           (json['coOrganizers'] is List)
               ? List<String>.from(
                 (json['coOrganizers'] as List).map((e) => e.toString()),
               )
               : <String>[],
-      startTime: _tryParse(json['startTime']),
-      endTime: _tryParse(json['endTime']),
-      signupDeadline: _tryParse(json['signupDeadline']),
-      status: (json['statusDisplay'] ?? '').toString(),
-      participants: _toIntCount(json['participants']),
-      description: (json['description'] ?? '（無活動介紹）').toString(),
+      startTime: _parseDate(json['startTime']),
+      endTime: _parseDate(json['endTime']),
+      signupDeadline: _parseDate(json['signupDeadline']),
+      status: _toString(json['statusDisplay'], '未知狀態'),
+      joinAmount: _toIntCount(json['joinAmount']),
+      saveAmount: _toIntCount(json['saveAmount']),
+      description: _toString(json['description'], '（無活動介紹）'),
       inviteCode: int.tryParse(inviteStr) ?? 0,
     );
   }
@@ -269,7 +289,8 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                       ),
                       _infoRow("任務地點", "${event.location} ${event.address}"),
                       _infoRow("委託所", event.mainOrganizer),
-                      _infoRow("參與人數", "${event.participants} 位冒險者"),
+                      _infoRow("參與人數", "${event.saveAmount} 位冒險者"),
+                      _infoRow('收藏人數', "${event.joinAmount} 位冒險者"),
                       //邀請碼
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
