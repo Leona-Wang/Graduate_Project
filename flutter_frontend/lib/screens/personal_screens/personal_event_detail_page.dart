@@ -17,7 +17,8 @@ class FullEvent {
   final DateTime? endTime;
   final DateTime? signupDeadline;
   final String status;
-  final int participants;
+  final int joinAmount;
+  final int saveAmount;
   final String description;
 
   FullEvent({
@@ -32,7 +33,8 @@ class FullEvent {
     required this.endTime,
     required this.signupDeadline,
     required this.status,
-    required this.participants,
+    required this.joinAmount,
+    required this.saveAmount,
     required this.description,
   });
 
@@ -68,21 +70,18 @@ class FullEvent {
   factory FullEvent.fromJson(Map<String, dynamic> json) {
     return FullEvent(
       id: (json['id'] as num?)?.toInt() ?? 0,
-      title: _toString(json['title'] ?? json['name']),
-      type: _toString(json['type'] ?? json['eventType']),
-      location: _toString(json['location'] ?? json['city']),
-      address: _toString(json['address']),
-      mainOrganizer: _toString(json['mainOrganizer'] ?? json['main_organizer']),
-      coOrganizers: _toStringList(
-        json['coOrganizers'] ?? json['co_organizers'],
-      ),
-      startTime: _parseDate(json['startTime'] ?? json['start_time']),
-      endTime: _parseDate(json['endTime'] ?? json['end_time']),
-      signupDeadline: _parseDate(
-        json['signupDeadline'] ?? json['signup_deadline'],
-      ),
-      status: _toString(json['statusDisplay']),
-      participants: _toIntCount(json['participants']),
+      title: _toString(json['name'], '未命名活動'),
+      type: _toString(json['eventType'], '未分類'),
+      location: _toString(json['location'], '未知地點'), //地區
+      address: _toString(json['address'], '（無地址資料）'), //地址
+      mainOrganizer: _toString(json['mainOrganizer']), //主辦單位
+      coOrganizers: _toStringList(json['coOrganizers']),
+      startTime: _parseDate(json['startTime']),
+      endTime: _parseDate(json['endTime']),
+      signupDeadline: _parseDate(json['signupDeadline']),
+      status: _toString(json['statusDisplay'], '未知狀態'),
+      joinAmount: _toIntCount(json['joinAmount']),
+      saveAmount: _toIntCount(json['saveAmount']),
       description: _toString(json['description'], '（無活動介紹）'),
     );
   }
@@ -117,6 +116,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     await apiClient.init();
     final url = ApiPath.charityEventDetail(id);
     final resp = await apiClient.get(url);
+    //print(resp.body);
     if (resp.statusCode == 200) {
       final map =
           json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
@@ -133,25 +133,44 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
         '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
+  /*
   void _showSnack(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
+*/
 
   Future<void> handleFavorite(int eventId) async {
     if (busyFavorite || isFavorite || joined) return;
+
+    if (joined) {
+      await _showResultDialog(context, '已參加任務，無法收藏。');
+      return;
+    }
+
+    final confirmed = await _confirmAction(context, '確定收藏這個任務嗎？');
+    if (!confirmed) return;
+
     setState(() => busyFavorite = true);
+
     final apiClient = ApiClient();
     await apiClient.init();
+
     final url = ApiPath.addCharityEventUserSave(eventId);
+
     try {
       final resp = await apiClient.post(url, {});
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         setState(() => isFavorite = true);
-        _showSnack('已加入收藏');
+
+        await _showResultDialog(context, '已成功收藏任務！');
+
+        setState(() {
+          eventFuture = fetchDetail(widget.event.id);
+        });
       }
     } catch (e) {
-      _showSnack('加入收藏錯誤：$e');
+      debugPrint('加入收藏錯誤：$e');
     } finally {
       setState(() => busyFavorite = false);
     }
@@ -159,18 +178,32 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
 
   Future<void> handleUnfavorite(int eventId) async {
     if (busyFavorite || !isFavorite) return;
+
+    final confirmed = await _confirmAction(context, '確定要移除收藏嗎？');
+    if (!confirmed) return;
+
     setState(() => busyFavorite = true);
+
     final apiClient = ApiClient();
     await apiClient.init();
+
     final url = ApiPath.addCharityEventUserRevert(eventId);
+
     try {
       final resp = await apiClient.post(url, {});
+      print('🔹 回傳狀態: ${resp.statusCode}');
+      print('🔹 回傳內容: ${resp.body}');
       if (resp.statusCode == 200 || resp.statusCode == 204) {
         setState(() => isFavorite = false);
-        _showSnack('已取消收藏');
+
+        await _showResultDialog(context, '已取消收藏');
+
+        setState(() {
+          eventFuture = fetchDetail(widget.event.id);
+        });
       }
     } catch (e) {
-      _showSnack('取消收藏錯誤：$e');
+      debugPrint('取消收藏錯誤：$e');
     } finally {
       setState(() => busyFavorite = false);
     }
@@ -178,22 +211,31 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
 
   Future<void> handleJoin(FullEvent event) async {
     if (busyJoin || joined || isFavorite) return;
+
+    final confirmed = await _confirmAction(context, '確定參加這個任務嗎？');
+    if (!confirmed) return;
+
     setState(() => busyJoin = true);
+
     final apiClient = ApiClient();
     await apiClient.init();
+
     final url = ApiPath.addCharityEventUserJoin(event.id);
+
     try {
       final resp = await apiClient.post(url, {});
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         setState(() {
           joined = true;
-          participantsOverride =
-              (participantsOverride ?? event.participants) + 1;
         });
-        _showSnack('報名成功！');
+        await _showResultDialog(context, '報名成功！');
+
+        setState(() {
+          eventFuture = fetchDetail(widget.event.id);
+        });
       }
     } catch (e) {
-      _showSnack('報名錯誤：$e');
+      debugPrint('報名錯誤：$e');
     } finally {
       setState(() => busyJoin = false);
     }
@@ -201,25 +243,74 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
 
   Future<void> handleUnjoin(FullEvent event) async {
     if (busyJoin || !joined) return;
+
+    final confirmed = await _confirmAction(context, '確定取消參加這個任務嗎？');
+    if (!confirmed) return;
+
     setState(() => busyJoin = true);
+
     final apiClient = ApiClient();
     await apiClient.init();
+
     final url = ApiPath.addCharityEventUserRevert(event.id);
+
     try {
       final resp = await apiClient.post(url, {});
       if (resp.statusCode == 200 || resp.statusCode == 204) {
         setState(() {
           joined = false;
-          participantsOverride =
-              (participantsOverride ?? event.participants) - 1;
         });
-        _showSnack('已取消報名');
+        await _showResultDialog(context, '已成功取消任務。');
+        setState(() {
+          eventFuture = fetchDetail(widget.event.id);
+        });
       }
     } catch (e) {
-      _showSnack('取消報名錯誤：$e');
+      debugPrint('取消報名錯誤：$e');
     } finally {
       setState(() => busyJoin = false);
     }
+  }
+
+  //確認是否值行動作用popup
+  Future<bool> _confirmAction(BuildContext context, String message) async {
+    return await showDialog<bool>(
+          context: context,
+          builder:
+              (ctx) => AlertDialog(
+                title: const Text('確認動作'),
+                content: Text(message),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('取消'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('確定'),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
+  }
+
+  //確認執行結果popup
+  Future<void> _showResultDialog(BuildContext context, String message) async {
+    await showDialog<void>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('提示'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('確定'),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -254,7 +345,6 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
           }
 
           final event = snapshot.data!;
-          final participantsShown = participantsOverride ?? event.participants;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -311,7 +401,8 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
                     "委託所",
                     "${event.mainOrganizer}${event.coOrganizers.isNotEmpty ? "、${event.coOrganizers.join(", ")}" : ""}",
                   ),
-                  _infoLine("參與人數", "$participantsShown 位冒險者"),
+                  _infoLine("參與人數", "${event.joinAmount} 位冒險者"),
+                  _infoLine('收藏人數', "${event.saveAmount} 位冒險者"),
                   const SizedBox(height: 20),
 
                   const Text(
@@ -341,12 +432,14 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
                   ),
                   const SizedBox(height: 12),
                   _rpgButton(
-                    label: isFavorite ? "移除收藏" : "收藏任務",
+                    label: isFavorite ? "移除收藏" : (joined ? "已參加，無法收藏" : "收藏任務"),
                     onPressed:
-                        () =>
-                            isFavorite
-                                ? handleUnfavorite(widget.event.id)
-                                : handleFavorite(widget.event.id),
+                        joined
+                            ? () {} // 禁用，點了沒反應
+                            : () =>
+                                isFavorite
+                                    ? handleUnfavorite(widget.event.id)
+                                    : handleFavorite(widget.event.id),
                     filled: false,
                   ),
                 ],
