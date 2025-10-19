@@ -385,26 +385,9 @@ def getCoOrganizeApplications(request):
         user = request.user
         if not user or not user.is_authenticated:
             return JsonResponse({'success': False, 'message': '未登入'}, status=401)
+        
+        eventName = request.query_params.get('charityEventName', '').strip()
 
-        # 依序嘗試從 query_params / GET / data 擷取參數；容忍別名
-        def pick(keys):
-            for k in keys:
-                v = (
-                    getattr(request, 'query_params', {}).get(k)
-                    or request.GET.get(k)
-                    or getattr(request, 'data', {}).get(k)
-                )
-                if isinstance(v, str):
-                    v = v.strip()
-                if v:
-                    return v
-            return ''
-
-        eventName = pick([
-            'charityEventName', 'charity_event_name',
-            'eventName', 'event_name',
-            'name', 'event',
-        ])
         if not eventName:
             return JsonResponse({'success': False, 'message': '缺少活動名稱'}, status=400)
 
@@ -416,17 +399,15 @@ def getCoOrganizeApplications(request):
         # 驗證主辦方身分
         if not CharityInfo.objects.filter(user=user, id=event.mainOrganizer_id).exists():
             return JsonResponse({'success': False, 'message': '只有主辦方可以查詢協辦申請'}, status=403)
-
-        # 只查 verified=None 的協辦申請（尚未審核）
-        applications = (CharityEventCoOrganizer.objects
-                        .filter(charityEvent=event, verified=None)
-                        .select_related('coOrganizer', 'coOrganizer__user'))
-
-        result = [{
-            'coOrganizerName': app.coOrganizer.name,
-            'coOrganizerEmail': (app.coOrganizer.user.email
-                                 if app.coOrganizer and app.coOrganizer.user else ''),
-        } for app in applications]
+        
+         # 只查詢 verified=None 的協辦申請（尚未審核）
+        applications = CharityEventCoOrganizer.objects.filter(charityEvent=event, verified=None)
+        result = []
+        for app in applications:
+            result.append({
+                'coOrganizerName': app.coOrganizer.name,
+                'coOrganizerEmail': app.coOrganizer.user.email if app.coOrganizer.user else '',
+            })
 
         return JsonResponse({'success': True, 'applications': result}, status=200)
     except Exception as e:
