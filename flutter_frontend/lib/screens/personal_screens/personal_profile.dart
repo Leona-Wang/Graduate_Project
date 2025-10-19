@@ -50,12 +50,27 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
           avatarUrl = data['personalImageUrl'];
           isLoading = false;
         });
-      } else {
+      } else if (response.statusCode == 400) {
         debugPrint('載入失敗: ${response.statusCode}');
+        setState(() {
+          userName = '使用者名稱';
+          avatarUrl = null;
+          isLoading = false;
+        });
+      } else {
+        // fallback
+        debugPrint('非預期狀態碼：${response.statusCode}');
+        setState(() {
+          userName = '使用者名稱';
+          avatarUrl = null;
+          isLoading = false;
+        });
       }
     } catch (e) {
       debugPrint('取個人資訊錯誤: $e');
       setState(() {
+        userName = '使用者名稱';
+        avatarUrl = null;
         isLoading = false;
       });
     }
@@ -101,11 +116,14 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
                   children: [
                     // 頭像區背景
                     Container(
-                      //width: double.infinity,
+                      width: double.infinity,
                       height: 300,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.orange, Colors.deepOrangeAccent],
+                          colors: [
+                            Color.fromARGB(255, 255, 214, 159),
+                            Color.fromARGB(255, 229, 167, 75),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -120,7 +138,7 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
                                 avatarUrl != null && avatarUrl!.isNotEmpty
                                     ? NetworkImage(avatarUrl!)
                                     : null,
-                            backgroundColor: Colors.orange[400],
+                            backgroundColor: Colors.orange[100],
                             child:
                                 avatarUrl == null || avatarUrl!.isNotEmpty
                                     ? const Icon(
