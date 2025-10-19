@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/api_client.dart';
+import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_favorite.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
@@ -14,6 +18,8 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
   String? avatarUrl; //頭像
   String? userName;
 
+  bool isLoading = true;
+
   void backToHome() {
     Navigator.pushAndRemoveUntil(
       context,
@@ -25,19 +31,35 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
   @override
   void initState() {
     super.initState();
-    // 用戶個人資訊 API
-    // fetchUserData();
+    fetchUserData();
   }
 
-  /*
-  void fetchUserData async(){
-    final data = await ApiClient.getUserData();
-     setState(() {
-       avatarUrl = data.avatarUrl;
-      userName = data.userName;
-      joinedEvents = data.joinedEvents;
-      favoritedEvents = data.favoritedEvents;
-  }*/
+  Future<void> fetchUserData() async {
+    try {
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final url = ApiPath.getPersonalInfo;
+      final response = await apiClient.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        setState(() {
+          userName = data['personalName'];
+          avatarUrl = data['personalImageUrl'];
+          isLoading = false;
+        });
+      } else {
+        debugPrint('載入失敗: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('取個人資訊錯誤: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   void toEventHistory() {
     Navigator.of(context).push(
@@ -71,63 +93,81 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
         ),
         title: const Text('個人資訊'),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 頭像區
-            Container(
-              width: double.infinity,
-              height: 200,
-              color: Colors.orange[100],
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage:
-                        avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-                    child:
-                        avatarUrl == null
-                            ? const Icon(Icons.person, size: 50)
-                            : null,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    userName ?? '使用者名稱',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // 頭像區背景
+                    Container(
+                      //width: double.infinity,
+                      height: 300,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.orange, Colors.deepOrangeAccent],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      //color: Colors.orange[100],
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 55,
+                            backgroundImage:
+                                avatarUrl != null && avatarUrl!.isNotEmpty
+                                    ? NetworkImage(avatarUrl!)
+                                    : null,
+                            backgroundColor: Colors.orange[400],
+                            child:
+                                avatarUrl == null || avatarUrl!.isNotEmpty
+                                    ? const Icon(
+                                      Icons.person,
+                                      size: 55,
+                                      color: Colors.white,
+                                    )
+                                    : null,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            userName ?? '使用者名稱',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 40),
+                    const SizedBox(height: 40),
 
-            // 兩個按鈕區塊
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  _buildActionButton(
-                    context,
-                    title: '已參加的活動',
-                    icon: Icons.event_available,
-                    onTap: toEventHistory,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildActionButton(
-                    context,
-                    title: '已收藏的活動',
-                    icon: Icons.favorite,
-                    onTap: toEventFavorite,
-                  ),
-                ],
+                    // 兩個按鈕區塊
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          _buildActionButton(
+                            context,
+                            title: '已參加的活動',
+                            icon: Icons.event_available,
+                            onTap: toEventHistory,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildActionButton(
+                            context,
+                            title: '已收藏的活動',
+                            icon: Icons.favorite,
+                            onTap: toEventFavorite,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

@@ -17,7 +17,7 @@ class PersonalShopPage extends StatefulWidget {
 }
 
 class _PersonalShopPageState extends State<PersonalShopPage> {
-  int coinBalance = 10000;
+  int coinBalance = 0;
   static const int gachaCost = 5;
   bool isSpinning = false;
 
@@ -29,6 +29,12 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
   ];
 
   void backToHome() => PersonalHomeTab.of(context)?.switchTab(0);
+
+  @override
+  void initState() {
+    super.initState();
+    getCoin();
+  }
 
   // ===== 通用對話框 =====
   Future<void> _showDialog(String title, Widget content) {
@@ -50,6 +56,38 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
 
   void _comingSoon([String? feature]) {
     _showDialog('敬請期待', Text(feature ?? '功能即將開放，請稍候～'));
+  }
+
+  Future<void> getCoin() async {
+    try {
+      final apiClient = ApiClient();
+      await apiClient.init();
+
+      final urlCoin = ApiPath.getCoinQuantity;
+      final response = await apiClient.get(urlCoin);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['success'] == true && data['coinQuantity'] != null) {
+          final int coin = int.tryParse(data['coinQuantity'].toString()) ?? 0;
+
+          if (mounted) {
+            setState(() {
+              coinBalance = coin;
+            });
+          }
+
+          debugPrint('目前金幣數量: $coin');
+        } else {
+          debugPrint('回傳格式不正確: ${response.body}');
+        }
+      } else {
+        debugPrint('取得金幣失敗: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      debugPrint('例外: $e\n$stack');
+    }
   }
 
   void _showGachaInfo() {
@@ -153,6 +191,7 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
         }
         return; // 不再繼續顯示抽卡結果
       }
+      await getCoin();
 
       // 抽卡成功才顯示結果
       await _showSingleResult(result);
@@ -183,6 +222,7 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
       }
 
       if (mounted && results.isNotEmpty) {
+        await getCoin();
         await _showTenResults(results);
       }
     } catch (e) {
