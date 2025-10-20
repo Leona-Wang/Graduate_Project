@@ -324,7 +324,13 @@ class CharityEventDetail(APIView):
     def get(self, request, *args, **kwargs):
         charityEventID = kwargs.get('eventId')
 
-        event = CharityEventSerializer(CharityEvent.objects.filter(id=charityEventID).first()).data
+        user = request.user
+
+        event = CharityEventSerializer(
+            CharityEvent.objects.filter(id=charityEventID).first(), context={
+                'user': user
+            }
+        ).data
 
         return Response({
             'event': event,
@@ -663,7 +669,12 @@ class GetCoinQuantity(APIView):
 
             return JsonResponse({'success': True, 'coinQuantity': coinQuantity, 'coinUrl': coinUrl}, status=200)
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            return JsonResponse({
+                'success': True,
+                'coinQuantity': 0,
+                'coinUrl': "https://images.vocus.cc/d0c70d85-cb25-4e18-b550-00308a2cfd0f.jpg"
+            },
+                                status=200)
 
 
 class GetPersonalInfo(APIView):

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CharityEvent, EventParticipant
+from .models import CharityEvent, EventParticipant, PersonalInfo
 from django.conf import settings
 
 
@@ -10,6 +10,7 @@ class CharityEventSerializer(serializers.ModelSerializer):
     eventType = serializers.CharField(source='eventType.typeName', read_only=True)
     location = serializers.CharField(source='location.locationName', read_only=True)
     statusDisplay = serializers.SerializerMethodField()
+    personalJoinType = serializers.SerializerMethodField(method_name='getPersonalJoinType')
 
     class Meta:
         model = CharityEvent
@@ -20,6 +21,21 @@ class CharityEventSerializer(serializers.ModelSerializer):
 
     def getJoinAmount(self, obj):
         return EventParticipant.objects.filter(charityEvent=obj, joinType=settings.CHARITY_EVENT_JOIN).count()
+
+    def getPersonalJoinType(self, obj):
+        user = self.context.get('user')
+
+        if not user or not getattr(user, 'is_authenticated', False):
+            return None
+        else:
+            participateRecord = EventParticipant.objects.filter(charityEvent=obj, personalUser=user)
+            if participateRecord:
+                joinType = participateRecord.first().joinType
+                if not joinType:
+                    return None
+                return joinType
+            else:
+                return None
 
     # 新增statusDisplay(中文狀態)欄位
     def get_statusDisplay(self, obj):
