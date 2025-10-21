@@ -687,7 +687,7 @@ class GetPersonalInfo(APIView):
             personalName = user.first_name
             personalInfo = PersonalInfo.objects.filter(user=user).first()
             personalLocation = personalInfo.location.locationName
-            personalImageUrl = personalInfo.avatar.url
+            personalImageUrl = personalInfo.avatar.url if personalInfo.avatar else None
 
             return JsonResponse({
                 'success': True,

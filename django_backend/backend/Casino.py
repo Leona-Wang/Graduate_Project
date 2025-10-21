@@ -38,7 +38,7 @@ def createOrUpdateBet(user, betEvent, betAmount):
     try:
         personalInfo = PersonalInfo.objects.filter(user=user).first()
 
-        prize = Item.objects.filter(name=settings.ITEM_CASH).first()
+        prize = Item.objects.filter(itemType__type=settings.ITEM_CASH).first()
 
         coinAmount = ItemBox.objects.filter(personalInfo=personalInfo, item=prize).first().quantity
 
