@@ -20,6 +20,7 @@ class FullEvent {
   final int joinAmount;
   final int saveAmount;
   final String description;
+  final String joinType;
 
   FullEvent({
     required this.id,
@@ -36,6 +37,7 @@ class FullEvent {
     required this.joinAmount,
     required this.saveAmount,
     required this.description,
+    required this.joinType,
   });
 
   static String _toString(dynamic v, [String fallback = '']) {
@@ -83,6 +85,7 @@ class FullEvent {
       joinAmount: _toIntCount(json['joinAmount']),
       saveAmount: _toIntCount(json['saveAmount']),
       description: _toString(json['description'], '（無活動介紹）'),
+      joinType: _toString(json['personalJoinType']),
     );
   }
 }
@@ -116,12 +119,26 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     await apiClient.init();
     final url = ApiPath.charityEventDetail(id);
     final resp = await apiClient.get(url);
-    //print(resp.body);
+
     if (resp.statusCode == 200) {
       final map =
           json.decode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
       final raw = (map['event'] is Map<String, dynamic>) ? map['event'] : map;
-      return FullEvent.fromJson(raw);
+
+      final event = FullEvent.fromJson(raw);
+
+      if (event.joinType == 'Save') {
+        isFavorite = true;
+        joined = false;
+      } else if (event.joinType == 'Join') {
+        joined = true;
+        isFavorite = false;
+      } else {
+        joined = false;
+        isFavorite = false;
+      }
+
+      return event;
     } else {
       throw Exception('載入詳情失敗 (${resp.statusCode})');
     }
@@ -132,13 +149,6 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
         '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
-
-  /*
-  void _showSnack(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-*/
 
   Future<void> handleFavorite(int eventId) async {
     if (busyFavorite || isFavorite || joined) return;
@@ -191,8 +201,8 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
 
     try {
       final resp = await apiClient.post(url, {});
-      print('🔹 回傳狀態: ${resp.statusCode}');
-      print('🔹 回傳內容: ${resp.body}');
+      print('回傳狀態: ${resp.statusCode}');
+      print('回傳內容: ${resp.body}');
       if (resp.statusCode == 200 || resp.statusCode == 204) {
         setState(() => isFavorite = false);
 
@@ -226,12 +236,12 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
       final resp = await apiClient.post(url, {});
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         setState(() {
-          joined = true;
+          joined = true; // ← 只改了變數
         });
         await _showResultDialog(context, '報名成功！');
 
         setState(() {
-          eventFuture = fetchDetail(widget.event.id);
+          eventFuture = fetchDetail(widget.event.id); // ← 有刷新，但異步
         });
       }
     } catch (e) {
