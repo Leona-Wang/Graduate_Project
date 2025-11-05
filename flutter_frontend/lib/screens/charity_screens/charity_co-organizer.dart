@@ -123,6 +123,7 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
 
         if (appResp.statusCode == 200) {
           final data = jsonDecode(appResp.body);
+          print(data);
           final apps = data['applications'] ?? [];
           results.add({'eventName': name, 'applications': apps});
         } else {
@@ -140,18 +141,30 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
   // ===============================================================
   // 協辦審核（通過 / 拒絕）
   // ===============================================================
-  Future<void> _verifyApplication({
+  Future<bool> _verifyApplication({
     required String eventName,
     required String coOrganizerName,
     required bool approve,
   }) async {
+    final trimmedEvent = eventName.trim();
+    final trimmedName = coOrganizerName.trim();
+
+    if (trimmedEvent.isEmpty) {
+      await _showPopup('缺少活動名稱');
+      return false;
+    }
+    if (trimmedName.isEmpty) {
+      await _showPopup('缺少協辦者名稱');
+      return false;
+    }
+
     try {
       final api = ApiClient();
       await api.init();
 
       final body = {
-        'charityEventName': eventName,
-        'coOrganizerName': coOrganizerName,
+        'charityEventName': trimmedEvent,
+        'coOrganizerName': trimmedName,
         'approve': approve,
       };
 
@@ -161,18 +174,16 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
 
       if (resp.statusCode == 200) {
         await _showPopup(approve ? '已通過申請' : '已拒絕申請');
+        return true;
       } else {
         await _showPopup('操作失敗 (${resp.statusCode})');
+        return false;
       }
     } catch (e) {
       await _showPopup('操作錯誤：$e');
+      return false;
     }
   }
-
-  /*
-  void _applyEventName() {
-    setState(() => _eventName = _eventNameController.text.trim());
-  }*/
 
   // ===============================================================
   // UI
@@ -258,6 +269,7 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
               final count = apps.length;
 
               return Stack(
+                clipBehavior: Clip.none,
                 children: [
                   Card(
                     margin: const EdgeInsets.symmetric(
@@ -277,7 +289,8 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
                       children:
                           apps.isEmpty
                               ? [const ListTile(title: Text('目前無申請'))]
-                              : apps.map((app) {
+                              : List.generate(apps.length, (appIndex) {
+                                final app = apps[appIndex];
                                 final name =
                                     (app['coOrganizerName'] ?? '')
                                         .toString()
@@ -298,24 +311,39 @@ class _CharityCoorganizerPageState extends State<CharityCoorganizerPage>
                                           Icons.check,
                                           color: Colors.green,
                                         ),
-                                        onPressed:
-                                            () => _verifyApplication(
-                                              eventName: eventName,
-                                              coOrganizerName: name,
-                                              approve: true,
-                                            ),
+                                        onPressed: () async {
+                                          final pass = await _verifyApplication(
+                                            eventName: eventName,
+                                            coOrganizerName: name,
+                                            approve: true,
+                                          );
+
+                                          if (pass) {
+                                            setState(() {
+                                              apps.removeAt(appIndex);
+                                            });
+                                          }
+                                        },
                                       ),
                                       IconButton(
                                         icon: const Icon(
                                           Icons.close,
                                           color: Colors.red,
                                         ),
-                                        onPressed:
-                                            () => _verifyApplication(
-                                              eventName: eventName,
-                                              coOrganizerName: name,
-                                              approve: false,
-                                            ),
+                                        onPressed: () async {
+                                          final unPass =
+                                              await _verifyApplication(
+                                                eventName: eventName,
+                                                coOrganizerName: name,
+                                                approve: false,
+                                              );
+
+                                          if (unPass) {
+                                            setState(() {
+                                              apps.removeAt(appIndex);
+                                            });
+                                          }
+                                        },
                                       ),
                                     ],
                                   ),
