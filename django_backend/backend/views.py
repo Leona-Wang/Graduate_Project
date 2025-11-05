@@ -199,7 +199,7 @@ class CreateCharityInfo(APIView):
             type = EventType.objects.filter(typeName=groupType).first()
 
             if organization:
-                charity = CharityInfo.objects.create(user=user, organization=organization)
+                charity = CharityInfo.objects.create(user=user, organization=organization, name=groupName)
             else:
                 charity = CharityInfo.objects.create(
                     user=user, organization=organization, type=type, address=groupAddress, phone=groupPhone
