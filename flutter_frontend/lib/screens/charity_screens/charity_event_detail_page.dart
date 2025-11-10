@@ -287,7 +287,7 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                         "任務時間",
                         "${formatDateTime(event.startTime)} ～ ${formatDateTime(event.endTime)}",
                       ),
-                      _infoRow("任務地點", "${event.location} ${event.address}"),
+                      _infoRow("任務地點", event.address),
                       _infoRow("委託所", event.mainOrganizer),
                       _infoRow("參與人數", "${event.saveAmount} 位冒險者"),
                       _infoRow('收藏人數', "${event.joinAmount} 位冒險者"),

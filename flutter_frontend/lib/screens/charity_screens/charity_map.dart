@@ -84,6 +84,12 @@ class CharityMapState extends State<CharityMapPage> {
     if (skipReverseGeocoding) return;
 
     try {
+      try {
+        await setLocaleIdentifier('zh_TW');
+      } catch (e) {
+        debugPrint('無法設定 geocoding 語系: $e');
+      }
+
       final placesmark = await placemarkFromCoordinates(
         latlng.latitude,
         latlng.longitude,
@@ -97,14 +103,32 @@ class CharityMapState extends State<CharityMapPage> {
 
   //使用者搜尋地址後定位
   void _searchAddress() async {
-    final query = _addressController.text;
+    final query = _addressController.text.trim();
     if (query.isEmpty) return;
 
-    final locations = await locationFromAddress(query);
-    if (locations.isNotEmpty) {
-      final loc = locations.first;
-      _updateLocation(LatLng(loc.latitude, loc.longitude));
-      _mapController.move(_selectedLatLng!, 20);
+    try {
+      try {
+        await setLocaleIdentifier('zh_TW');
+      } catch (e) {
+        debugPrint('無法設定 geocoding 語系: $e');
+      }
+
+      final locations = await locationFromAddress(query);
+
+      if (locations.isNotEmpty) {
+        final loc = locations.first;
+        _updateLocation(LatLng(loc.latitude, loc.longitude));
+        _mapController.move(_selectedLatLng!, 20);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('找不到對應的地址，請再確認輸入')));
+      }
+    } catch (e) {
+      debugPrint('地址搜尋失敗: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('找不到對應的地址，請再確認輸入')));
     }
   }
 

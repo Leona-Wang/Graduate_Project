@@ -405,7 +405,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
                   ),
                   _infoLine(
                     "任務地點",
-                    "${event.location} ${event.address.isNotEmpty ? event.address : '（無地址資料）'}",
+                    '${event.address.isNotEmpty ? event.address : '（無地址資料）'}',
                   ),
                   _infoLine(
                     "委託所",
