@@ -24,6 +24,8 @@ class PersonalMapPageState extends State<PersonalMapPage> {
   LatLng? _currentLocation; //使用者當前座標
   List<dynamic> markers = [];
 
+  double _zoom = 14.0; //地圖縮放變數
+
   @override
   void initState() {
     super.initState();
@@ -71,25 +73,28 @@ class PersonalMapPageState extends State<PersonalMapPage> {
     }
   }
 
-  /*
   //呼叫API獲取活動，轉換成地標點
   Future<void> fetchEvents() async {
-    final uriEvent = Uri.parse(ApiPath.charityEventList); //待確認
+    final uriEvent = Uri.parse(ApiPath.charityEventList);
 
-    //待API確認後新增內容
     try {
       final apiClient = ApiClient();
       await apiClient.init();
       final response = await apiClient.get(uriEvent.toString());
 
+      debugPrint('活動列表狀態碼: ${response.statusCode}');
+      debugPrint('活動列表回傳內容: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
+        final List<dynamic> events = data['events'] ?? [];
+
         List<Marker> newMarkers = [];
 
-        for (var event in data) {
-          final address = event['address'] ?? '';
-          final name = event['name'] ?? '任務';
+        for (var e in events) {
+          final address = (e['address'] ?? '').toString();
+          final name = (e['name'] ?? '任務').toString();
 
           final latLng = await getLatLngFromAddress(address);
           if (latLng != null) {
@@ -99,7 +104,22 @@ class PersonalMapPageState extends State<PersonalMapPage> {
                 height: 60,
                 point: latLng,
                 child: GestureDetector(
-                  onTap: () => toEventList(),
+                  onTap: () {
+                    // 先放大並移動鏡頭到這個 marker
+                    final double targetZoom = (_zoom < 16.0 ? 16.0 : _zoom + 1)
+                        .clamp(3.0, 18.0);
+
+                    setState(() {
+                      _zoom = targetZoom;
+                    });
+                    _mapController.move(latLng, targetZoom);
+
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (mounted) {
+                        toEventList();
+                      }
+                    });
+                  },
                   child: Tooltip(
                     message: name,
                     child: const Icon(
@@ -111,6 +131,8 @@ class PersonalMapPageState extends State<PersonalMapPage> {
                 ),
               ),
             );
+          } else {
+            debugPrint('地址轉換失敗，略過此活動');
           }
         }
 
@@ -122,8 +144,8 @@ class PersonalMapPageState extends State<PersonalMapPage> {
       debugPrint('取得活動失敗: $e');
     }
   }
-*/
 
+  /*
   //測試用假資料
   Future<void> fetchEvents() async {
     try {
@@ -179,6 +201,7 @@ class PersonalMapPageState extends State<PersonalMapPage> {
       debugPrint('取得活動失敗: $e');
     }
   }
+  */
 
   //地址轉座標
   Future<LatLng?> getLatLngFromAddress(String address) async {
@@ -191,6 +214,18 @@ class PersonalMapPageState extends State<PersonalMapPage> {
       debugPrint('地址轉換失敗: $e');
     }
     return null;
+  }
+
+  //一鍵回到定位點
+  void goToCurrentLoc() {
+    if (_currentLocation == null) return;
+
+    const double tergetZoom = 14;
+    setState(() {
+      _zoom = tergetZoom;
+    });
+
+    _mapController.move(_currentLocation!, _zoom);
   }
 
   void backToHome() {
@@ -226,33 +261,81 @@ class PersonalMapPageState extends State<PersonalMapPage> {
       body:
           _currentLocation == null
               ? const Center(child: CircularProgressIndicator())
-              : FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(center: _currentLocation, zoom: 14),
+              : Stack(
                 children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    subdomains: const ['a', 'b', 'c'],
-                    userAgentPackageName: 'com.example.flutter_frontend',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      //使用者位置
-                      if (_currentLocation != null)
-                        Marker(
-                          width: 60,
-                          height: 60,
-                          point: _currentLocation!,
-                          child: const Icon(
-                            Icons.person_pin_circle_rounded,
-                            color: Colors.blue,
-                            size: 40,
-                          ),
-                        ),
-                      //活動位置
-                      ...markers,
+                  FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(center: _currentLocation, zoom: _zoom),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        //subdomains: const ['a', 'b', 'c'],
+                        userAgentPackageName: 'com.example.flutter_frontend',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          if (_currentLocation != null)
+                            Marker(
+                              width: 60,
+                              height: 60,
+                              point: _currentLocation!,
+                              child: const Icon(
+                                Icons.person_pin_circle_rounded,
+                                color: Colors.blue,
+                                size: 40,
+                              ),
+                            ),
+                          ...markers,
+                        ],
+                      ),
                     ],
+                  ),
+
+                  //放大縮小按鈕
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 放大
+                        FloatingActionButton(
+                          heroTag: 'zoom_in',
+                          mini: true,
+                          onPressed: () {
+                            setState(() {
+                              _zoom = (_zoom + 1).clamp(3.0, 18.0);
+                              _mapController.move(_mapController.center, _zoom);
+                            });
+                          },
+                          child: const Icon(Icons.add),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // 縮小
+                        FloatingActionButton(
+                          heroTag: 'zoom_out',
+                          mini: true,
+                          onPressed: () {
+                            setState(() {
+                              _zoom = (_zoom - 1).clamp(3.0, 18.0);
+                              _mapController.move(_mapController.center, _zoom);
+                            });
+                          },
+                          child: const Icon(Icons.remove),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // ⭐ 回到我的位置
+                        FloatingActionButton(
+                          heroTag: 'my_location',
+                          mini: true,
+                          onPressed: goToCurrentLoc,
+                          child: const Icon(Icons.my_location),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
