@@ -64,6 +64,9 @@ dependencies:
   #animation
   animate_do: ^3.3.4
 
+  #font
+  google_fonts: ^6.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

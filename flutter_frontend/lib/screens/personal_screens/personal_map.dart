@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_frontend/config.dart';
@@ -12,6 +13,8 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+import 'package:google_fonts/google_fonts.dart';
+
 class PersonalMapPage extends StatefulWidget {
   const PersonalMapPage({super.key});
 
@@ -19,12 +22,29 @@ class PersonalMapPage extends StatefulWidget {
   State<PersonalMapPage> createState() => PersonalMapPageState();
 }
 
+class EventPin {
+  final int id;
+  final String name;
+  final String address;
+  final LatLng loc;
+  EventPin({
+    required this.id,
+    required this.name,
+    required this.address,
+    required this.loc,
+  });
+}
+
 class PersonalMapPageState extends State<PersonalMapPage> {
   final MapController _mapController = MapController();
   LatLng? _currentLocation; //使用者當前座標
-  List<dynamic> markers = [];
+
+  List<Marker> markers = [];
+  final List<EventPin> _events = [];
 
   double _zoom = 14.0; //地圖縮放變數
+
+  EventPin? selected; //被選中的marker
 
   @override
   void initState() {
@@ -82,62 +102,52 @@ class PersonalMapPageState extends State<PersonalMapPage> {
       await apiClient.init();
       final response = await apiClient.get(uriEvent.toString());
 
-      debugPrint('活動列表狀態碼: ${response.statusCode}');
-      debugPrint('活動列表回傳內容: ${response.body}');
+      //debugPrint('活動列表狀態碼: ${response.statusCode}');
+      //debugPrint('活動列表回傳內容: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         final List<dynamic> events = data['events'] ?? [];
 
-        List<Marker> newMarkers = [];
+        final List<EventPin> pins = [];
 
         for (var e in events) {
+          final id = (e['id'] ?? 0) as int;
           final address = (e['address'] ?? '').toString();
           final name = (e['name'] ?? '任務').toString();
 
-          final latLng = await getLatLngFromAddress(address);
-          if (latLng != null) {
-            newMarkers.add(
-              Marker(
-                width: 60,
-                height: 60,
-                point: latLng,
-                child: GestureDetector(
-                  onTap: () {
-                    // 先放大並移動鏡頭到這個 marker
-                    final double targetZoom = (_zoom < 16.0 ? 16.0 : _zoom + 1)
-                        .clamp(3.0, 18.0);
-
-                    setState(() {
-                      _zoom = targetZoom;
-                    });
-                    _mapController.move(latLng, targetZoom);
-
-                    Future.delayed(const Duration(milliseconds: 300), () {
-                      if (mounted) {
-                        toEventList();
-                      }
-                    });
-                  },
-                  child: Tooltip(
-                    message: name,
-                    child: const Icon(
-                      Icons.location_on_rounded,
-                      color: Colors.amber,
-                      size: 40,
-                    ),
-                  ),
-                ),
-              ),
-            );
+          final loc = await getLatLngFromAddress(address);
+          if (loc != null) {
+            pins.add(EventPin(id: id, name: name, address: address, loc: loc));
           } else {
             debugPrint('地址轉換失敗，略過此活動');
           }
         }
 
+        final List<Marker> mks =
+            pins.map((p) {
+              return Marker(
+                width: 60,
+                height: 60,
+                point: p.loc,
+                child: GestureDetector(
+                  onTap: () => onMarkerTap(p),
+                  child: const Icon(
+                    Icons.location_on_rounded,
+                    color: Color(0xFFd4a373),
+                    size: 40,
+                  ),
+                ),
+              );
+            }).toList();
+
+        if (!mounted) return;
         setState(() {
-          markers = newMarkers;
+          _events
+            ..clear()
+            ..addAll(pins);
+          markers = mks;
         });
       }
     } catch (e) {
@@ -145,63 +155,24 @@ class PersonalMapPageState extends State<PersonalMapPage> {
     }
   }
 
-  /*
-  //測試用假資料
-  Future<void> fetchEvents() async {
-    try {
-      // 📌 測試用假資料 (模擬 API 回傳的 JSON 陣列)
-      final data = [
-        {
-          "id": 1,
-          "name": "台北公益活動",
-          "address": "台北市中正區忠孝西路一段49號", // 台北車站
-        },
-        {"id": 2, "name": "消滅Google總部", "address": "美國加州聖塔克拉拉郡的山景城圓形劇場園道"},
-        {
-          "id": 3,
-          "name": "高雄助學市集",
-          "address": "高雄市苓雅區四維三路2號", // 高雄市政府
-        },
-        {'id': 4, 'name': '捐米', 'address': '台北市文山區指南二路政治大學'},
-      ];
-
-      List<Marker> newMarkers = [];
-
-      for (var event in data) {
-        final address = event['address'] ?? '';
-        final name = event['name'] ?? '任務';
-
-        final latLng = await getLatLngFromAddress(address.toString());
-        if (latLng != null) {
-          newMarkers.add(
-            Marker(
-              width: 60,
-              height: 60,
-              point: latLng,
-              child: GestureDetector(
-                onTap: () => toEventList(),
-                child: Tooltip(
-                  message: name.toString(),
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    color: Colors.amber,
-                    size: 40,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-      }
-
-      setState(() {
-        markers = newMarkers;
-      });
-    } catch (e) {
-      debugPrint('取得活動失敗: $e');
+  //點擊卡片
+  void onMarkerTap(EventPin pin) {
+    //再次點擊
+    if (selected != null && selected!.id == pin.id) {
+      goToDetail(pin);
+      return;
     }
+
+    //初次點擊
+    final double targetZoom = (_zoom < 16.0 ? 16.0 : _zoom).clamp(3.0, 18.0);
+    setState(() {
+      selected = pin;
+      _zoom = targetZoom;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _mapController.move(pin.loc, targetZoom);
+    });
   }
-  */
 
   //地址轉座標
   Future<LatLng?> getLatLngFromAddress(String address) async {
@@ -234,7 +205,7 @@ class PersonalMapPageState extends State<PersonalMapPage> {
     ).push(MaterialPageRoute(builder: (context) => const PersonalHomeTab()));
   }
 
-  void toEventList() {
+  void goToDetail(EventPin pin) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const PersonalEventListPage()),
     );
@@ -243,20 +214,22 @@ class PersonalMapPageState extends State<PersonalMapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFf8f5f0),
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        /*leading: Padding(
-          padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.amberAccent,
-            child: IconButton(
-              onPressed: backToHome,
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
-              tooltip: '返回主頁',
+        title: Text(
+          '活動地圖',
+          style: GoogleFonts.notoSerifTc(
+            // 中文用 Noto Serif TC
+            textStyle: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF4b3832),
+              letterSpacing: 0.5,
             ),
           ),
-        ),*/
-        title: const Text('活動地圖'),
+        ),
+        backgroundColor: const Color(0xFFe6ccb2),
+        elevation: 4,
       ),
       body:
           _currentLocation == null
@@ -282,13 +255,38 @@ class PersonalMapPageState extends State<PersonalMapPage> {
                               point: _currentLocation!,
                               child: const Icon(
                                 Icons.person_pin_circle_rounded,
-                                color: Colors.blue,
+                                color: Color.fromARGB(255, 46, 95, 136),
                                 size: 40,
                               ),
                             ),
                           ...markers,
                         ],
                       ),
+                      if (selected != null)
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: selected!.loc,
+                              width:
+                                  MediaQuery.of(context).size.width *
+                                  0.8, // 卡片寬度
+                              height: 160, // 預留高度
+                              alignment:
+                                  Alignment.bottomCenter, // 讓 child 的底對準座標
+                              child: Transform.translate(
+                                // 固定上移 36px（可再調整）
+                                offset: const Offset(0, -120),
+                                child: _PopupAboveMarker(
+                                  title: selected!.name,
+                                  subtitle: selected!.address,
+                                  onClose:
+                                      () => setState(() => selected = null),
+                                  onTap: () => goToDetail(selected!),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
 
@@ -299,41 +297,21 @@ class PersonalMapPageState extends State<PersonalMapPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // 放大
-                        FloatingActionButton(
-                          heroTag: 'zoom_in',
-                          mini: true,
-                          onPressed: () {
-                            setState(() {
-                              _zoom = (_zoom + 1).clamp(3.0, 18.0);
-                              _mapController.move(_mapController.center, _zoom);
-                            });
-                          },
-                          child: const Icon(Icons.add),
-                        ),
+                        _roundButton(Icons.add, () {
+                          setState(() {
+                            _zoom = (_zoom + 1).clamp(3.0, 18.0);
+                            _mapController.move(_mapController.center, _zoom);
+                          });
+                        }),
                         const SizedBox(height: 8),
-
-                        // 縮小
-                        FloatingActionButton(
-                          heroTag: 'zoom_out',
-                          mini: true,
-                          onPressed: () {
-                            setState(() {
-                              _zoom = (_zoom - 1).clamp(3.0, 18.0);
-                              _mapController.move(_mapController.center, _zoom);
-                            });
-                          },
-                          child: const Icon(Icons.remove),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // ⭐ 回到我的位置
-                        FloatingActionButton(
-                          heroTag: 'my_location',
-                          mini: true,
-                          onPressed: goToCurrentLoc,
-                          child: const Icon(Icons.my_location),
-                        ),
+                        _roundButton(Icons.remove, () {
+                          setState(() {
+                            _zoom = (_zoom - 1).clamp(3.0, 18.0);
+                            _mapController.move(_mapController.center, _zoom);
+                          });
+                        }),
+                        const SizedBox(height: 12),
+                        _roundButton(Icons.my_location, goToCurrentLoc),
                       ],
                     ),
                   ),
@@ -341,4 +319,162 @@ class PersonalMapPageState extends State<PersonalMapPage> {
               ),
     );
   }
+
+  Widget _roundButton(IconData icon, VoidCallback onTap) {
+    return FloatingActionButton(
+      heroTag: icon.codePoint,
+      backgroundColor: const Color(0xFFe6ccb2),
+      mini: true,
+      onPressed: onTap,
+      child: Icon(icon, color: const Color(0xFF5b4636)),
+    );
+  }
+}
+
+class _PopupAboveMarker extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final VoidCallback onClose;
+  final VoidCallback onTap;
+
+  const _PopupAboveMarker({
+    required this.title,
+    required this.subtitle,
+    required this.onClose,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 上方的資訊卡片
+        Material(
+          elevation: 10,
+          borderRadius: BorderRadius.circular(18),
+          color: const Color(0xFFfef9f2),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.menu_book_rounded,
+                    size: 44,
+                    color: Color(0xFFd4a373),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.notoSerifTc(
+                            textStyle: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF3e2e25),
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.notoSerifTc(
+                            textStyle: const TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF5c4f46),
+                              height: 1.25,
+                            ),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFFb08968)),
+                    onPressed: onClose,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // 卡片下方的小三角，指向地標
+        const _BubblePointer(
+          color: Color(0xFFfef9f2),
+          borderColor: Color(0xFFfef9f2),
+        ),
+        const SizedBox(height: 8), // 卡片底到座標點的距離（調整卡片與圖標的垂直間隙）
+      ],
+    );
+  }
+}
+
+class _BubblePointer extends StatelessWidget {
+  final Color color;
+  final Color borderColor;
+  const _BubblePointer({required this.color, required this.borderColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 18,
+      height: 10,
+      child: CustomPaint(
+        painter: _TrianglePainter(color: color, borderColor: borderColor),
+      ),
+    );
+  }
+}
+
+class _TrianglePainter extends CustomPainter {
+  final Color color;
+  final Color borderColor;
+  _TrianglePainter({required this.color, required this.borderColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path =
+        ui.Path()
+          ..moveTo(0.0, 0)
+          ..lineTo(size.width / 2, size.height)
+          ..lineTo(size.width, 0)
+          ..close();
+
+    // 邊框
+    final border =
+        Paint()
+          ..color = borderColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
+    canvas.drawPath(path, border);
+
+    // 內填色
+    final fill =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
+    // 稍微往上填，避免和邊框有縫
+    final inner =
+        ui.Path()
+          ..moveTo(1, 1)
+          ..lineTo(size.width / 2, size.height - 1)
+          ..lineTo(size.width - 1, 1)
+          ..close();
+    canvas.drawPath(inner, fill);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
