@@ -46,7 +46,7 @@ class CharityHomePageState extends State<CharityHomePage> {
           Padding(
             padding: const EdgeInsets.only(right: 12.0, top: 6.0, bottom: 6.0),
             child: CircleAvatar(
-              backgroundColor: Colors.amber,
+              backgroundColor: Color(0xFFd4a373),
               child: IconButton(
                 onPressed: _toMail,
                 icon: const Icon(Icons.mail, color: Colors.brown),
@@ -67,7 +67,7 @@ class CharityHomePageState extends State<CharityHomePage> {
                 onPressed: _newEventPage,
                 child: const Text(
                   '新增活動',
-                  style: TextStyle(fontSize: 20, color: Colors.amber),
+                  style: TextStyle(fontSize: 20, color: Color(0xFFf8f5f0)),
                 ),
               ),
             ),
@@ -79,7 +79,7 @@ class CharityHomePageState extends State<CharityHomePage> {
                 onPressed: _eventListPage,
                 child: const Text(
                   '活動清單',
-                  style: TextStyle(fontSize: 20, color: Colors.amber),
+                  style: TextStyle(fontSize: 20, color: Color(0xFFf8f5f0)),
                 ),
               ),
             ),
@@ -91,7 +91,7 @@ class CharityHomePageState extends State<CharityHomePage> {
                 onPressed: _coEventPage,
                 child: const Text(
                   '協辦活動',
-                  style: TextStyle(fontSize: 20, color: Colors.amber),
+                  style: TextStyle(fontSize: 20, color: Color(0xFFf8f5f0)),
                 ),
               ),
             ),

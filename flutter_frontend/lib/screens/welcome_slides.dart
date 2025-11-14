@@ -73,7 +73,7 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
                       line,
                       style: TextStyle(
                         fontSize: 32.sp,
-                        color: Colors.black87,
+                        color: Color(0xFF4b3832),
                         fontWeight: FontWeight.bold,
                       ),
 
@@ -88,7 +88,10 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
                   descriptions[currentPage].map<Widget>((line) {
                     return Text(
                       line,
-                      style: TextStyle(fontSize: 16.sp, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: Color(0xFF4b3832),
+                      ),
                       textAlign: TextAlign.center,
                     );
                   }).toList(),
@@ -114,7 +117,9 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color:
-                        currentPage == index ? Colors.black : Colors.grey[300],
+                        currentPage == index
+                            ? Color(0xFF4b3832)
+                            : Colors.grey[300],
                   ),
                 ),
               ),
@@ -139,14 +144,14 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
             style: TextStyle(
               fontSize: 32.sp,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Color(0xFF4b3832),
             ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 10.h),
           Text(
             '一起用行動支持公益～',
-            style: TextStyle(fontSize: 16.sp, color: Colors.black87),
+            style: TextStyle(fontSize: 16.sp, color: Color(0xFF4b3832)),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 10.h),
@@ -159,14 +164,14 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/personal_signin');
                   },
-                  color: GFColors.SECONDARY,
+                  color: const Color(0xFFe6ccb2),
                   shape: GFButtonShape.pills,
                   type: GFButtonType.solid,
                   child: Text(
                     "我是個人使用者，入境接收任務",
                     style: TextStyle(
                       fontSize: 16.sp,
-                      color: Colors.white,
+                      color: const Color(0xFF4b3832),
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
@@ -180,14 +185,14 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
                   onPressed: () {
                     Navigator.pushNamed(context, '/group_signin');
                   },
-                  color: GFColors.SECONDARY,
+                  color: const Color(0xFFe6ccb2),
                   shape: GFButtonShape.pills,
                   type: GFButtonType.solid,
                   child: Text(
                     "我是慈善機構，入境創建委託所",
                     style: TextStyle(
                       fontSize: 16.sp,
-                      color: Colors.white,
+                      color: const Color(0xFF4b3832),
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
