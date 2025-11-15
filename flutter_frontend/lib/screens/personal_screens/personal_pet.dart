@@ -144,11 +144,14 @@ class _PersonalPetPageState extends State<PersonalPetPage>
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
-            onPressed: backToHome,
-            tooltip: '返回主頁',
+          padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.amber,
+            child: IconButton(
+              onPressed: backToHome,
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
+              tooltip: '返回主頁',
+            ),
           ),
         ),
         title: const Text('我的寵物'),

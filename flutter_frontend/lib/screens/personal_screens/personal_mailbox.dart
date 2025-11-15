@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
 import '../../api_client.dart';
 import 'package:flutter_frontend/routes.dart';
 
@@ -143,15 +144,34 @@ class PersonalMailboxPageState extends State<PersonalMailboxPage>
     );
   }
 
+  void backToHome() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const PersonalHomePage()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.amber,
+            child: IconButton(
+              onPressed: backToHome,
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
+              tooltip: '返回主頁',
+            ),
+          ),
+        ),
         title: const Text('信箱'),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.brown,
-          indicatorColor: Colors.amberAccent,
+          indicatorColor: Color(0xFF4A2E14),
           tabs: const [
             Tab(text: '個人信件'),
             Tab(text: '活動通知'),

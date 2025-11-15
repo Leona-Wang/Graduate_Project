@@ -98,7 +98,7 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
         leading: Padding(
           padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
           child: CircleAvatar(
-            backgroundColor: Colors.amberAccent,
+            backgroundColor: Colors.amber,
             child: IconButton(
               onPressed: backToHome,
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),

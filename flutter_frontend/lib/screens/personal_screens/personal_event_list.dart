@@ -203,32 +203,114 @@ class PersonalEventListState extends State<PersonalEventListPage> {
   //主架構，其他區域分開寫
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.amberAccent,
-            child: IconButton(
-              onPressed: backToMap,
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
-              tooltip: '返回地圖',
+    final baseTheme = Theme.of(context);
+    final brown = Colors.brown[800]!;
+
+    return Theme(
+      data: baseTheme.copyWith(
+        // 全頁文字顏色、大小、粗細
+        textTheme: baseTheme.textTheme
+            .apply(bodyColor: brown, displayColor: brown)
+            .copyWith(
+              titleLarge: baseTheme.textTheme.titleLarge?.copyWith(
+                fontSize: (baseTheme.textTheme.titleLarge?.fontSize ?? 20) + 2,
+                fontWeight: FontWeight.w800,
+              ),
+              titleMedium: baseTheme.textTheme.titleMedium?.copyWith(
+                fontSize: (baseTheme.textTheme.titleMedium?.fontSize ?? 18) + 2,
+                fontWeight: FontWeight.w700,
+              ),
+              bodyLarge: baseTheme.textTheme.bodyLarge?.copyWith(
+                fontSize: (baseTheme.textTheme.bodyLarge?.fontSize ?? 16) + 2,
+                fontWeight: FontWeight.w700,
+              ),
+              bodyMedium: baseTheme.textTheme.bodyMedium?.copyWith(
+                fontSize: (baseTheme.textTheme.bodyMedium?.fontSize ?? 14) + 2,
+                fontWeight: FontWeight.w600,
+              ),
+              bodySmall: baseTheme.textTheme.bodySmall?.copyWith(
+                fontSize: (baseTheme.textTheme.bodySmall?.fontSize ?? 12) + 2,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+        // AppBar 標題也用棕色＋加粗
+        appBarTheme: baseTheme.appBarTheme.copyWith(
+          titleTextStyle: baseTheme.textTheme.titleLarge?.copyWith(
+            color: brown,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+          ),
+          iconTheme: const IconThemeData(color: Colors.brown),
+        ),
+
+        // TextField / Dropdown 標籤與邊框
+        inputDecorationTheme: baseTheme.inputDecorationTheme.copyWith(
+          labelStyle: TextStyle(
+            color: brown,
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+          ),
+          hintStyle: TextStyle(color: brown.withOpacity(0.6), fontSize: 14),
+          border: const OutlineInputBorder(),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: brown.withOpacity(0.45)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: brown, width: 2),
+          ),
+        ),
+
+        // ChoiceChip 文字與選取顏色
+        chipTheme: baseTheme.chipTheme.copyWith(
+          labelStyle: TextStyle(
+            color: brown,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+          selectedColor: Colors.amber[200],
+        ),
+
+        // 「活動詳情」按鈕文字
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: brown,
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
-        title: const Text('任務一覽'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            buildFilters(),
-            buildSearchAndSort(),
-            const SizedBox(height: 8),
-            Expanded(child: buildEventList()),
-            buildPagination(),
-          ],
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
+            child: CircleAvatar(
+              backgroundColor: Colors.amber,
+              child: IconButton(
+                onPressed: backToMap,
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
+                tooltip: '返回地圖',
+              ),
+            ),
+          ),
+          title: const Text('任務一覽'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              buildFilters(),
+              const SizedBox(height: 8),
+              buildSearchAndSort(),
+              const SizedBox(height: 8),
+              Expanded(child: buildEventList()),
+              buildPagination(),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -240,9 +322,9 @@ class PersonalEventListState extends State<PersonalEventListPage> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          //篩選活動類型
+          // 篩選活動類型
           buildDropdown(
-            '選擇活動類型',
+            '活動類型',
             selectedType,
             [
               '綜合性服務',
@@ -270,14 +352,14 @@ class PersonalEventListState extends State<PersonalEventListPage> {
               fetchEvents();
             }),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
-          //篩選地點
+          // 篩選地點
           buildDropdown(
-            '選擇地點',
+            '地點',
             selectedLocation,
             [
-              '台北市',
+              '臺北市',
               '新北市',
               '基隆市',
               '桃園市',
@@ -285,7 +367,7 @@ class PersonalEventListState extends State<PersonalEventListPage> {
               '新竹縣',
               '苗栗縣',
               '南投縣',
-              '台中市',
+              '臺中市',
               '彰化縣',
               '雲林縣',
               '嘉義市',
@@ -295,7 +377,7 @@ class PersonalEventListState extends State<PersonalEventListPage> {
               '屏東縣',
               '宜蘭縣',
               '花蓮縣',
-              '台東縣',
+              '臺東縣',
               '澎湖縣',
               '金門縣',
               '連江縣',
@@ -307,11 +389,11 @@ class PersonalEventListState extends State<PersonalEventListPage> {
               fetchEvents();
             }),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
-          //篩選時間
+          // 篩選時間
           buildDropdown(
-            '選擇時間段',
+            '時間段',
             selectedTime,
             ['三天內', '一周內', '一個月內', '三個月內', '常駐'],
             (val) => setState(() {
@@ -320,15 +402,23 @@ class PersonalEventListState extends State<PersonalEventListPage> {
               fetchEvents();
             }),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
-          //線上/線下篩選
+          // 線上 / 線下
           Wrap(
-            spacing: 8,
+            spacing: 6,
             children: [
               ChoiceChip(
-                label: const Text('全部'),
+                label: const Text(
+                  '全部',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.brown,
+                  ),
+                ),
                 selected: filterOnline == null,
+                selectedColor: Colors.amber[200],
                 onSelected: (_) {
                   setState(() {
                     filterOnline = null;
@@ -338,8 +428,16 @@ class PersonalEventListState extends State<PersonalEventListPage> {
                 },
               ),
               ChoiceChip(
-                label: const Text('線上'),
+                label: const Text(
+                  '線上',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.brown,
+                  ),
+                ),
                 selected: filterOnline == true,
+                selectedColor: Colors.amber[200],
                 onSelected: (_) {
                   setState(() {
                     filterOnline = true;
@@ -349,8 +447,16 @@ class PersonalEventListState extends State<PersonalEventListPage> {
                 },
               ),
               ChoiceChip(
-                label: const Text('線下'),
+                label: const Text(
+                  '線下',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.brown,
+                  ),
+                ),
                 selected: filterOnline == false,
+                selectedColor: Colors.amber[200],
                 onSelected: (_) {
                   setState(() {
                     filterOnline = false;
@@ -374,17 +480,56 @@ class PersonalEventListState extends State<PersonalEventListPage> {
     Function(String?) onChanged,
   ) {
     return SizedBox(
-      width: 140,
+      width: 150, // 每個篩選框固定寬度
+      height: 50,
       child: DropdownButtonFormField<String?>(
-        decoration: InputDecoration(labelText: label),
+        isDense: true,
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 6,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.brown),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+            borderSide: BorderSide(color: Colors.brown, width: 2),
+          ),
+        ),
         value: value,
+        // 上面顯示的文字（尚未選時）
+        hint: Text(
+          label, // 例如：活動類型 / 地點 / 時間段
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Colors.brown,
+          ),
+        ),
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.brown),
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Colors.brown,
+        ),
         items: [
           DropdownMenuItem<String?>(
-            child: Text('所有${label.replaceAll('選擇', '')}'),
             value: null,
+            child: Text(
+              '所有${label.replaceAll("選擇", "")}', // 若 label 是「選擇活動類型」→ 「所有活動類型」
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           ...items.map(
-            (e) => DropdownMenuItem<String?>(value: e, child: Text(e)),
+            (e) => DropdownMenuItem<String?>(
+              value: e,
+              child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
           ),
         ],
         onChanged: onChanged,
@@ -397,30 +542,61 @@ class PersonalEventListState extends State<PersonalEventListPage> {
     return Row(
       children: [
         Expanded(
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              labelText: '搜尋活動',
-              prefixIcon: Icon(Icons.search_outlined),
-              border: OutlineInputBorder(),
-              suffixIcon:
-                  _searchController.text.isNotEmpty
-                      ? IconButton(
-                        icon: Icon(Icons.clear),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            currentPage = 1;
-                            fetchEvents();
-                          });
-                        },
-                      )
-                      : null,
+          child: SizedBox(
+            height: 50,
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.brown,
+              ),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 0,
+                ),
+                labelText: null,
+                hintText: '搜尋活動',
+                hintStyle: TextStyle(
+                  color: Colors.brown.withOpacity(0.5),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_outlined,
+                  size: 20,
+                  color: Colors.brown,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.brown.withOpacity(0.5)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Colors.brown, width: 2),
+                ),
+                suffixIcon:
+                    _searchController.text.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(
+                            Icons.clear,
+                            size: 20,
+                            color: Colors.brown,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _searchController.clear();
+                              currentPage = 1;
+                              fetchEvents();
+                            });
+                          },
+                        )
+                        : null,
+              ),
+              onSubmitted: (_) => fetchEvents(),
+              onChanged: (_) => setState(() {}),
             ),
-            onChanged: (_) {
-              setState(() {});
-            },
-            onSubmitted: (_) => fetchEvents(),
           ),
         ),
         IconButton(
@@ -451,7 +627,11 @@ class PersonalEventListState extends State<PersonalEventListPage> {
       return Center(
         child: Text(
           _searchController.text.isNotEmpty ? '找不到符合的活動' : '目前沒有活動',
-          style: const TextStyle(fontSize: 16, color: Colors.grey),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.brown,
+          ),
         ),
       );
     }
@@ -519,7 +699,14 @@ class PersonalEventListState extends State<PersonalEventListPage> {
                   : null,
           icon: Icon(Icons.arrow_back),
         ),
-        Text('第 $currentPage 頁 / 共 $totalPage 頁'),
+        Text(
+          '第 $currentPage 頁 / 共 $totalPage 頁',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Colors.brown,
+          ),
+        ),
         IconButton(
           onPressed:
               currentPage < totalPage

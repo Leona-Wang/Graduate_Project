@@ -171,7 +171,7 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
       progress = 0;
     }
 
-    final primaryColor = Colors.amber[400]!;
+    final primaryColor = Colors.amber;
     final textOnDark = Colors.white;
 
     return Theme(
@@ -237,7 +237,7 @@ class PersonalFFEventPageState extends State<PersonalFFEventPage> {
                           children: [
                             CircleAvatar(
                               radius: 20,
-                              backgroundColor: Colors.amberAccent,
+                              backgroundColor: Colors.amber,
                               child: IconButton(
                                 padding: EdgeInsets.zero,
                                 icon: const Icon(

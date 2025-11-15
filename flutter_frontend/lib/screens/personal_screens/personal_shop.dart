@@ -428,11 +428,14 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
-            onPressed: backToHome,
-            tooltip: '返回主頁',
+          padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.amber,
+            child: IconButton(
+              onPressed: backToHome,
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
+              tooltip: '返回主頁',
+            ),
           ),
         ),
         title: const Text('商城'),
@@ -484,7 +487,11 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4A2E14),
+                ),
               ),
             ),
             if (trailing != null) trailing,
@@ -508,7 +515,11 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
                 Expanded(
                   child: Text(
                     '每抽 $gachaCost 金幣',
-                    style: theme.textTheme.bodyLarge,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF4A2E14),
+                    ),
                   ),
                 ),
                 IconButton(
@@ -578,9 +589,13 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
       children: [
         const Text(
           '克金區域',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF4A2E14),
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Row(
           children: [
             for (final amount in [100, 300, 1000])
@@ -605,9 +620,13 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
       children: [
         const Text(
           '商品清單',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF4A2E14),
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         GridView.builder(
           shrinkWrap: true,
           itemCount: items.length,
@@ -630,11 +649,20 @@ class _PersonalShopPageState extends State<PersonalShopPage> {
                     Icon(item.icon, size: 48),
                     Text(
                       item.name,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF4A2E14),
                       ),
                     ),
-                    Text('價格：${item.price}'),
+                    Text(
+                      '價格：${item.price}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF4A2E14),
+                      ),
+                    ),
                     FilledButton(
                       onPressed: () => _comingSoon('購買功能將於正式版開放'),
                       child: const Text('購買'),

@@ -67,7 +67,7 @@ class CharityHomePageState extends State<CharityHomePage> {
                 onPressed: _newEventPage,
                 child: const Text(
                   '新增活動',
-                  style: TextStyle(fontSize: 20, color: Color(0xFFf8f5f0)),
+                  style: TextStyle(fontSize: 20, color: Color(0xFF4b3832)),
                 ),
               ),
             ),
@@ -79,7 +79,7 @@ class CharityHomePageState extends State<CharityHomePage> {
                 onPressed: _eventListPage,
                 child: const Text(
                   '活動清單',
-                  style: TextStyle(fontSize: 20, color: Color(0xFFf8f5f0)),
+                  style: TextStyle(fontSize: 20, color: Color(0xFF4b3832)),
                 ),
               ),
             ),
@@ -91,7 +91,7 @@ class CharityHomePageState extends State<CharityHomePage> {
                 onPressed: _coEventPage,
                 child: const Text(
                   '協辦活動',
-                  style: TextStyle(fontSize: 20, color: Color(0xFFf8f5f0)),
+                  style: TextStyle(fontSize: 20, color: Color(0xFF4b3832)),
                 ),
               ),
             ),
