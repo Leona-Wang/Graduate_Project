@@ -15,7 +15,7 @@ class TaiwanAddressHelper {
     "New Taipei City": "新北市",
     "Taoyuan City": "桃園市",
     "Taichung City": "台中市",
-    "Tainan City": "台南市",
+    "Tainan City": "臺南市",
     "Kaohsiung City": "高雄市",
     "Keelung City": "基隆市",
     "Hsinchu City": "新竹市",

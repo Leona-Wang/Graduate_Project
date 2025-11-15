@@ -79,7 +79,7 @@
     "model": "backend.location",
     "pk": 1,
     "fields": {
-        "locationName": "台北市"
+        "locationName": "臺北市"
     }
 },
 {
@@ -135,7 +135,7 @@
     "model": "backend.location",
     "pk": 9,
     "fields": {
-        "locationName": "台中市"
+        "locationName": "臺中市"
     }
 },
 {
@@ -177,7 +177,7 @@
     "model": "backend.location",
     "pk": 15,
     "fields": {
-        "locationName": "台南市"
+        "locationName": "臺南市"
     }
 },
 {
@@ -198,7 +198,7 @@
     "model": "backend.location",
     "pk": 18,
     "fields": {
-        "locationName": "台東縣"
+        "locationName": "臺東縣"
     }
 },
 {

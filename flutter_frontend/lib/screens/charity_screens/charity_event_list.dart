@@ -320,7 +320,7 @@ class CharityEventListState extends State<CharityEventListPage> {
               '雲林縣',
               '嘉義市',
               '嘉義縣',
-              '台南市',
+              '臺南市',
               '高雄市',
               '屏東縣',
               '宜蘭縣',
