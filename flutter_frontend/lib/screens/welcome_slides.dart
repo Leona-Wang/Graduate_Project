@@ -13,10 +13,10 @@ class WelcomeSlidesPageState extends State<WelcomeSlidesPage> {
   int currentPage = 0;
 
   final List<String> slideList = [
-    'assets/welcomeSlides/image1.png',
-    'assets/welcomeSlides/image2.png',
-    'assets/welcomeSlides/image3.png',
-    'assets/welcomeSlides/image4.png',
+    'assets/welcomeSlides/manga1.png',
+    'assets/welcomeSlides/manga2.png',
+    'assets/welcomeSlides/manga3.png',
+    'assets/welcomeSlides/manga4.png',
   ];
 
   final List<List<String>> titles = [
