@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_event_detail_page.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -22,15 +23,22 @@ class PersonalMapPage extends StatefulWidget {
   State<PersonalMapPage> createState() => PersonalMapPageState();
 }
 
+//圖標用
 class EventPin {
   final int id;
-  final String name;
-  final String address;
+  final String title;
+  final String type;
+  final String location;
+  final DateTime date;
+  final bool online;
   final LatLng loc;
   EventPin({
     required this.id,
-    required this.name,
-    required this.address,
+    required this.title,
+    required this.type,
+    required this.location,
+    required this.date,
+    required this.online,
     required this.loc,
   });
 }
@@ -113,15 +121,27 @@ class PersonalMapPageState extends State<PersonalMapPage> {
         final List<EventPin> pins = [];
 
         for (var e in events) {
-          final id = (e['id'] ?? 0) as int;
-          final address = (e['address'] ?? '').toString();
-          final name = (e['name'] ?? '任務').toString();
+          final id = e['id'] as int;
+          final title = e['name'] ?? '未命名任務';
+          final type = e['eventType'] ?? '';
+          final location = e['address'] ?? '';
+          final date = DateTime.parse(e['startTime']);
+          final online = e['online'] ?? false;
 
-          final loc = await getLatLngFromAddress(address);
+          final loc = await getLatLngFromAddress(location);
+
           if (loc != null) {
-            pins.add(EventPin(id: id, name: name, address: address, loc: loc));
-          } else {
-            debugPrint('地址轉換失敗，略過此活動');
+            pins.add(
+              EventPin(
+                id: id,
+                title: title,
+                type: type,
+                location: location,
+                date: date,
+                online: online,
+                loc: loc,
+              ),
+            );
           }
         }
 
@@ -206,8 +226,18 @@ class PersonalMapPageState extends State<PersonalMapPage> {
   }
 
   void goToDetail(EventPin pin) {
+    final event = Event(
+      id: pin.id,
+      title: pin.title,
+      type: pin.type,
+      location: pin.location,
+      date: pin.date,
+      online: pin.online,
+    );
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const PersonalEventListPage()),
+      MaterialPageRoute(
+        builder: (context) => PersonalEventDetailPage(event: event),
+      ),
     );
   }
 
@@ -277,8 +307,8 @@ class PersonalMapPageState extends State<PersonalMapPage> {
                                 // 固定上移 36px（可再調整）
                                 offset: const Offset(0, -120),
                                 child: _PopupAboveMarker(
-                                  title: selected!.name,
-                                  subtitle: selected!.address,
+                                  title: selected!.title,
+                                  subtitle: selected!.location,
                                   onClose:
                                       () => setState(() => selected = null),
                                   onTap: () => goToDetail(selected!),
