@@ -92,7 +92,10 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final brown = Colors.brown[800]!;
+
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: Padding(
@@ -106,65 +109,90 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
             ),
           ),
         ),
-        title: const Text('個人資訊'),
+        title: Text(
+          '個人資訊',
+          style: TextStyle(
+            color: brown,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        backgroundColor: const Color(0xFFFFF0D8),
+        elevation: 0,
       ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // 頭像區背景
                     Container(
                       width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 32),
                       height: 300,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 255, 214, 159),
-                            Color.fromARGB(255, 229, 167, 75),
-                          ],
+                          colors: [Color(0xFFFFF2DD), Color(0xFFFFD798)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                       ),
-                      //color: Colors.orange[100],
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          CircleAvatar(
-                            radius: 55,
-                            backgroundImage:
-                                avatarUrl != null && avatarUrl!.isNotEmpty
-                                    ? NetworkImage(avatarUrl!)
-                                    : null,
-                            backgroundColor: Colors.orange[100],
-                            child:
-                                avatarUrl == null || avatarUrl!.isNotEmpty
-                                    ? const Icon(
-                                      Icons.person,
-                                      size: 55,
-                                      color: Colors.white,
-                                    )
-                                    : null,
+                          Container(
+                            width: 130,
+                            height: 130,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.4),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 60,
+                              backgroundColor: Colors.white,
+                              foregroundImage:
+                                  avatarUrl != null && avatarUrl!.isNotEmpty
+                                      ? NetworkImage(avatarUrl!)
+                                      : null,
+                              child:
+                                  (avatarUrl == null ||
+                                          avatarUrl!.isEmpty) // ← 修正原本判斷
+                                      ? Icon(
+                                        Icons.person,
+                                        size: 60,
+                                        color: Colors.brown[300],
+                                      )
+                                      : null,
+                            ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           Text(
                             userName ?? '使用者名稱',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              color: brown,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 40),
-
+                    const SizedBox(height: 24), //40
                     // 兩個按鈕區塊
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       child: Column(
                         children: [
                           _buildActionButton(
@@ -196,31 +224,47 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final brown = Colors.brown[800]!;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         decoration: BoxDecoration(
-          color: Colors.orange[200],
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.orange.withOpacity(0.3),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
+              color: Colors.brown.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
+          border: Border.all(color: Colors.brown.withOpacity(0.15), width: 1),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 30, color: Colors.white),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, color: Colors.white),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.amber[300],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 22, color: Colors.brown[900]),
             ),
-            const Spacer(),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 18),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: brown,
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: brown, size: 18),
           ],
         ),
       ),

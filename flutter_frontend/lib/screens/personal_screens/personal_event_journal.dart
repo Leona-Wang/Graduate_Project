@@ -159,11 +159,22 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
   }
 
   Widget buildEventList(List<Map<String, dynamic>> events, bool isLoading) {
+    final brown = Colors.brown[800]!;
+
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (events.isEmpty) {
-      return const Center(child: Text('目前沒有任務，快去探索看看吧!'));
+      return const Center(
+        child: Text(
+          '目前沒有任務，快去探索看看吧!',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.brown,
+          ),
+        ),
+      );
     }
     return RefreshIndicator(
       onRefresh: () async {
@@ -174,87 +185,80 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
         }
       },
       child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: events.length,
         itemBuilder: (context, index) {
           final event = events[index];
           final status = event['status'] ?? '';
 
           // 顏色與互動設定
-          late Color cardColor;
-          late Color labelColor;
+          final Color labelColor = const Color.fromARGB(255, 199, 138, 33);
+          final Color cardBG = Colors.white;
 
-          switch (status) {
-            case '正在進行':
-              cardColor = const Color.fromARGB(255, 255, 235, 205);
-              labelColor = const Color.fromARGB(255, 239, 187, 109);
-              break;
-            case '即將到來':
-              cardColor = const Color.fromARGB(255, 233, 198, 164);
-              labelColor = const Color.fromARGB(255, 159, 121, 68);
-              break;
-            case '已結束':
-              cardColor = const Color.fromARGB(255, 255, 235, 205);
-              labelColor = const Color.fromARGB(255, 239, 187, 109);
-              break;
-            case '已刪除':
-              cardColor = const Color.fromARGB(255, 233, 198, 164);
-              labelColor = const Color.fromARGB(255, 159, 121, 68);
-              break;
-            default:
-              cardColor = Colors.grey.shade50;
-              labelColor = Colors.grey;
-          }
-
-          return Card(
-            color: cardColor,
+          return Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 3,
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              title: Text(
-                event['title'] ?? '未命名任務',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: labelColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: labelColor),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      color: labelColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cardBG,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
                 ),
+              ],
+              border: Border.all(
+                color: Colors.brown.withOpacity(0.15),
+                width: 1,
               ),
+            ),
+            child: InkWell(
               onTap: () {
                 if (status != '已刪除') {
                   toEventDetail(event);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('已刪除任務無法查看詳細內容'),
-                      duration: Duration(seconds: 2),
-                    ),
+                    const SnackBar(content: Text('已刪除任務無法查看詳細內容')),
                   );
                 }
               },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    event['title'] ?? '未命名任務',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: brown,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Status label
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: labelColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: labelColor),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        color: labelColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -264,9 +268,14 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
 
   @override
   Widget build(BuildContext context) {
+    final brown = Colors.brown[800]!;
+
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xFFFFF0D8),
+        elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
           child: CircleAvatar(
@@ -274,15 +283,27 @@ class PersonalEventJournalPageState extends State<PersonalEventJournalPage>
             child: IconButton(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
-              tooltip: '返回主頁',
             ),
           ),
         ),
-        title: const Text('個人任務履歷'),
+        title: Text(
+          '個人任務履歷',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: brown,
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.brown,
-          indicatorColor: Colors.amberAccent,
+          labelColor: brown,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+          unselectedLabelColor: brown,
+          indicatorColor: Colors.amber,
+          indicatorWeight: 3,
           tabs: const [Tab(text: '進行中的任務'), Tab(text: '已結束的任務')],
         ),
       ),

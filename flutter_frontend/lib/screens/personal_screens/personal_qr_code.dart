@@ -15,9 +15,11 @@ class PersonalQRCodePage extends StatefulWidget {
 
 class PersonalQRCodePageState extends State<PersonalQRCodePage> {
   String token = '';
-  String fakeToken = '123456';
   int secondsLeft = 300; //5mins
   Timer? countdownTimer;
+
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -33,6 +35,11 @@ class PersonalQRCodePageState extends State<PersonalQRCodePage> {
   }
 
   Future<void> fetchToken() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
     try {
       final apiClient = ApiClient();
       await apiClient.init();
@@ -41,19 +48,29 @@ class PersonalQRCodePageState extends State<PersonalQRCodePage> {
 
       if (getToken.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(getToken.body); //解析
+
         if (data['success'] == true && data['code'] != null) {
           setState(() {
-            token = data['code'];
+            token = data['code'].toString();
             secondsLeft = 300;
+            isLoading = false;
           });
         } else {
-          debugPrint('後端回傳失敗or沒有token');
+          setState(() {
+            errorMessage = '後端回傳失敗或沒有 token';
+            isLoading = false;
+          });
+          debugPrint('後端回傳失敗或沒有 token: ${getToken.body}');
         }
       } else {
         debugPrint('HTTP 錯誤: ${getToken.statusCode}');
       }
     } catch (e) {
-      debugPrint('錯誤:$e');
+      setState(() {
+        errorMessage = '取得 token 時發生錯誤：$e';
+        isLoading = false;
+      });
+      debugPrint('錯誤: $e');
     }
   }
 
@@ -72,10 +89,10 @@ class PersonalQRCodePageState extends State<PersonalQRCodePage> {
 
   String get qrData {
     final Map<String, dynamic> data = {
-      'token': fakeToken, //測試
+      'token': token,
       'eventName': widget.eventName,
     };
-    print(data);
+    debugPrint('QR data: $data');
     return jsonEncode(data);
   }
 
@@ -88,9 +105,29 @@ class PersonalQRCodePageState extends State<PersonalQRCodePage> {
       appBar: AppBar(title: const Text('報到QRCode')),
       body: Center(
         child:
-            fakeToken
-                    .isEmpty //測試
+            isLoading
                 ? const CircularProgressIndicator()
+                : token.isEmpty
+                ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 40,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      errorMessage ?? '目前無法取得 QRCode，請稍後再試',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: fetchToken,
+                      child: const Text('重新嘗試取得 QRCode'),
+                    ),
+                  ],
+                )
                 : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
