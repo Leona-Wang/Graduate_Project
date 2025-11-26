@@ -131,7 +131,7 @@ class OfficialEventParticipant(models.Model):
 class QRCodeRecord(models.Model):
     personalUser = models.ForeignKey(User, on_delete=models.CASCADE) # 持有人
     createTime = models.DateTimeField(auto_now_add=True) # 生成時間
-    expireTime = models.DateTimeField() # 過期時間
+    expireTime = models.DateTimeField(null=True, blank=True) # 過期時間
     isUsed = models.BooleanField(default=False) #
     token = models.CharField(max_length=64, unique=True)
 
