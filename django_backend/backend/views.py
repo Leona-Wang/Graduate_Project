@@ -464,6 +464,7 @@ class ProcessUserQRCode(APIView):
             if joinType == settings.CHARITY_EVENT_JOIN or joinType == settings.CHARITY_EVENT_FINISHED:
                 joined.joinType = settings.CHARITY_EVENT_FINISHED
                 joined.save()
+                return JsonResponse({'success': True}, status=200)
             else:
                 return JsonResponse({'success': False, 'message': '無參加資訊'}, status=404)
         else:
