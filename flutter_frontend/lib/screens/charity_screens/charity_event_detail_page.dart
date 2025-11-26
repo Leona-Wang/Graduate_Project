@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter_frontend/config.dart';
 import 'package:flutter_frontend/api_client.dart';
+import 'package:flutter_frontend/screens/charity_screens/charity_qr_code.dart';
 import 'charity_co-organizer_list.dart';
 import 'charity_event_list.dart';
 import 'charity_edit_event.dart';
@@ -212,16 +213,25 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    const bgColor = Color(0xFFFDF8EC); // 米白
-    const borderColor = Color.fromRGBO(199, 167, 108, 1); // 金黃
-    const textColor = Color(0xFF4A3C1A); // 深棕
+    final brown = Colors.brown[800]!;
+    final brownLight = Colors.brown[600];
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text("活動詳情"),
-        backgroundColor: borderColor,
-        foregroundColor: textColor,
+        backgroundColor: const Color(0xFFe6ccb2),
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          "活動詳情",
+          style: TextStyle(
+            color: brown,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        iconTheme: IconThemeData(color: brown),
+        foregroundColor: brown,
         automaticallyImplyLeading: true,
       ),
       body: FutureBuilder<FullEvent>(
@@ -234,21 +244,24 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
           }
 
           final event = snapshot.data!;
-          const titleColor = Color(0xFF4A3C1A);
-          const subtitleColor = Color(0xFF7B5E3C);
-          const cardBgColor = Color(0xFFFFF9F0);
-          const buttonColor = Color.fromRGBO(208, 179, 138, 1);
+          final titleColor = brown;
+          final subtitleColor = brownLight;
+          const buttonBorderColor = Color(0xFFFFC977);
 
           return Padding(
             padding: const EdgeInsets.all(16),
             child: SingleChildScrollView(
               child: Card(
-                color: cardBgColor,
+                color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: const BorderSide(color: Color(0xFFDAB67D), width: 1.5),
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(
+                    color: Colors.brown.withOpacity(0.15),
+                    width: 1.5,
+                  ),
                 ),
-                elevation: 4,
+                elevation: 5,
+                shadowColor: Colors.black.withOpacity(0.08),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: 24,
@@ -261,9 +274,9 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                       Text(
                         event.title,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
                           color: titleColor,
                         ),
                       ),
@@ -271,16 +284,15 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                       Text(
                         "${event.type} | ${event.location}",
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: subtitleColor,
-                        ),
+                        style: TextStyle(fontSize: 18, color: subtitleColor),
                       ),
-                      const Divider(
-                        height: 24,
-                        thickness: 1,
-                        color: Color(0xFFDAB67D),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: 100,
+                        height: 2,
+                        color: Colors.amber[600],
                       ),
+                      const SizedBox(height: 20),
 
                       // 資訊列表
                       _infoRow(
@@ -291,19 +303,23 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                       _infoRow("委託所", event.mainOrganizer),
                       _infoRow("參與人數", "${event.saveAmount} 位冒險者"),
                       _infoRow('收藏人數', "${event.joinAmount} 位冒險者"),
+
+                      const SizedBox(height: 20),
+
                       //邀請碼
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Expanded(
+                            Expanded(
                               flex: 2,
                               child: Text(
                                 "邀請碼：",
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF4A3C1A),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: brown,
                                 ),
                               ),
                             ),
@@ -315,8 +331,9 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                                     event.inviteCode == 0
                                         ? "尚未產生"
                                         : event.inviteCode.toString(),
-                                    style: const TextStyle(
-                                      color: Color(0xFF7B5E3C),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: brown,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -359,16 +376,20 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                         child: Text(
                           "任務詳情",
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
                             color: titleColor,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         event.description,
-                        style: const TextStyle(fontSize: 14, color: titleColor),
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.5,
+                          color: brownLight,
+                        ),
                         textAlign: TextAlign.left,
                       ),
                       const SizedBox(height: 24),
@@ -394,13 +415,13 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                                   );
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: buttonColor,
-                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.amber,
+                                foregroundColor: brown,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               child: const Text(
@@ -429,13 +450,16 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
-                                foregroundColor: titleColor,
-                                side: const BorderSide(color: buttonColor),
+                                foregroundColor: brown,
+                                side: const BorderSide(
+                                  color: buttonBorderColor,
+                                  width: 2,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               child: const Text(
@@ -445,6 +469,7 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                             ),
                           ),
                           const SizedBox(width: 8),
+
                           Expanded(
                             child: ElevatedButton(
                               onPressed:
@@ -452,18 +477,14 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                                       ? null
                                       : () => _confirmAndDelete(event.title),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(
-                                  255,
-                                  187,
-                                  80,
-                                  78,
-                                ),
+                                backgroundColor: const Color(0xFFBF4C4A),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
+                                elevation: 2,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               child: Text(
@@ -474,6 +495,38 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
                           ),
                         ],
                       ),
+                      if (event.status == '進行中') ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CharityQRCodePage(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.amber[700],
+                              foregroundColor: Colors.brown[900],
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              '參加者報到',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -487,8 +540,9 @@ class _CharityEventDetailPageState extends State<CharityEventDetailPage> {
 }
 
 Widget _infoRow(String label, String value) {
-  const labelColor = Color(0xFF4A3C1A);
-  const valueColor = Color(0xFF7B5E3C);
+  final brown = Colors.brown[800]!;
+  final valueColor = Colors.brown[700];
+
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
@@ -498,15 +552,19 @@ Widget _infoRow(String label, String value) {
           flex: 2,
           child: Text(
             "$label：",
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: labelColor,
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              color: brown,
             ),
           ),
         ),
         Expanded(
           flex: 3,
-          child: Text(value, style: const TextStyle(color: valueColor)),
+          child: Text(
+            value,
+            style: TextStyle(fontSize: 16, color: valueColor, height: 1.4),
+          ),
         ),
       ],
     ),

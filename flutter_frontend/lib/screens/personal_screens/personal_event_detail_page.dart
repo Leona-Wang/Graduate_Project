@@ -325,21 +325,24 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    const parchmentColor = Color(0xFFF8F4E3); //底色
-    const borderColor = Color.fromRGBO(199, 167, 108, 1); //邊框主題色
-    const textMain = Color(0xFF4A3C1A); //文字顏色
+    final brown = Colors.brown[800]!;
+    const appBarBg = Color(0xFFe6ccb2);
 
     return Scaffold(
-      backgroundColor: parchmentColor,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: borderColor,
+        backgroundColor: appBarBg,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           "任務詳情",
-          style: TextStyle(color: textMain, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: brown,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        iconTheme: const IconThemeData(color: textMain),
+        iconTheme: IconThemeData(color: brown),
       ),
       body: FutureBuilder<FullEvent>(
         future: eventFuture,
@@ -360,14 +363,17 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
             padding: const EdgeInsets.all(20),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFFDF8EC),
-                border: Border.all(color: borderColor, width: 2),
+                color: Colors.white,
+                border: Border.all(
+                  color: Colors.brown.withOpacity(0.15),
+                  width: 1.5,
+                ),
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.brown.withOpacity(0.25),
-                    offset: const Offset(3, 3),
-                    blurRadius: 8,
+                    color: Colors.black.withOpacity(0.06),
+                    offset: const Offset(0, 4),
+                    blurRadius: 10,
                   ),
                 ],
               ),
@@ -381,19 +387,26 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
                       children: [
                         Text(
                           event.title,
-                          style: const TextStyle(
-                            fontSize: 24,
+                          style: TextStyle(
+                            fontSize: 30,
                             fontWeight: FontWeight.w800,
-                            color: textMain,
+                            color: brown,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "${event.type}｜${event.location}",
-                          style: const TextStyle(color: Color(0xFF7A6543)),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.brown[600],
+                          ),
                         ),
                         const SizedBox(height: 10),
-                        Container(width: 100, height: 2, color: borderColor),
+                        Container(
+                          width: 100,
+                          height: 2,
+                          color: Colors.amber[600],
+                        ),
                       ],
                     ),
                   ),
@@ -415,22 +428,18 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
                   _infoLine('收藏人數', "${event.saveAmount} 位冒險者"),
                   const SizedBox(height: 20),
 
-                  const Text(
+                  Text(
                     "任務詳情",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: textMain,
+                      color: brown,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     event.description,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      height: 1.5,
-                      color: textMain,
-                    ),
+                    style: TextStyle(fontSize: 15, height: 1.5, color: brown),
                   ),
 
                   const SizedBox(height: 30),
@@ -462,19 +471,21 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
   }
 
   Widget _infoLine(String title, String content) {
+    final brown = Colors.brown[800]!;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: RichText(
         text: TextSpan(
-          style: const TextStyle(
-            fontSize: 15,
-            height: 1.5,
-            color: Color(0xFF4A3C1A),
-          ),
+          style: TextStyle(fontSize: 16, height: 1.5, color: Colors.brown[700]),
           children: [
             TextSpan(
               text: "$title：",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: brown,
+              ),
             ),
             TextSpan(text: content),
           ],
@@ -488,19 +499,18 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     required VoidCallback onPressed,
     bool filled = true,
   }) {
-    const gold = Color(0xFFD7C09A);
-    const textMain = Color(0xFF4A3C1A);
+    final brown = Colors.brown[800]!;
 
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: filled ? gold : Colors.transparent,
-          foregroundColor: textMain,
-          shadowColor: Colors.brown.withOpacity(0.3),
+          backgroundColor: filled ? Colors.amber : Colors.white,
+          foregroundColor: brown,
+          shadowColor: Colors.black.withOpacity(filled ? 0.15 : 0.0),
           elevation: filled ? 3 : 0,
-          side: BorderSide(color: gold, width: 2),
+          side: BorderSide(color: Colors.amber, width: 2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -508,7 +518,7 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
         onPressed: onPressed,
         child: Text(
           label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       ),
     );
