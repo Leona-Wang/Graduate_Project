@@ -251,4 +251,8 @@ class ApiPath {
 
   //後端傳值(用 GET ){"success": true, "personalEmail": "personal1@gmail.com", "personalName": "personal1", "personalLocation": "\u53f0\u5317\u5e02", "personalImageUrl": "/media/avatars/1000013116.jpg"}
   static String get getPersonalInfo => '${BaseConfig.baseUrl}/person/info/';
+
+  //有報到過 isFinish:True
+  static String getFinishedOrNot(String eventName) =>
+      '${BaseConfig.baseUrl}/person/event_status/?event_name=$eventName';
 }

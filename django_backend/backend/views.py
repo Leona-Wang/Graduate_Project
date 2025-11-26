@@ -703,3 +703,20 @@ class GetPersonalInfo(APIView):
                                 status=200)
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class GetFinishedOrNot(APIView):
+
+    def get(self, request, *args, **kwargs):
+
+        try:
+            user = request.user
+            isFinish = False
+            eventName = request.query_params.get('event_name', None)
+            charityEvent = CharityEvent.objects.filter(name=eventName).first()
+            joinType = EventParticipant.objects.filter(personalUser=user, charityEvent=charityEvent).first().joinType
+            if joinType == settings.CHARITY_EVENT_FINISHED:
+                isFinish = True
+            return JsonResponse({'success': True, 'isFinish': isFinish}, status=200)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)

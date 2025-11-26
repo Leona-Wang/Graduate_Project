@@ -58,4 +58,5 @@ urlpatterns = [
     path('person/event_list/', views.UserCharityEvents.as_view(), name="userCharityEvents"),
     path('person/coin/', views.GetCoinQuantity.as_view(), name="getCoinQuantity"),
     path('person/info/', views.GetPersonalInfo.as_view(), name="getPersonalInfo"),
+    path('person/event_status/', views.GetFinishedOrNot.as_view(), name="getFinishedOrNot"),
 ]
