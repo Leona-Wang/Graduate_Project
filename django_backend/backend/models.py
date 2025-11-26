@@ -139,11 +139,15 @@ class QRCodeRecord(models.Model):
         return timezone.now() > self.expireTime
 
     def save(self, *args, **kwargs):
-        # 預設 QRCode 有效期限為 5 分鐘
-        super().save(*args, **kwargs)
+        # 如果物件還沒有 PK（還沒存過資料庫），先呼叫 super() 生成 createTime
+        if not self.pk:
+            super().save(*args, **kwargs)
+        # 如果 expireTime 尚未設定，基於 createTime 計算
         if not self.expireTime:
             self.expireTime = self.createTime + timedelta(minutes=5)
-        super().save(*args, **kwargs)
+            super().save(update_fields=['expireTime'])
+        else:
+            super().save(*args, **kwargs)
 
 
 class Attribute(models.Model):
