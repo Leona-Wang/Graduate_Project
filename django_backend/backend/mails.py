@@ -49,6 +49,7 @@ def getMailListByType(request, mailType):
         # 查詢該用戶該類型所有信件
         mails = Letter.objects.filter(receiver=user, type=letter_type).order_by('-date')
         mail_list = [{'id': mail.id, 'title': mail.title, 'isRead': mail.isRead} for mail in mails]
+        print(mail_list)
 
         return JsonResponse({'success': True, 'mails': mail_list}, status=200)
     except Exception as e:

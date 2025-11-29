@@ -5,13 +5,13 @@ from .serializers import CharityEventSerializer, EventParticipantSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord, OfficialEvent, ItemBox, Item, PersonalPet, Pet, Letter
+from .models import LetterType, PersonalInfo, CharityInfo, Location, EventType, Organization, CharityEvent, EventParticipant, QRCodeRecord, OfficialEvent, ItemBox, Item, PersonalPet, Pet, Letter, Reward
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login
-from datetime import datetime
+from datetime import datetime, timezone
 from django.utils.timezone import now
 from .Casino import createOrUpdateBet, getUserBetAmount, getTotalBetAmount
 import random
@@ -449,11 +449,22 @@ class ProcessUserQRCode(APIView):
         return JsonResponse({'success': True, 'code': code}, status=200)
 
     def post(self, request, *args, **kwargs):
-        code = request.data.get('code', None)
-        charityEventName = request.data.get('eventName', None)
+
+        def createReward(user):
+            item = Item.objects.get(id=random.randint(2, 11))
+            quantity = random.randint(3, 6)
+            receiver = user
+            reward = Reward.objects.create(item=item, receiver=receiver, quantity=quantity)
+
+        codeStr = request.data.get("code")
+
+        if codeStr:
+            codeJson = json.loads(codeStr)
+            token = codeJson.get("token")
+            charityEventName = codeJson.get("eventName")
 
         charityEvent = CharityEvent.objects.filter(name=charityEventName).first()
-        codeRecord = QRCodeRecord.objects.filter(token=code).first()
+        codeRecord = QRCodeRecord.objects.filter(token=token).first()
 
         if not codeRecord.isExpired():
             user = codeRecord.personalUser
@@ -464,6 +475,8 @@ class ProcessUserQRCode(APIView):
             if joinType == settings.CHARITY_EVENT_JOIN or joinType == settings.CHARITY_EVENT_FINISHED:
                 joined.joinType = settings.CHARITY_EVENT_FINISHED
                 joined.save()
+                if joinType == settings.CHARITY_EVENT_JOIN:
+                    createReward(user)
                 return JsonResponse({'success': True}, status=200)
             else:
                 return JsonResponse({'success': False, 'message': '無參加資訊'}, status=404)

@@ -34,7 +34,7 @@ class Command(BaseCommand):
             }).strip()
 
             rewardLetter = Letter(
-                receiver=reward.receiver, date=now, title=title, content=content, reward=reward, letterType=letterType
+                receiver=reward.receiver, date=now, title=title, content=content, reward=reward, type=letterType
             )
             rewardLetters.append(rewardLetter)
 
