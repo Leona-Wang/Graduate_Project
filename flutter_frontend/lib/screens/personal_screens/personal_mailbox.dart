@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/config.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
+//import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_mail_detail.dart';
 import '../../api_client.dart';
-import 'package:flutter_frontend/routes.dart';
+//import 'package:flutter_frontend/routes.dart';
 
 class PersonalMailboxPage extends StatefulWidget {
   const PersonalMailboxPage({super.key});
@@ -69,9 +71,15 @@ class PersonalMailboxPageState extends State<PersonalMailboxPage>
 
     try {
       final getMails = await _apiClient.get(uriMail.toString());
+      debugPrint('Response status: ${getMails.statusCode}');
+      debugPrint('Response body: ${getMails.body}');
+
       if (getMails.statusCode == 200) {
-        final mails =
-            (jsonDecode(getMails.body) as List).cast<Map<String, dynamic>>();
+        final Map<String, dynamic> data = jsonDecode(getMails.body);
+        final List<dynamic> rawList = (data['mails'] ?? []) as List<dynamic>;
+
+        final List<Map<String, dynamic>> mails =
+            rawList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
 
         //分類
         setState(() {
@@ -93,10 +101,10 @@ class PersonalMailboxPageState extends State<PersonalMailboxPage>
         });
       } else {
         setState(() => isLoading = false);
-        print('API錯誤: ${getMails.statusCode} -> ${getMails.body}');
+        debugPrint('API錯誤: ${getMails.statusCode} -> ${getMails.body}');
       }
     } catch (e) {
-      print('API Exception: $e');
+      debugPrint('API Exception: $e');
       setState(() => isLoading = false);
     }
   }
@@ -127,10 +135,12 @@ class PersonalMailboxPageState extends State<PersonalMailboxPage>
           ),
           subtitle: Text('ID: ${mail['id']}'),
           onTap: () async {
-            final result = await Navigator.pushNamed(
+            final result = await Navigator.push(
               context,
-              AppRoutes.personalMailDetail, // 路由
-              arguments: mail['id'] as int, // 傳 int
+              MaterialPageRoute(
+                builder:
+                    (_) => PersonalMailDetailPage(mailId: mail['id'] as int),
+              ),
             );
 
             if (result == true) {
@@ -145,10 +155,9 @@ class PersonalMailboxPageState extends State<PersonalMailboxPage>
   }
 
   void backToHome() {
-    Navigator.pushAndRemoveUntil(
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PersonalHomePage()),
-      (route) => false,
+      MaterialPageRoute(builder: (_) => PersonalHomeTab()),
     );
   }
 

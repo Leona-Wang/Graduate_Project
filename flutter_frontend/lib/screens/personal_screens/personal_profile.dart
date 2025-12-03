@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/api_client.dart';
 import 'package:flutter_frontend/config.dart';
+//import 'package:flutter_frontend/routes.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_favorite.dart';
 import 'package:flutter_frontend/screens/personal_screens/personal_event_journal.dart';
-import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
+//import 'package:flutter_frontend/screens/personal_screens/personal_home.dart';
+import 'package:flutter_frontend/screens/personal_screens/personal_home_tab.dart';
 
 class PersonalProfilePage extends StatefulWidget {
   const PersonalProfilePage({super.key});
@@ -21,10 +23,9 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
   bool isLoading = true;
 
   void backToHome() {
-    Navigator.pushAndRemoveUntil(
+    Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const PersonalHomePage()),
-      (route) => false,
+      MaterialPageRoute(builder: (_) => PersonalHomeTab()),
     );
   }
 
