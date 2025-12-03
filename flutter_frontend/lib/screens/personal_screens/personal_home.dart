@@ -37,7 +37,10 @@ class PersonalHomePageState extends State<PersonalHomePage> {
       backgroundColor: const Color(0xFFf8f5f0),
       appBar: AppBar(
         elevation: 0,
-        title: const Text('首頁'),
+        title: const Text(
+          '首頁',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
+        ),
         //左邊區域
         leading: Padding(
           padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),

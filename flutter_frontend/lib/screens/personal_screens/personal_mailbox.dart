@@ -122,33 +122,58 @@ class PersonalMailboxPageState extends State<PersonalMailboxPage>
         final mail = mails[index];
         final bool isRead = mail['isRead'] ?? false;
 
-        return ListTile(
-          leading: Icon(
-            isRead ? Icons.mark_email_read : Icons.mark_email_unread,
-            color: isRead ? Colors.grey : Colors.brown,
-          ),
-          title: Text(
-            mail['title'] ?? '',
-            style: TextStyle(
-              fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          child: Container(
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Colors.black12, width: 1),
+              ),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 4.0,
+                vertical: 14.0,
+              ),
+              leading: Icon(
+                isRead ? Icons.mark_email_read : Icons.mark_email_unread,
+                size: 30,
+                color: isRead ? Colors.grey : Colors.brown,
+              ),
+              title: Text(
+                mail['title'] ?? '',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
+                ),
+              ),
+              subtitle: null,
+              // subtitle: Text(
+              //   'ID: ${mail['id']}',
+              //   style: const TextStyle(
+              //     fontSize: 14,
+              //     fontWeight: FontWeight.w600,
+              //     color: Colors.black54,
+              //   ),
+              // ),
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (_) =>
+                            PersonalMailDetailPage(mailId: mail['id'] as int),
+                  ),
+                );
+
+                if (result == true) {
+                  setState(() {
+                    mails[index]['isRead'] = true;
+                  });
+                }
+              },
             ),
           ),
-          subtitle: Text('ID: ${mail['id']}'),
-          onTap: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (_) => PersonalMailDetailPage(mailId: mail['id'] as int),
-              ),
-            );
-
-            if (result == true) {
-              setState(() {
-                mails[index]['isRead'] = true;
-              });
-            }
-          },
         );
       },
     );
@@ -180,6 +205,17 @@ class PersonalMailboxPageState extends State<PersonalMailboxPage>
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.brown,
+          unselectedLabelColor: Colors.black54,
+
+          labelStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+
           indicatorColor: Color(0xFF4A2E14),
           tabs: const [
             Tab(text: '個人信件'),

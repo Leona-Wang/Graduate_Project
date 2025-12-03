@@ -273,7 +273,7 @@ class PersonalEventFavoritePageState extends State<PersonalEventFavoritePage>
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFFFFF0D8),
+        backgroundColor: const Color(0xFFe6ccb2),
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),

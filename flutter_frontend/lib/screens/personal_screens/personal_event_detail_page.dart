@@ -331,18 +331,27 @@ class _PersonalEventDetailPageState extends State<PersonalEventDetailPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: appBarBg,
         elevation: 0,
-        centerTitle: true,
-        title: Text(
-          "任務詳情",
-          style: TextStyle(
-            color: brown,
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12.0, top: 6.0, bottom: 6.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.amber,
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.brown),
+            ),
           ),
         ),
-        iconTheme: IconThemeData(color: brown),
+        title: Text(
+          '任務詳情',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: brown,
+          ),
+        ),
       ),
       body: FutureBuilder<FullEvent>(
         future: eventFuture,

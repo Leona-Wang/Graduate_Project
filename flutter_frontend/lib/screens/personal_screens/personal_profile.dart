@@ -118,7 +118,7 @@ class PersonalProfilePageState extends State<PersonalProfilePage> {
             fontWeight: FontWeight.w800,
           ),
         ),
-        backgroundColor: const Color(0xFFFFF0D8),
+        backgroundColor: const Color(0xFFe6ccb2),
         elevation: 0,
       ),
       body:
